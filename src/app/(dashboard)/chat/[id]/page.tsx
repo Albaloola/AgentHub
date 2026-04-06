@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -32,10 +32,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   const [conversation, setConversation] = useState<ConversationWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [messageQueue, setMessageQueue] = useState<{ content: string; targetAgentId?: string }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamContentRef = useRef("");
   const streamMsgIdRef = useRef("");
+  const processingQueue = useRef(false);
 
   useEffect(() => {
     loadChat();
@@ -66,7 +68,30 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
+  // Process queued messages after current stream finishes
+  useEffect(() => {
+    if (!isStreaming && messageQueue.length > 0 && !processingQueue.current) {
+      processingQueue.current = true;
+      const next = messageQueue[0];
+      setMessageQueue((q) => q.slice(1));
+      setTimeout(() => {
+        processingQueue.current = false;
+        sendMessage(next.content, next.targetAgentId);
+      }, 300);
+    }
+  }, [isStreaming, messageQueue]);
+
   function handleSend(content: string, targetAgentId?: string, attachmentIds?: string[]) {
+    // If already streaming, queue the message
+    if (isStreaming) {
+      setMessageQueue((q) => [...q, { content, targetAgentId }]);
+      toast.success(`Message queued (${messageQueue.length + 1} in queue)`);
+      return;
+    }
+    sendMessage(content, targetAgentId);
+  }
+
+  function sendMessage(content: string, targetAgentId?: string) {
     // Add user message locally
     const userMsg: MessageWithToolCalls = {
       id: uuid(),
@@ -235,33 +260,52 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full min-h-0 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0">
       {/* Chat area */}
-      <div className="flex flex-1 flex-col h-full min-w-0">
+      <div className="flex flex-1 flex-col min-h-0 min-w-0">
         <ChatHeader
           conversation={conversation}
           isStreaming={isStreaming}
           streamingAgentId={streamingAgentId}
           toolPanelOpen={toolPanelOpen}
           onToggleToolPanel={() => setToolPanelOpen(!toolPanelOpen)}
+          onStop={handleCancel}
+          queueCount={messageQueue.length}
           onReset={() => {
             setMessages([]);
+            setMessageQueue([]);
             setThinkingContent("", true);
             clearSubagents();
             getMessages(id).then(setMessages).catch(() => {});
           }}
         />
 
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl space-y-4 p-4">
+        {/* Messages with starfield background */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto starfield" id="chat-scroll">
+          <div className="relative z-10 mx-auto max-w-4xl space-y-3 p-6">
+            {/* Empty state with ambient animation */}
+            {messages.length === 0 && !isStreaming && (
+              <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+                <div className="relative mb-6">
+                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 flex items-center justify-center neon-glow ambient-pulse">
+                    <MessageSquare className="h-8 w-8 text-blue-400/60" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-400/80 neon-glow-sm" style={{ animation: "orbit 3s linear infinite" }} />
+                </div>
+                <h2 className="text-lg font-medium text-foreground/70 neon-text mb-2">Start a conversation</h2>
+                <p className="text-sm text-muted-foreground/50 max-w-sm">
+                  Send a message to {conversation?.agents?.[0]?.name ?? "the agent"} and watch the stars align
+                </p>
+              </div>
+            )}
+
             {messages.map((msg, i) => (
               <MessageBubble
                 key={msg.id}
@@ -276,13 +320,28 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               />
             ))}
 
+            {/* Thinking indicator with glow */}
             {isStreaming && messages.length > 0 && messages[messages.length - 1].sender_agent_id === null && (
-              <div className="flex gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex gap-3 animate-fade-in">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl glass neon-glow-sm">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
                 </div>
-                <div className="rounded-lg bg-muted px-4 py-2.5 text-sm text-muted-foreground">
-                  Agent is thinking...
+                <div className="glass-bubble rounded-2xl px-5 py-3 text-sm text-muted-foreground neon-border">
+                  <span className="animate-pulse neon-text">Agent is thinking...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Queue indicator */}
+            {messageQueue.length > 0 && (
+              <div className="flex items-center justify-center gap-2 py-2 animate-fade-in">
+                <div className="glass-bubble rounded-full px-4 py-1.5 flex items-center gap-2 queue-pulse neon-border">
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(messageQueue.length, 3) }).map((_, i) => (
+                      <div key={i} className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-blue-400">{messageQueue.length} message{messageQueue.length !== 1 ? "s" : ""} queued</span>
                 </div>
               </div>
             )}

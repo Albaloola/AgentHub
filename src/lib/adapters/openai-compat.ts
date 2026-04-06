@@ -34,9 +34,10 @@ export class OpenAICompatAdapter implements GatewayAdapter {
       api_key?: string;
       model?: string;
       system_prompt?: string;
+      chat_endpoint?: string;
     };
 
-    const url = `${agent.connection_url}/v1/chat/completions`;
+    const url = `${agent.connection_url}${config.chat_endpoint ?? "/v1/chat/completions"}`;
     const messages: { role: string; content: string }[] = [];
 
     if (config.system_prompt) {

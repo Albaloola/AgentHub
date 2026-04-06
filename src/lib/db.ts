@@ -732,65 +732,41 @@ function initSchema(db: Database.Database) {
 }
 
 function seed(db: Database.Database) {
-  const hermesId = uuid();
-  const openclawId = uuid();
-  const mockId = uuid();
-
-  // Hermes agent — needs a real gateway to be useful
+  // OpenClaw gateway: Jerry (jaimy agent) and Jamie (jamie agent)
+  // OpenClaw runs on localhost:18789 with token auth, OpenAI-compatible API
+  const openclawJerryId = uuid();
   db.prepare(`
     INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    hermesId, "Hermes", null, "hermes",
-    "http://localhost:8080",
-    JSON.stringify({ chat_endpoint: "/api/chat", health_endpoint: "/api/health" }),
+    openclawJerryId, "Jerry", null, "openai-compat",
+    "http://localhost:18789",
+    JSON.stringify({
+      api_key: "REDACTED",
+      model: "openclaw/jaimy",
+      chat_endpoint: "/v1/chat/completions",
+    }),
     1,
   );
 
-  // OpenClaw agent — needs a real gateway to be useful
+  const openclawJamieId = uuid();
   db.prepare(`
     INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    openclawId, "OpenClaw", null, "openclaw",
-    "http://localhost:8090",
-    JSON.stringify({ chat_endpoint: "/v1/chat", health_endpoint: "/v1/status", request_format: "native" }),
+    openclawJamieId, "Jamie", null, "openai-compat",
+    "http://localhost:18789",
+    JSON.stringify({
+      api_key: "REDACTED",
+      model: "openclaw/jamie",
+      chat_endpoint: "/v1/chat/completions",
+    }),
     1,
   );
 
-  // Mock Echo Bot — always works, for immediate testing
-  db.prepare(`
-    INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(mockId, "Echo Bot", null, "mock", "mock://echo", '{"delay_ms": 50, "echo": true}', 1);
-
-  // --- Sample conversations ---
-
-  // 1. Mock conversation (functional immediately)
-  const mockConvId = uuid();
-  db.prepare(`INSERT INTO conversations (id, type, name, agent_id) VALUES (?, ?, ?, ?)`)
-    .run(mockConvId, "single", "Echo Bot", mockId);
-
-  db.prepare(`INSERT INTO messages (id, conversation_id, sender_agent_id, content) VALUES (?, ?, ?, ?)`)
-    .run(uuid(), mockConvId, null, "Hello! Can you echo this message back?");
-
-  db.prepare(`INSERT INTO messages (id, conversation_id, sender_agent_id, content) VALUES (?, ?, ?, ?)`)
-    .run(uuid(), mockConvId, mockId, "Hello! Can you echo this message back?\n\n*(Echoed by Echo Bot — a mock agent for testing AgentHub connections.)*");
-
-  // 2. Group chat with all three agents
-  const groupId = uuid();
-  db.prepare(`INSERT INTO conversations (id, type, name) VALUES (?, ?, ?)`)
-    .run(groupId, "group", "Agent Roundtable");
-
-  db.prepare(`INSERT INTO conversation_agents (conversation_id, agent_id, response_mode) VALUES (?, ?, ?)`)
-    .run(groupId, hermesId, "discussion");
-  db.prepare(`INSERT INTO conversation_agents (conversation_id, agent_id, response_mode) VALUES (?, ?, ?)`)
-    .run(groupId, openclawId, "discussion");
-  db.prepare(`INSERT INTO conversation_agents (conversation_id, agent_id, response_mode) VALUES (?, ?, ?)`)
-    .run(groupId, mockId, "discussion");
-
-  db.prepare(`INSERT INTO messages (id, conversation_id, sender_agent_id, content) VALUES (?, ?, ?, ?)`)
-    .run(uuid(), groupId, null, "Welcome to the roundtable! Each agent will respond in turn.");
+  // Seed a default theme
+  db.prepare(`INSERT OR IGNORE INTO theme_preferences (id) VALUES ('default')`).run();
+  db.prepare(`INSERT OR IGNORE INTO onboarding_state (id) VALUES ('default')`).run();
 }
 
 export const db = getDb();

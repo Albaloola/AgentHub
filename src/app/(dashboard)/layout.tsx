@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ChatTabs } from "@/components/chat/chat-tabs";
 import { CommandPalette } from "@/components/search/command-palette";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { useKeyboardShortcuts, ShortcutsHelp } from "@/components/shortcuts/keyboard-shortcuts";
+import { SettingsModal } from "@/components/settings/settings-modal";
+import { ThemeLoader } from "@/components/theme/theme-loader";
 import { useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useStore();
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { helpOpen, setHelpOpen, shortcuts } = useKeyboardShortcuts();
 
   useEffect(() => {
@@ -19,6 +23,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
+      }
+      // Ctrl+, opens settings
+      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+        e.preventDefault();
+        setSettingsOpen((prev) => !prev);
       }
     };
     document.addEventListener("keydown", handler);
@@ -28,22 +37,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main
-        className={cn(
-          "flex-1 overflow-auto transition-all duration-200",
-          sidebarOpen ? "md:ml-0" : "md:ml-0",
-        )}
-      >
-        <div className="flex items-center justify-between">
+      <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+        {/* Top bar */}
+        <div className="flex items-center justify-between shrink-0 border-b border-white/[0.04] glass">
           <ChatTabs />
-          <div className="pr-4">
+          <div className="flex items-center gap-1.5 pr-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+              onClick={() => setSettingsOpen(true)}
+              title="Settings (Ctrl+,)"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
             <NotificationCenter />
           </div>
         </div>
-        {children}
+        {/* Page content */}
+        <div className="flex-1 min-h-0 overflow-auto">
+          {children}
+        </div>
       </main>
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} shortcuts={shortcuts} />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <ThemeLoader />
     </div>
   );
 }

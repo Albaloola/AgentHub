@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Download, Trash2, Upload } from "lucide-react";
+import { Save, Download, Trash2, Upload, Palette } from "lucide-react";
+import { ThemeCustomizer } from "@/components/theme/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -197,6 +198,9 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Theme Customization */}
+      <ThemeCustomizer />
 
       {/* About */}
       <Card>

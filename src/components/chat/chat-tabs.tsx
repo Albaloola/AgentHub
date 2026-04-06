@@ -29,8 +29,8 @@ export function ChatTabs() {
 
   if (openTabs.length === 0) {
     return (
-      <div className="flex items-center border-b border-border px-2 py-1">
-        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={handleNewChat}>
+      <div className="flex items-center px-3 py-1.5">
+        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs rounded-lg hover:bg-white/5" onClick={handleNewChat}>
           <Plus className="h-3.5 w-3.5" />
           New Chat
         </Button>
@@ -39,26 +39,28 @@ export function ChatTabs() {
   }
 
   return (
-    <div className="flex items-center border-b border-border px-2 py-1 gap-1 overflow-x-auto">
+    <div className="flex items-center px-2 py-1.5 gap-1 overflow-x-auto">
       {openTabs.map((tab) => (
         <div
           key={tab.id}
           className={cn(
-            "group flex items-center gap-1 rounded-md px-2 py-1 text-xs cursor-pointer transition-colors hover:bg-accent max-w-[160px] shrink-0",
-            tab.id === activeTabId ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+            "group flex items-center gap-1 rounded-lg px-3 py-1 text-xs cursor-pointer transition-all duration-200 max-w-[160px] shrink-0",
+            tab.id === activeTabId
+              ? "glass-bubble neon-border text-foreground"
+              : "text-muted-foreground hover:bg-white/5",
           )}
           onClick={() => handleTabClick(tab.id, tab.conversationId)}
         >
           <span className="truncate flex-1">{tab.title}</span>
           <button
-            className="ml-1 rounded-sm p-0.5 opacity-0 group-hover:opacity-100 hover:bg-accent-foreground/20 transition-opacity"
+            className="ml-1 rounded-md p-0.5 opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
             onClick={(e) => handleTabClose(e, tab.id)}
           >
             <X className="h-3 w-3" />
           </button>
         </div>
       ))}
-      <Button variant="ghost" size="sm" className="h-7 w-7 shrink-0 p-0" onClick={handleNewChat}>
+      <Button variant="ghost" size="sm" className="h-7 w-7 shrink-0 p-0 rounded-lg hover:bg-white/5" onClick={handleNewChat}>
         <Plus className="h-3.5 w-3.5" />
       </Button>
     </div>

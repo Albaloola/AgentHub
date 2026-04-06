@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Wrench, ArrowLeft } from "lucide-react";
+import { RotateCcw, Wrench, ArrowLeft, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,8 @@ interface ChatHeaderProps {
   toolPanelOpen: boolean;
   onToggleToolPanel: () => void;
   onReset: () => void;
+  onStop?: () => void;
+  queueCount?: number;
 }
 
 export function ChatHeader({
@@ -35,6 +37,8 @@ export function ChatHeader({
   toolPanelOpen,
   onToggleToolPanel,
   onReset,
+  onStop,
+  queueCount = 0,
 }: ChatHeaderProps) {
   const router = useRouter();
   const [resetOpen, setResetOpen] = useState(false);
@@ -56,11 +60,11 @@ export function ChatHeader({
   }
 
   return (
-    <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+    <div className="flex items-center gap-3 border-b border-white/[0.06] glass px-4 py-3 shrink-0">
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 md:hidden"
+        className="h-8 w-8 md:hidden rounded-lg"
         onClick={() => router.push("/")}
       >
         <ArrowLeft className="h-4 w-4" />
@@ -70,8 +74,9 @@ export function ChatHeader({
         <div key={agent.id} className="flex items-center gap-2">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium text-white",
+              "flex h-9 w-9 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-lg",
               getAvatarColor(agent.id),
+              isStreaming && streamingAgentId === agent.id && "neon-glow-sm animate-pulse",
             )}
           >
             {getInitials(agent.name)}
@@ -81,7 +86,7 @@ export function ChatHeader({
             <div className="text-[10px] text-muted-foreground">
               {agent.gateway_type}
               {isStreaming && streamingAgentId === agent.id && (
-                <span className="ml-1 text-yellow-500">thinking...</span>
+                <span className="ml-1 text-blue-400 neon-text animate-pulse">processing...</span>
               )}
             </div>
           </div>
@@ -89,10 +94,28 @@ export function ChatHeader({
       ))}
 
       <div className="ml-auto flex items-center gap-2">
-        {conversation?.type === "group" && (
-          <Badge variant="outline" className="text-[10px]">
-            Group
+        {/* Queue count */}
+        {queueCount > 0 && (
+          <Badge variant="outline" className="text-[10px] neon-border text-blue-400 animate-pulse">
+            {queueCount} queued
           </Badge>
+        )}
+
+        {conversation?.type === "group" && (
+          <Badge variant="outline" className="text-[10px]">Group</Badge>
+        )}
+
+        {/* Stop button (visible during streaming) */}
+        {isStreaming && onStop && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-1 rounded-lg neon-glow-sm"
+            onClick={onStop}
+          >
+            <Square className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs">Stop</span>
+          </Button>
         )}
 
         <Dialog open={resetOpen} onOpenChange={setResetOpen}>
@@ -100,7 +123,7 @@ export function ChatHeader({
             <Button
               variant="outline"
               size="sm"
-              className="gap-1"
+              className="gap-1 rounded-lg"
               disabled={isStreaming}
             >
               <RotateCcw className="h-3.5 w-3.5" />
@@ -116,9 +139,7 @@ export function ChatHeader({
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setResetOpen(false)}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
               <Button variant="destructive" onClick={handleReset} disabled={isResetting}>
                 {isResetting ? "Resetting..." : "Reset Context"}
               </Button>
@@ -130,7 +151,7 @@ export function ChatHeader({
           variant={toolPanelOpen ? "secondary" : "outline"}
           size="sm"
           onClick={onToggleToolPanel}
-          className="gap-1"
+          className="gap-1 rounded-lg"
         >
           <Wrench className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Tools</span>

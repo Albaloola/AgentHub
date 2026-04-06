@@ -6,8 +6,20 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
+  // Strip parenthetical suffixes like "(Hermes)" or "(OpenClaw)"
+  const clean = name.replace(/\s*\(.*?\)\s*/g, "").trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "??";
+  if (words.length === 1) {
+    const word = words[0];
+    // Try to split on camelCase/PascalCase boundaries
+    const parts = word.replace(/([a-z])([A-Z])/g, "$1 $2").split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return word.slice(0, 2).toUpperCase();
+  }
+  return words
     .map((w) => w[0])
     .join("")
     .toUpperCase()
