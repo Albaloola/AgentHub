@@ -1,0 +1,172 @@
+"use client";
+
+import { useState, useMemo, useRef, useEffect } from "react";
+import {
+  Code2, X, Maximize2, Minimize2, ExternalLink, Copy, Check,
+  ChevronLeft, ChevronRight, Layers,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import type { MessageWithToolCalls } from "@/lib/types";
+
+interface Artifact {
+  id: string;
+  messageId: string;
+  language: string;
+  code: string;
+  title: string;
+}
+
+function extractArtifacts(messages: MessageWithToolCalls[]): Artifact[] {
+  const artifacts: Artifact[] = [];
+  const codeBlockRegex = /```(html|svg|jsx|tsx|react|css)\n([\s\S]*?)```/g;
+
+  for (const msg of messages) {
+    if (!msg.content || msg.sender_agent_id === null) continue;
+    let match;
+    let idx = 0;
+    while ((match = codeBlockRegex.exec(msg.content)) !== null) {
+      const lang = match[1];
+      const code = match[2].trim();
+      // Only include if it looks renderable (has tags or JSX)
+      if (code.length > 50 && (code.includes("<") || lang === "css")) {
+        artifacts.push({
+          id: `${msg.id}-${idx}`,
+          messageId: msg.id,
+          language: lang,
+          code,
+          title: lang === "svg" ? "SVG Image" : lang === "css" ? "Stylesheet" : `${lang.toUpperCase()} Component`,
+        });
+        idx++;
+      }
+    }
+  }
+  return artifacts;
+}
+
+function buildPreviewHtml(artifact: Artifact): string {
+  const { language, code } = artifact;
+
+  if (language === "html") {
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#e4e4e7;background:#09090b}</style></head><body>${code}</body></html>`;
+  }
+
+  if (language === "svg") {
+    return `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#09090b}</style></head><body>${code}</body></html>`;
+  }
+
+  if (language === "css") {
+    return `<!DOCTYPE html><html><head><style>${code}</style></head><body><div class="preview">CSS Preview</div></body></html>`;
+  }
+
+  // JSX/TSX/React — wrap in a basic React scaffold
+  return `<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#e4e4e7;background:#09090b}*{box-sizing:border-box}</style>
+<script>
+// Minimal React-like rendering for simple JSX
+document.addEventListener('DOMContentLoaded', function() {
+  var root = document.getElementById('root');
+  root.innerHTML = \`<div style="padding:16px"><pre style="color:#a1a1aa;font-size:12px">JSX/TSX artifact detected.\\nRendering requires a React runtime.\\n\\nCode preview:</pre><pre style="color:#e4e4e7;font-size:11px;white-space:pre-wrap;background:#18181b;padding:12px;border-radius:8px;border:1px solid #27272a;margin-top:8px">${code.replace(/`/g, "\\`").replace(/\\/g, "\\\\").replace(/\$/g, "\\$")}</pre></div>\`;
+});
+</script>
+</head><body><div id="root"></div></body></html>`;
+}
+
+export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] }) {
+  const artifacts = useMemo(() => extractArtifacts(messages), [messages]);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (artifacts.length > 0 && activeIndex >= artifacts.length) {
+      setActiveIndex(artifacts.length - 1);
+    }
+  }, [artifacts.length]);
+
+  // Auto-open when new artifact appears
+  useEffect(() => {
+    if (artifacts.length > 0 && !open) {
+      setOpen(true);
+      setActiveIndex(artifacts.length - 1);
+    }
+  }, [artifacts.length]);
+
+  if (artifacts.length === 0) return null;
+
+  const current = artifacts[activeIndex] ?? artifacts[0];
+  if (!current) return null;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(current.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (!open) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="fixed bottom-20 right-4 z-40 gap-1.5 shadow-lg"
+        onClick={() => setOpen(true)}
+      >
+        <Layers className="h-4 w-4" />
+        {artifacts.length} artifact{artifacts.length !== 1 ? "s" : ""}
+      </Button>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col border-l border-border bg-card transition-all duration-200",
+        expanded ? "w-[600px]" : "w-[380px]",
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <Code2 className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium flex-1">{current.title}</span>
+        <Badge variant="outline" className="text-[10px]">{current.language}</Badge>
+
+        {artifacts.length > 1 && (
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.max(0, activeIndex - 1))} disabled={activeIndex === 0}>
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            <span className="text-xs text-muted-foreground">{activeIndex + 1}/{artifacts.length}</span>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.min(artifacts.length - 1, activeIndex + 1))} disabled={activeIndex === artifacts.length - 1}>
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy} title="Copy code">
+          {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)} title={expanded ? "Shrink" : "Expand"}>
+          {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+
+      {/* Preview iframe */}
+      <div className="flex-1 overflow-hidden bg-[#09090b]">
+        <iframe
+          ref={iframeRef}
+          srcDoc={buildPreviewHtml(current)}
+          sandbox="allow-scripts"
+          className="w-full h-full border-0"
+          title="Artifact Preview"
+        />
+      </div>
+    </div>
+  );
+}

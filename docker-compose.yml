@@ -1,0 +1,15 @@
+services:
+  agenthub:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - agenthub-data:/app/data
+    env_file:
+      - .env.local
+    environment:
+      - DATABASE_PATH=/app/data/agenthub.db
+    restart: unless-stopped
+
+volumes:
+  agenthub-data:
