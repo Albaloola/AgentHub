@@ -272,7 +272,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.06] glass-strong transition-all duration-300 ease-in-out",
+          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.06] glass-strong transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           "md:relative md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           collapsed ? "w-14" : "w-64",
@@ -285,12 +285,13 @@ export function Sidebar() {
             collapsed ? "justify-center px-2 py-3" : "px-4 py-3",
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600">
-            <Bot className="h-5 w-5 text-white" />
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_12px_oklch(0.55_0.24_264_/0.3)]">
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-400 to-violet-500 opacity-0 animate-[luminance-pulse_4s_ease-in-out_infinite]" />
+            <Bot className="relative h-5 w-5 text-white" />
           </div>
           {!collapsed && (
             <>
-              <span className="text-lg font-semibold whitespace-nowrap">AgentHub</span>
+              <span className="text-lg font-semibold whitespace-nowrap bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">AgentHub</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -318,10 +319,10 @@ export function Sidebar() {
                           href={item.href}
                           onClick={() => setSidebarOpen(false)}
                           className={cn(
-                            "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+                            "relative flex h-9 w-9 items-center justify-center rounded-md transition-all duration-200 light-sweep-hover",
                             isActive
-                              ? "bg-accent/80 text-accent-foreground shadow-[0_0_10px_var(--accent-color-glow,rgba(99,102,241,0.35))]"
-                              : "text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+                              ? "bg-accent/80 text-accent-foreground shadow-[0_0_10px_var(--accent-color-glow,rgba(99,102,241,0.35))] sidebar-item-active"
+                              : "text-muted-foreground hover:bg-accent/40 hover:text-foreground sidebar-item-glow",
                           )}
                         />
                       }
@@ -352,10 +353,10 @@ export function Sidebar() {
                       type="button"
                       onClick={() => toggleCategory(category.label)}
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider transition-colors",
+                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider transition-all duration-200",
                         hasActiveChild
-                          ? "text-foreground/90"
-                          : "text-muted-foreground/70 hover:text-muted-foreground",
+                          ? "text-foreground/90 hover:bg-white/[0.03]"
+                          : "text-muted-foreground/70 hover:text-muted-foreground hover:bg-white/[0.02]",
                       )}
                     >
                       <CategoryIcon className="h-3.5 w-3.5 shrink-0" />
@@ -386,16 +387,16 @@ export function Sidebar() {
                               href={item.href}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "stagger-item flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
+                                "stagger-item relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 light-sweep-hover",
                                 isActive
-                                  ? "bg-accent/80 text-accent-foreground"
-                                  : "text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+                                  ? "bg-accent/80 text-accent-foreground sidebar-item-active"
+                                  : "text-muted-foreground hover:bg-accent/40 hover:text-foreground sidebar-item-glow",
                               )}
                               style={{ animationDelay: `${idx * 40}ms` }}
                             >
                               <item.icon className="h-4 w-4 shrink-0" />
                               <span className="truncate">{item.label}</span>
-                              {isActive && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-400" />}
+                              {isActive && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_oklch(0.55_0.24_264/0.6)] animate-[luminance-pulse_2s_ease-in-out_infinite]" />}
                             </Link>
                           );
                         })}
@@ -439,7 +440,7 @@ export function Sidebar() {
                   return (
                     <div key={folder.id}>
                       <div
-                        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all duration-200 sidebar-item-glow"
                         onClick={() => toggleFolder(folder.id)}
                       >
                         <FolderIcon className="h-3.5 w-3.5 shrink-0" />
@@ -527,7 +528,7 @@ export function Sidebar() {
                   <button
                     type="button"
                     onClick={() => setCollapsed(false)}
-                    className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
+                    className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-all duration-200 sidebar-item-glow"
                   />
                 }
               >
@@ -541,7 +542,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => setCollapsed(true)}
-              className="hidden md:flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
+              className="hidden md:flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-all duration-200 sidebar-item-glow"
             >
               <PanelLeftClose className="h-4 w-4 shrink-0" />
               <span>Collapse</span>
@@ -587,18 +588,18 @@ function ConversationItem({
   const agent = conv.agents[0];
 
   return (
-    <Link
-      href={`/chat/${conv.id}`}
-      onClick={onClick}
-      onMouseEnter={() => onHover(conv.id)}
-      onMouseLeave={() => onHover(null)}
-      className={cn(
-        "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-        isActive
-          ? "bg-accent text-accent-foreground"
-          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-      )}
-    >
+      <Link
+        href={`/chat/${conv.id}`}
+        onClick={onClick}
+        onMouseEnter={() => onHover(conv.id)}
+        onMouseLeave={() => onHover(null)}
+        className={cn(
+          "group relative flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-200 light-sweep-hover",
+          isActive
+            ? "bg-accent text-accent-foreground sidebar-item-active"
+            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground sidebar-item-glow",
+        )}
+      >
       {agent ? (
         <div
           className={cn(

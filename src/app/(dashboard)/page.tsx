@@ -59,7 +59,7 @@ export default function HomePage() {
         {/* Mission control header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Mission Control</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Mission Control</h1>
             <p className="text-sm text-muted-foreground/60 mt-0.5">
               {time.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               {" "}
@@ -67,11 +67,11 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-xl glass gap-1.5" onClick={() => router.push("/agents")}>
+            <Button variant="outline" size="sm" className="rounded-xl glass gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/agents")}>
               <Plus className="h-3.5 w-3.5" />
               New Agent
             </Button>
-            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 gap-1.5" onClick={() => router.push("/groups")}>
+            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 gap-1.5 transition-all duration-200 hover-lift animate-[luminance-pulse_3s_ease-in-out_infinite]" onClick={() => router.push("/groups")}>
               <Users className="h-3.5 w-3.5" />
               Group Chat
             </Button>
@@ -102,7 +102,7 @@ export default function HomePage() {
               {agents.filter((a) => a.is_active).map((agent) => (
                 <div
                   key={agent.id}
-                  className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-all hover:bg-white/[0.04] cursor-pointer group"
+                  className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.1] hover:shadow-[0_0_16px_oklch(0.55_0.24_264/0.08)] cursor-pointer group light-sweep-hover"
                   onClick={() => startChat(agent)}
                 >
                   <LivingAvatar
@@ -162,7 +162,7 @@ export default function HomePage() {
               ].map((action) => (
                 <button
                   key={action.label}
-                  className="flex items-center gap-3 w-full rounded-xl border border-white/[0.04] p-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.08]"
+                  className="flex items-center gap-3 w-full rounded-xl border border-white/[0.04] p-3 text-left transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.08] hover:shadow-[0_0_12px_oklch(0.55_0.24_264/0.06)] light-sweep-hover"
                   onClick={() => router.push(action.href)}
                 >
                   <action.icon className={cn("h-4 w-4", action.color)} />
@@ -194,7 +194,7 @@ export default function HomePage() {
                   return (
                     <button
                       key={conv.id}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.04] p-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.08]"
+                      className="flex items-center gap-3 rounded-xl border border-white/[0.04] p-3 text-left transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.08] hover:shadow-[0_0_12px_oklch(0.55_0.24_264/0.06)] light-sweep-hover"
                       onClick={() => router.push(`/chat/${conv.id}`)}
                     >
                       {agent && (

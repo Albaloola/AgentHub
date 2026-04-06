@@ -228,8 +228,8 @@ export default function PlaygroundPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Playground</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Playground</h1>
+        <p className="text-sm text-muted-foreground/60 mt-1">
           Test prompts, manage versions, and experiment with agent behavior
         </p>
       </div>
@@ -301,7 +301,7 @@ export default function PlaygroundPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Pane: Prompt Editor */}
         <div className="space-y-3">
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">System Prompt</CardTitle>
             </CardHeader>
@@ -319,7 +319,7 @@ export default function PlaygroundPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Test Input</CardTitle>
             </CardHeader>
@@ -332,12 +332,12 @@ export default function PlaygroundPage() {
               />
               <div className="flex gap-2">
                 {running ? (
-                  <Button variant="destructive" size="sm" onClick={handleStop}>
+                  <Button variant="destructive" size="sm" onClick={handleStop} className="transition-all duration-200">
                     <RotateCcw className="h-4 w-4 mr-1" />
                     Stop
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={handleRun} disabled={!selectedAgentId || !testInput.trim()}>
+                  <Button size="sm" onClick={handleRun} disabled={!selectedAgentId || !testInput.trim()} className="transition-all duration-200 hover:shadow-[0_0_16px_oklch(0.55_0.24_264/0.2)]">
                     <Play className="h-4 w-4 mr-1" />
                     Run
                   </Button>
@@ -345,6 +345,7 @@ export default function PlaygroundPage() {
                 <Button
                   variant="outline" size="sm"
                   onClick={() => { setResponse(""); setTestInput(""); }}
+                  className="transition-all duration-200"
                 >
                   Clear
                 </Button>
@@ -354,7 +355,7 @@ export default function PlaygroundPage() {
         </div>
 
         {/* Right Pane: Response Viewer */}
-        <Card className="flex flex-col">
+        <Card className="flex flex-col transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               Response
@@ -394,8 +395,8 @@ export default function PlaygroundPage() {
                 </ReactMarkdown>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <FlaskConical className="h-10 w-10 mb-3" />
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground/60">
+                <FlaskConical className="h-10 w-10 mb-3 animate-[float-gentle_4s_ease-in-out_infinite]" />
                 <p className="text-sm">
                   {running ? "Waiting for response..." : "Run a test to see the response here"}
                 </p>

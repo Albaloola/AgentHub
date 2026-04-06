@@ -742,7 +742,7 @@ function seed(db: Database.Database) {
     openclawJerryId, "Jerry", null, "openai-compat",
     "http://localhost:18789",
     JSON.stringify({
-      api_key: "REDACTED",
+      api_key: process.env.OPENCLAW_API_KEY || "",
       model: "openclaw/jaimy",
       chat_endpoint: "/v1/chat/completions",
     }),
@@ -757,7 +757,7 @@ function seed(db: Database.Database) {
     openclawJamieId, "Jamie", null, "openai-compat",
     "http://localhost:18789",
     JSON.stringify({
-      api_key: "REDACTED",
+      api_key: process.env.OPENCLAW_API_KEY || "",
       model: "openclaw/jamie",
       chat_endpoint: "/v1/chat/completions",
     }),

@@ -54,7 +54,7 @@ export function HudPanel({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl border border-white/[0.06] overflow-hidden transition-all duration-300",
+        "flex flex-col rounded-2xl border border-white/[0.06] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover-lift",
         "bg-card/80 backdrop-blur-xl",
         accent !== "none" && `border-t-2 ${ACCENT_STYLES[accent]}`,
         maximized && "fixed inset-4 z-50",
@@ -65,12 +65,15 @@ export function HudPanel({
       {/* Header */}
       <div
         className={cn(
-          "flex items-center gap-2 px-4 shrink-0 border-b border-white/[0.04]",
+          "relative flex items-center gap-2 px-4 shrink-0 border-b border-white/[0.04] transition-colors duration-200",
           variant === "compact" ? "py-2" : "py-2.5",
-          collapsible && "cursor-pointer",
+          collapsible && "cursor-pointer hover:bg-white/[0.02]",
         )}
         onClick={collapsible ? () => setCollapsed(!collapsed) : undefined}
       >
+        {accent !== "none" && (
+          <div className="absolute bottom-0 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-oklch(0.55_0.24_264_/0.2) to-transparent" />
+        )}
         {icon && <span className="text-muted-foreground">{icon}</span>}
         <span className={cn("font-medium flex-1", variant === "compact" ? "text-xs" : "text-sm")}>{title}</span>
 
@@ -102,7 +105,7 @@ export function HudPanel({
       {/* Content */}
       <div
         className={cn(
-          "flex-1 min-h-0 overflow-auto transition-all duration-300",
+          "flex-1 min-h-0 overflow-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           collapsed ? "max-h-0 opacity-0 overflow-hidden" : "max-h-[9999px] opacity-100",
         )}
       >
@@ -128,7 +131,7 @@ export function HudStat({
 }) {
   return (
     <div className={cn(
-      "flex items-center gap-3 rounded-xl border border-white/[0.06] bg-card/60 backdrop-blur-sm p-3 transition-all hover:bg-card/80",
+      "flex items-center gap-3 rounded-xl border border-white/[0.06] bg-card/60 backdrop-blur-sm p-3 transition-all duration-300 hover-lift hover:bg-card/80",
       accent !== "none" && `border-l-2 ${ACCENT_STYLES[accent].split(" ")[0]}`,
     )}>
       {icon && <span className="text-muted-foreground">{icon}</span>}
