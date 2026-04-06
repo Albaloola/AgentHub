@@ -1,22 +1,29 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, MessageSquare, Plus, Users, Activity, ArrowRight } from "lucide-react";
+import {
+  Bot, MessageSquare, Plus, Users, Activity, ArrowRight,
+  Zap, Clock, Shield, GitBranch, Brain, Cpu,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HudPanel, HudStat } from "@/components/ui/hud-panel";
+import { LivingAvatar } from "@/components/ui/living-avatar";
 import { useStore } from "@/lib/store";
-import { getAgents, getConversations, createConversation } from "@/lib/api";
-import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { getAgents, getConversations, createConversation, checkAgentHealth } from "@/lib/api";
+import { cn, timeAgo } from "@/lib/utils";
 import type { AgentWithStatus } from "@/lib/types";
 
 export default function HomePage() {
   const router = useRouter();
-  const { agents, setAgents, conversations, setConversations } = useStore();
+  const { agents, setAgents, conversations, setConversations, updateAgentStatus } = useStore();
+  const [time, setTime] = useState(new Date());
 
   useEffect(() => {
     loadData();
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   async function loadData() {
@@ -30,165 +37,185 @@ export default function HomePage() {
     router.push(`/chat/${id}`);
   }
 
+  async function pingAgent(agent: AgentWithStatus) {
+    try {
+      const result = await checkAgentHealth(agent.id);
+      updateAgentStatus(agent.id, result.status === "ok" ? "online" : "error", result.latency_ms);
+    } catch {
+      updateAgentStatus(agent.id, "error");
+    }
+  }
+
   const onlineCount = agents.filter((a) => a.status === "online").length;
   const totalMessages = conversations.reduce((sum, c) => sum + c.message_count, 0);
+  const activeConvs = conversations.filter((c) => {
+    const updated = new Date(c.updated_at + "Z");
+    return Date.now() - updated.getTime() < 24 * 60 * 60 * 1000;
+  }).length;
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Monitor and chat with your connected agents
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <StatCard icon={Bot} label="Total Agents" value={agents.length} />
-        <StatCard
-          icon={Activity}
-          label="Online"
-          value={onlineCount}
-          accent="text-emerald-500"
-        />
-        <StatCard icon={MessageSquare} label="Conversations" value={conversations.length} />
-        <StatCard icon={Users} label="Total Messages" value={totalMessages} />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={() => router.push("/agents")}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10">
-              <Plus className="h-6 w-6 text-blue-500" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium">Register Agent</h3>
-              <p className="text-sm text-muted-foreground">Connect a new agent gateway</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={() => router.push("/groups")}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-600/10">
-              <Users className="h-6 w-6 text-violet-500" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium">Create Group Chat</h3>
-              <p className="text-sm text-muted-foreground">Orchestrate multiple agents</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Agent Quick-Chat Cards */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Quick Chat</h2>
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {agents.filter((a) => a.is_active).map((agent) => (
-            <Card
-              key={agent.id}
-              className="hover:bg-accent/30 transition-colors cursor-pointer"
-              onClick={() => startChat(agent)}
-            >
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="relative">
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-white",
-                      getAvatarColor(agent.id),
-                    )}
-                  >
-                    {getInitials(agent.name)}
-                  </div>
-                  <StatusDot status={agent.status} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{agent.name}</div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {agent.gateway_type}
-                    </Badge>
-                    {agent.latency_ms !== undefined && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {agent.latency_ms}ms
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          ))}
-
-          {agents.filter((a) => a.is_active).length === 0 && (
-            <Card className="col-span-full">
-              <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                <Bot className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  No active agents.{" "}
-                  <button
-                    className="text-blue-500 hover:underline"
-                    onClick={() => router.push("/agents")}
-                  >
-                    Register one
-                  </button>
-                  .
-                </p>
-              </CardContent>
-            </Card>
-          )}
+    <div className="starfield min-h-full">
+      <div className="relative z-10 p-6 space-y-6">
+        {/* Mission control header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Mission Control</h1>
+            <p className="text-sm text-muted-foreground/60 mt-0.5">
+              {time.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              {" "}
+              <span className="tabular-nums">{time.toLocaleTimeString()}</span>
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="rounded-xl glass gap-1.5" onClick={() => router.push("/agents")}>
+              <Plus className="h-3.5 w-3.5" />
+              New Agent
+            </Button>
+            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 gap-1.5" onClick={() => router.push("/groups")}>
+              <Users className="h-3.5 w-3.5" />
+              Group Chat
+            </Button>
+          </div>
         </div>
+
+        {/* Stats row */}
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+          <HudStat icon={<Bot className="h-4 w-4" />} label="Agents Online" value={`${onlineCount}/${agents.length}`} accent="emerald" />
+          <HudStat icon={<MessageSquare className="h-4 w-4" />} label="Conversations" value={conversations.length} accent="blue" />
+          <HudStat icon={<Zap className="h-4 w-4" />} label="Messages" value={totalMessages} accent="violet" />
+          <HudStat icon={<Activity className="h-4 w-4" />} label="Active (24h)" value={activeConvs} accent="amber" />
+        </div>
+
+        {/* Main panels grid */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Agent Fleet Panel */}
+          <HudPanel
+            title="Agent Fleet"
+            icon={<Cpu className="h-4 w-4" />}
+            accent="blue"
+            className="md:col-span-2"
+            controls
+            collapsible
+            status={`${onlineCount} online`}
+          >
+            <div className="p-4 space-y-3">
+              {agents.filter((a) => a.is_active).map((agent) => (
+                <div
+                  key={agent.id}
+                  className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-all hover:bg-white/[0.04] cursor-pointer group"
+                  onClick={() => startChat(agent)}
+                >
+                  <LivingAvatar
+                    name={agent.name}
+                    id={agent.id}
+                    state={agent.status === "online" ? "idle" : agent.status === "error" ? "error" : "offline"}
+                    size="md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{agent.name}</span>
+                      <Badge variant="outline" className="text-[10px] rounded-md">{agent.gateway_type}</Badge>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground/50 mt-0.5">
+                      {agent.total_messages} messages
+                      {agent.latency_ms !== undefined && <span className="ml-2">{agent.latency_ms}ms</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => { e.stopPropagation(); pingAgent(agent); }}
+                    >
+                      Ping
+                    </Button>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground/40 group-hover:text-blue-400 transition-colors" />
+                  </div>
+                </div>
+              ))}
+
+              {agents.filter((a) => a.is_active).length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground/50">
+                  No agents registered.
+                  <button className="text-blue-400 ml-1 hover:underline" onClick={() => router.push("/agents")}>
+                    Add one
+                  </button>
+                </div>
+              )}
+            </div>
+          </HudPanel>
+
+          {/* Quick Actions Panel */}
+          <HudPanel
+            title="Quick Actions"
+            icon={<Zap className="h-4 w-4" />}
+            accent="violet"
+            collapsible
+          >
+            <div className="p-4 space-y-2">
+              {[
+                { label: "Templates", desc: "Start from a template", icon: GitBranch, href: "/templates", color: "text-blue-400" },
+                { label: "Playground", desc: "Test prompts", icon: Activity, href: "/playground", color: "text-violet-400" },
+                { label: "Arena", desc: "Compare agents", icon: Shield, href: "/arena", color: "text-amber-400" },
+                { label: "Knowledge", desc: "Manage documents", icon: Brain, href: "/knowledge", color: "text-emerald-400" },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  className="flex items-center gap-3 w-full rounded-xl border border-white/[0.04] p-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.08]"
+                  onClick={() => router.push(action.href)}
+                >
+                  <action.icon className={cn("h-4 w-4", action.color)} />
+                  <div>
+                    <div className="text-sm font-medium">{action.label}</div>
+                    <div className="text-[10px] text-muted-foreground/50">{action.desc}</div>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground/30" />
+                </button>
+              ))}
+            </div>
+          </HudPanel>
+        </div>
+
+        {/* Recent Conversations */}
+        {conversations.length > 0 && (
+          <HudPanel
+            title="Recent Conversations"
+            icon={<Clock className="h-4 w-4" />}
+            accent="cyan"
+            controls
+            collapsible
+            status={`${conversations.length} total`}
+          >
+            <div className="p-4">
+              <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {conversations.slice(0, 6).map((conv) => {
+                  const agent = conv.agents[0];
+                  return (
+                    <button
+                      key={conv.id}
+                      className="flex items-center gap-3 rounded-xl border border-white/[0.04] p-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.08]"
+                      onClick={() => router.push(`/chat/${conv.id}`)}
+                    >
+                      {agent && (
+                        <LivingAvatar name={agent.name} id={agent.id} state="idle" size="sm" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{conv.name}</div>
+                        <div className="text-[10px] text-muted-foreground/50">
+                          {conv.message_count} msgs
+                          <span className="mx-1">.</span>
+                          {timeAgo(conv.updated_at)}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </HudPanel>
+        )}
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  accent?: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <Icon className={cn("h-5 w-5", accent ?? "text-muted-foreground")} />
-        <div>
-          <div className="text-2xl font-bold">{value}</div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatusDot({ status }: { status: string }) {
-  const color =
-    status === "online"
-      ? "bg-emerald-500"
-      : status === "busy"
-        ? "bg-yellow-500"
-        : status === "error"
-          ? "bg-red-500"
-          : "bg-gray-500";
-
-  return (
-    <div
-      className={cn(
-        "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card",
-        color,
-      )}
-    />
   );
 }

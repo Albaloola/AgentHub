@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
 import { editMessage, voteMessage, pinMessage } from "@/lib/api";
 import type { MessageWithToolCalls } from "@/lib/types";
@@ -120,16 +121,15 @@ export function MessageBubble({
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-500/20">
           <User className="h-4 w-4" />
         </div>
+      ) : message.agent ? (
+        <LivingAvatar
+          name={message.agent.name}
+          id={message.agent.id}
+          state={isStreaming ? "speaking" : "idle"}
+          size="md"
+        />
       ) : (
-        <div
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-lg",
-            message.agent ? getAvatarColor(message.agent.id) : "bg-muted",
-          )}
-          style={{ boxShadow: message.agent ? `0 4px 12px ${getAvatarColor(message.agent.id).replace("bg-", "").includes("blue") ? "rgba(59,130,246,0.25)" : "rgba(139,92,246,0.25)"}` : undefined }}
-        >
-          {message.agent ? getInitials(message.agent.name) : "?"}
-        </div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-xs font-semibold text-white">?</div>
       )}
 
       {/* Content */}

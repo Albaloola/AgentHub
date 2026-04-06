@@ -1,6 +1,7 @@
 "use client";
 
-import { RotateCcw, Wrench, ArrowLeft, Square, Loader2 } from "lucide-react";
+import { RotateCcw, Wrench, ArrowLeft, Square } from "lucide-react";
+import { LivingAvatar } from "@/components/ui/living-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { resetConversation as apiReset } from "@/lib/api";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -72,21 +73,18 @@ export function ChatHeader({
 
       {conversation?.agents.map((agent) => (
         <div key={agent.id} className="flex items-center gap-2">
-          <div
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-lg",
-              getAvatarColor(agent.id),
-              isStreaming && streamingAgentId === agent.id && "neon-glow-sm animate-pulse",
-            )}
-          >
-            {getInitials(agent.name)}
-          </div>
+          <LivingAvatar
+            name={agent.name}
+            id={agent.id}
+            state={isStreaming && streamingAgentId === agent.id ? "thinking" : "idle"}
+            size="md"
+          />
           <div>
             <div className="text-sm font-medium">{agent.name}</div>
             <div className="text-[10px] text-muted-foreground">
               {agent.gateway_type}
               {isStreaming && streamingAgentId === agent.id && (
-                <span className="ml-1 text-blue-400 neon-text animate-pulse">processing...</span>
+                <span className="ml-1 text-blue-400 animate-pulse">processing...</span>
               )}
             </div>
           </div>
