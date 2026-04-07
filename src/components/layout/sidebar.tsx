@@ -41,6 +41,9 @@ import {
   Layout,
   Hammer,
   Zap,
+  FolderPlus,
+  MessageSquarePlus,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +60,8 @@ import {
   getAgents,
   getFolders,
   createFolder,
+  deleteFolder,
+  createConversation,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
 import type { ConversationWithDetails, ConversationFolder } from "@/lib/types";
@@ -175,7 +180,7 @@ const CATEGORY_GLOW: Record<string, string> = {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { conversations, setConversations, sidebarOpen, setSidebarOpen, setAgents, uiPrefs } =
+  const { agents, conversations, setConversations, sidebarOpen, setSidebarOpen, setAgents, uiPrefs } =
     useStore();
   const [hoveredConv, setHoveredConv] = useState<string | null>(null);
   const [folders, setFolders] = useState<ConversationFolder[]>([]);
@@ -251,6 +256,8 @@ export function Sidebar() {
     });
   }
 
+  const [newChatOpen, setNewChatOpen] = useState(false);
+
   async function handleNewFolder() {
     try {
       const name = `Folder ${folders.length + 1}`;
@@ -268,6 +275,25 @@ export function Sidebar() {
       setExpandedFolders((prev) => ({ ...prev, [result.id]: true }));
     } catch (err) {
       console.error("Failed to create folder:", err);
+    }
+  }
+
+  async function handleDeleteFolder(folderId: string) {
+    try {
+      await deleteFolder(folderId);
+      setFolders((prev) => prev.filter((f) => f.id !== folderId));
+    } catch {
+      toast.error("Failed to delete folder");
+    }
+  }
+
+  async function handleNewChat(agentId: string) {
+    try {
+      const { id } = await createConversation({ agent_id: agentId });
+      setNewChatOpen(false);
+      router.push(`/chat/${id}`);
+    } catch {
+      toast.error("Failed to create conversation");
     }
   }
 
@@ -564,16 +590,53 @@ export function Sidebar() {
               <span className="text-sm font-medium uppercase text-muted-foreground/70">
                 Conversations
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5"
-                onClick={handleNewFolder}
-                title="New Folder"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 rounded-md"
+                  onClick={() => setNewChatOpen(!newChatOpen)}
+                  title="New Chat"
+                >
+                  <MessageSquarePlus className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 rounded-md"
+                  onClick={handleNewFolder}
+                  title="New Folder"
+                >
+                  <FolderPlus className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
+
+            {/* New chat agent picker dropdown */}
+            {newChatOpen && (
+              <div className="mx-3 mb-2 rounded-xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in">
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/[0.04]">
+                  <span className="text-[10px] text-muted-foreground/60 uppercase">Pick an agent</span>
+                  <button onClick={() => setNewChatOpen(false)} className="text-muted-foreground/40 hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <div className="py-1">
+                  {agents.filter((a) => a.is_active).map((agent) => (
+                    <button
+                      key={agent.id}
+                      onClick={() => handleNewChat(agent.id)}
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-white/[0.04] transition-colors"
+                    >
+                      <div className={cn("flex h-5 w-5 items-center justify-center rounded-md text-[8px] font-medium text-white", getAvatarColor(agent.id))}>
+                        {getInitials(agent.name)}
+                      </div>
+                      <span>{agent.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-2 pb-2">
               <div className="space-y-1 pb-4">
@@ -585,16 +648,23 @@ export function Sidebar() {
                   return (
                     <div key={folder.id}>
                       <div
-                        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
+                        className="group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
                         onClick={() => toggleFolder(folder.id)}
                       >
                         <FolderIcon className="h-3.5 w-3.5 shrink-0" />
                         <span className="flex-1 truncate text-sm font-medium">
                           {folder.name}
                         </span>
-                        <span className="text-xs text-muted-foreground/50">
+                        <span className="text-xs text-muted-foreground/50 group-hover:hidden">
                           {folderConvs.length}
                         </span>
+                        <button
+                          className="hidden group-hover:flex h-4 w-4 items-center justify-center rounded-md text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
+                          title="Delete folder"
+                        >
+                          <Trash2 className="h-2.5 w-2.5" />
+                        </button>
                         <ChevronRight
                           className={cn(
                             "h-3 w-3 text-muted-foreground/50 transition-transform",
