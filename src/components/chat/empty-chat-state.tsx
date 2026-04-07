@@ -6,13 +6,29 @@ import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 const ALL_SUGGESTIONS = [
+  // Set 0
   { tag: "Code Help", tagColor: "#10b981", desc: "Help me write or debug code", prompt: "Help me write clean, well-documented code", icon: Code2 },
   { tag: "Suggestions", tagColor: "#f59e0b", desc: "Help with me ideas", prompt: "Help me brainstorm creative ideas", icon: Lightbulb },
   { tag: "Research", tagColor: "#06b6d4", desc: "Help me research a topic", prompt: "Help me research and summarize a topic", icon: Search },
+  // Set 1
   { tag: "Writing", tagColor: "#8b5cf6", desc: "Help me draft content", prompt: "Help me write a professional document", icon: FileText },
   { tag: "Planning", tagColor: "#ec4899", desc: "Help me plan a project", prompt: "Help me create a detailed project plan", icon: Rocket },
   { tag: "Creative", tagColor: "#f97316", desc: "Think outside the box", prompt: "Help me come up with creative solutions", icon: Sparkles },
+  // Set 2
+  { tag: "Debug", tagColor: "#ef4444", desc: "Fix errors in my code", prompt: "Help me debug an error I'm encountering", icon: Code2 },
+  { tag: "Explain", tagColor: "#14b8a6", desc: "Break down a concept", prompt: "Explain a complex topic in simple terms", icon: Lightbulb },
+  { tag: "Automate", tagColor: "#a855f7", desc: "Streamline a workflow", prompt: "Help me automate a repetitive task", icon: Rocket },
+  // Set 3
+  { tag: "Review", tagColor: "#3b82f6", desc: "Review my work", prompt: "Review my code or document for improvements", icon: Search },
+  { tag: "Compare", tagColor: "#f59e0b", desc: "Weigh my options", prompt: "Help me compare different approaches or tools", icon: Lightbulb },
+  { tag: "Summarize", tagColor: "#10b981", desc: "Condense information", prompt: "Summarize a long document or article for me", icon: FileText },
+  // Set 4
+  { tag: "Deploy", tagColor: "#06b6d4", desc: "Ship to production", prompt: "Help me deploy my application to production", icon: Rocket },
+  { tag: "Design", tagColor: "#ec4899", desc: "Architect a system", prompt: "Help me design the architecture for a system", icon: Sparkles },
+  { tag: "Learn", tagColor: "#8b5cf6", desc: "Teach me something", prompt: "Teach me about a technology I want to learn", icon: Lightbulb },
 ];
+
+const TOTAL_SETS = 5;
 
 export function EmptyChatState({
   agentName,
@@ -29,12 +45,12 @@ export function EmptyChatState({
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Rotate suggestions smoothly every 5 seconds
+  // Rotate suggestions smoothly every 6 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setTransitioning(true);
       setTimeout(() => {
-        setActiveSet((prev) => (prev + 1) % 2);
+        setActiveSet((prev) => (prev + 1) % TOTAL_SETS);
         setTransitioning(false);
       }, 400);
     }, 5000);
@@ -153,7 +169,7 @@ export function EmptyChatState({
 
       {/* Rotating suggestion cards - fixed height container, cards overlay */}
       <div className="relative max-w-2xl w-full" style={{ height: 110 }}>
-        {[0, 1].map((setIdx) => {
+        {Array.from({ length: TOTAL_SETS }).map((_, setIdx) => {
           const cards = ALL_SUGGESTIONS.slice(setIdx * 3, setIdx * 3 + 3);
           const isVisible = activeSet === setIdx && !transitioning;
           return (
@@ -201,14 +217,14 @@ export function EmptyChatState({
       </div>
 
       {/* Navigation: prev arrow + dots + next arrow */}
-      <div className="flex items-center gap-3 mt-6 mb-8">
+      <div className="flex items-center gap-2 mt-6 mb-8">
         <button
-          onClick={() => switchSet((activeSet - 1 + 2) % 2)}
-          className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all"
+          onClick={() => switchSet((activeSet - 1 + TOTAL_SETS) % TOTAL_SETS)}
+          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.08] transition-all"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
-        {[0, 1].map((i) => (
+        {Array.from({ length: TOTAL_SETS }).map((_, i) => (
           <button
             key={i}
             onClick={() => switchSet(i)}
@@ -219,10 +235,10 @@ export function EmptyChatState({
           />
         ))}
         <button
-          onClick={() => switchSet((activeSet + 1) % 2)}
-          className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all"
+          onClick={() => switchSet((activeSet + 1) % TOTAL_SETS)}
+          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.08] transition-all"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>
