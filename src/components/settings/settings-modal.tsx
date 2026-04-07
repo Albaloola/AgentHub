@@ -263,6 +263,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           min={12}
           max={24}
           step={1}
+          milestones={[12, 14, 16, 18, 20, 24]}
           value={[fontPreview]}
           onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
           onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
