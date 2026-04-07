@@ -196,6 +196,9 @@ interface AppState {
     autoScroll: boolean;
     notificationsEnabled: boolean;
     soundEffects: boolean;
+    glowColor: string;
+    glowIntensity: number;
+    glowSpread: number;
   };
   setUiPref: <K extends keyof AppState["uiPrefs"]>(key: K, value: AppState["uiPrefs"][K]) => void;
   resetUiPrefs: () => void;
@@ -220,6 +223,9 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   autoScroll: true,
   notificationsEnabled: true,
   soundEffects: false,
+  glowColor: "rgba(59,130,246,0.08)",
+  glowIntensity: 0.5,
+  glowSpread: 30,
 };
 
 function loadUiPrefs(): AppState["uiPrefs"] {

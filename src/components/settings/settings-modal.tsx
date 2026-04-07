@@ -380,6 +380,64 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           </button>
         ))}
       </div>
+
+      <Separator />
+
+      <SectionTitle icon={Sparkles} title="Glass Glow" />
+
+      <div className="space-y-4">
+        {/* Glow color picker */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Glow Color</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { label: "Blue", value: "rgba(59,130,246,0.08)" },
+              { label: "Violet", value: "rgba(139,92,246,0.08)" },
+              { label: "Cyan", value: "rgba(6,182,212,0.08)" },
+              { label: "Emerald", value: "rgba(16,185,129,0.08)" },
+              { label: "Amber", value: "rgba(245,158,11,0.08)" },
+              { label: "Rose", value: "rgba(251,86,91,0.08)" },
+              { label: "White", value: "rgba(242,242,242,0.05)" },
+            ].map((c) => (
+              <button
+                key={c.label}
+                onClick={() => setPref("glowColor", c.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] border transition-all",
+                  prefs.glowColor === c.value
+                    ? "border-white/20 bg-white/10"
+                    : "border-white/[0.06] hover:border-white/[0.12]"
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Glow spread */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Glow Spread</span>
+            <span className="text-[10px] text-muted-foreground/50">{prefs.glowSpread}px</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={80}
+            value={prefs.glowSpread}
+            onChange={(e) => setPref("glowSpread", parseInt(e.target.value))}
+            className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-500"
+          />
+          <div className="flex justify-between text-[9px] text-muted-foreground/30 mt-1">
+            <span>None</span>
+            <span>Subtle</span>
+            <span>Bright</span>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

@@ -33,6 +33,10 @@ export function UiPrefsApplier() {
     } else {
       document.documentElement.classList.remove("ambient-hidden");
     }
+
+    // Glass glow settings
+    document.documentElement.style.setProperty("--glass-glow-color", uiPrefs.glowColor);
+    document.documentElement.style.setProperty("--glass-glow-spread", uiPrefs.glowSpread.toString());
   }, [uiPrefs]);
 
   return null;
