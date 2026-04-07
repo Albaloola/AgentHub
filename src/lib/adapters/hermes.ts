@@ -1,30 +1,27 @@
 import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } from "../types";
 import type { GatewayAdapter, AdapterMeta } from "./base";
 import { registerAdapter } from "./base";
+import { spawn } from "child_process";
 
 /**
- * Hermes Adapter — connects to a Hermes agent gateway.
+ * Hermes Adapter - connects to a local Hermes Agent installation via CLI.
  *
- * Expected endpoints (all configurable via connection_config):
- *   POST {base}/api/chat   — send message, receive SSE stream
- *   GET  {base}/api/health — health check returning { status: "ok"|"error", agent_name?: string }
+ * Hermes does not expose an HTTP API. Instead, this adapter invokes the
+ * Hermes CLI in programmatic mode:
+ *   hermes chat -q "message" --quiet --source agenthub
  *
- * SSE stream format:
- *   data: {"type":"content","content":"..."}
- *   data: {"type":"tool_call","tool_call_id":"...","tool_name":"...","tool_input":{...}}
- *   data: {"type":"tool_result","tool_call_id":"...","tool_name":"...","tool_output":{...}}
- *   data: {"type":"error","error":"..."}
- *   data: [DONE]
- *
- * If the gateway sends plain text chunks (no JSON), they're treated as content.
+ * Configuration via connection_config JSON:
+ *   {
+ *     "hermes_path": "/home/alba/.hermes/hermes-agent/venv/bin/python",
+ *     "timeout_ms": 60000,
+ *     "max_turns": 30
+ *   }
  */
 
 interface HermesConfig {
-  auth_token?: string;
-  headers?: Record<string, string>;
-  chat_endpoint?: string;   // default: "/api/chat"
-  health_endpoint?: string; // default: "/api/health"
-  timeout_ms?: number;      // default: 30000
+  hermes_path?: string;
+  timeout_ms?: number;
+  max_turns?: number;
 }
 
 export class HermesAdapter implements GatewayAdapter {
@@ -42,232 +39,167 @@ export class HermesAdapter implements GatewayAdapter {
     signal?: AbortSignal,
   ): AsyncIterable<AgentResponseChunk> {
     const config = this.parseConfig(agent);
-    const chatPath = config.chat_endpoint ?? "/api/chat";
-    const url = `${agent.connection_url.replace(/\/+$/, "")}${chatPath}`;
-    const timeoutMs = config.timeout_ms ?? 30000;
+    const pythonPath = config.hermes_path || `${process.env.HOME}/.hermes/hermes-agent/venv/bin/python`;
+    const timeout = config.timeout_ms || 60000;
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-      ...config.headers,
-    };
-    if (config.auth_token) {
-      headers["Authorization"] = `Bearer ${config.auth_token}`;
+    // Build the query with conversation context
+    let query = message.content;
+    if (message.history.length > 0) {
+      const recentHistory = message.history.slice(-6);
+      const contextLines = recentHistory.map((h) =>
+        `${h.role === "user" ? "User" : "Assistant"}: ${h.content.slice(0, 500)}`,
+      );
+      query = `[Previous context]\n${contextLines.join("\n")}\n\n[Current message]\n${message.content}`;
     }
 
-    // Combine user signal with timeout
-    const timeoutController = new AbortController();
-    const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
-    const combinedSignal = signal
-      ? anySignal([signal, timeoutController.signal])
-      : timeoutController.signal;
+    const args = [
+      "-m", "hermes_cli.main",
+      "chat",
+      "-q", query,
+      "--quiet",
+      "--source", "agenthub",
+    ];
 
-    let response: Response;
+    if (config.max_turns) {
+      args.push("--max-turns", config.max_turns.toString());
+    }
+
     try {
-      response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(message),
-        signal: combinedSignal,
+      const result = await new Promise<string>((resolve, reject) => {
+        let output = "";
+        let errorOutput = "";
+        let killed = false;
+
+        const proc = spawn(pythonPath, args, {
+          cwd: process.env.HOME,
+          env: { ...process.env },
+          timeout,
+        });
+
+        if (signal) {
+          const abortHandler = () => { killed = true; proc.kill("SIGTERM"); };
+          signal.addEventListener("abort", abortHandler, { once: true });
+        }
+
+        proc.stdout.on("data", (data: Buffer) => { output += data.toString(); });
+        proc.stderr.on("data", (data: Buffer) => { errorOutput += data.toString(); });
+
+        proc.on("close", (code) => {
+          if (killed) reject(new Error("Aborted"));
+          else if (code !== 0 && !output) reject(new Error(`Hermes exited with code ${code}: ${errorOutput.slice(0, 200)}`));
+          else resolve(output);
+        });
+
+        proc.on("error", (err) => reject(new Error(`Failed to spawn Hermes: ${err.message}`)));
       });
-    } catch (err) {
-      clearTimeout(timeout);
-      const msg = classifyFetchError(err, url);
-      yield { type: "error", error: msg };
-      yield { type: "done" };
-      return;
-    }
 
-    clearTimeout(timeout);
+      // Parse: Hermes wraps response in a box, extract the actual content
+      const cleaned = extractHermesResponse(result);
+      const content = cleaned || result.trim() || "No response from Hermes.";
 
-    if (!response.ok) {
-      let detail = response.statusText;
-      try {
-        const body = await response.text();
-        if (body) detail = body.slice(0, 200);
-      } catch { /* ignore */ }
-      yield { type: "error", error: `Hermes returned ${response.status}: ${detail}` };
-      yield { type: "done" };
-      return;
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      yield { type: "error", error: "Hermes returned an empty response body" };
-      yield { type: "done" };
-      return;
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith(":")) continue; // skip empty lines and SSE comments
-
-          if (!trimmed.startsWith("data: ") && !trimmed.startsWith("data:")) continue;
-          const data = trimmed.startsWith("data: ") ? trimmed.slice(6) : trimmed.slice(5);
-          const dataTrimmed = data.trim();
-
-          if (dataTrimmed === "[DONE]") {
-            yield { type: "done" };
-            return;
-          }
-
-          if (!dataTrimmed) continue;
-
-          try {
-            const chunk = JSON.parse(dataTrimmed) as AgentResponseChunk;
-            // Validate the type field
-            if (chunk.type && ["content", "tool_call", "tool_result", "error", "done"].includes(chunk.type)) {
-              yield chunk;
-              if (chunk.type === "done") return;
-            } else {
-              // Unknown structure but valid JSON — treat content field if present
-              const raw = chunk as unknown as Record<string, unknown>;
-              if (typeof raw.content === "string") {
-                yield { type: "content", content: raw.content };
-              }
-            }
-          } catch {
-            // Not valid JSON — treat as plain text content
-            if (dataTrimmed.length > 0) {
-              yield { type: "content", content: dataTrimmed };
-            }
-          }
-        }
+      // Stream in chunks for natural feel
+      const words = content.split(" ");
+      const chunkSize = 3;
+      for (let i = 0; i < words.length; i += chunkSize) {
+        const chunk = words.slice(i, i + chunkSize).join(" ");
+        const suffix = i + chunkSize < words.length ? " " : "";
+        yield { type: "content", content: chunk + suffix };
+        await new Promise((r) => setTimeout(r, 15));
       }
 
-      // Process any remaining buffer
-      if (buffer.trim()) {
-        const remaining = buffer.trim();
-        if (remaining.startsWith("data: ") || remaining.startsWith("data:")) {
-          const data = remaining.startsWith("data: ") ? remaining.slice(6) : remaining.slice(5);
-          if (data.trim() && data.trim() !== "[DONE]") {
-            try {
-              const chunk = JSON.parse(data.trim()) as AgentResponseChunk;
-              yield chunk;
-            } catch {
-              yield { type: "content", content: data.trim() };
-            }
-          }
-        }
-      }
+      yield { type: "done" };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Stream read error";
-      yield { type: "error", error: msg };
-    } finally {
-      reader.releaseLock();
+      yield { type: "error", error: err instanceof Error ? err.message : "Hermes communication failed" };
+      yield { type: "done" };
     }
-
-    yield { type: "done" };
   }
 
   async healthCheck(agent: Agent): Promise<HealthCheckResponse> {
     const config = this.parseConfig(agent);
-    const healthPath = config.health_endpoint ?? "/api/health";
-    const url = `${agent.connection_url.replace(/\/+$/, "")}${healthPath}`;
-    const start = Date.now();
+    const pythonPath = config.hermes_path || `${process.env.HOME}/.hermes/hermes-agent/venv/bin/python`;
 
     try {
-      const headers: Record<string, string> = {};
-      if (config.auth_token) {
-        headers["Authorization"] = `Bearer ${config.auth_token}`;
-      }
-
-      const res = await fetch(url, {
-        headers,
-        signal: AbortSignal.timeout(5000),
+      const startTime = Date.now();
+      await new Promise<void>((resolve, reject) => {
+        const proc = spawn(pythonPath, ["-m", "hermes_cli.main", "status"], {
+          cwd: process.env.HOME,
+          timeout: 10000,
+        });
+        let output = "";
+        proc.stdout.on("data", (d: Buffer) => { output += d.toString(); });
+        proc.on("close", (code) => {
+          if (code === 0 || output.includes("running") || output.includes("Gateway")) resolve();
+          else reject(new Error("Hermes not running"));
+        });
+        proc.on("error", reject);
       });
-
-      const latency_ms = Date.now() - start;
-
-      if (!res.ok) {
-        return { status: "error", agent_name: agent.name, latency_ms };
-      }
-
-      // Try to parse JSON response, but don't require it
-      try {
-        const data = (await res.json()) as Record<string, unknown>;
-        return {
-          status: data.status === "ok" || data.status === "healthy" ? "ok" : "error",
-          agent_name: (data.agent_name as string) ?? agent.name,
-          latency_ms,
-        };
-      } catch {
-        // Non-JSON 200 response — treat as healthy
-        return { status: "ok", agent_name: agent.name, latency_ms };
-      }
-    } catch (err) {
-      return {
-        status: "error",
-        agent_name: agent.name,
-        latency_ms: Date.now() - start,
-      };
+      return { status: "ok", agent_name: agent.name, latency_ms: Date.now() - startTime };
+    } catch {
+      return { status: "error", agent_name: agent.name };
     }
   }
 }
 
-// === Helpers ===
+function extractHermesResponse(raw: string): string {
+  const lines = raw.split("\n");
+  const contentLines: string[] = [];
+  let inContent = false;
 
-function classifyFetchError(err: unknown, url: string): string {
-  if (err instanceof DOMException && err.name === "AbortError") {
-    return `Request to ${url} was aborted (timeout or cancellation)`;
+  for (const line of lines) {
+    // Skip Hermes box borders (Unicode box drawing characters)
+    if (/^[\u2500-\u257F]/.test(line.trim())) continue;
+    // Skip session_id line
+    if (line.trim().startsWith("session_id:")) continue;
+    // Skip empty lines at start
+    if (!inContent && line.trim() === "") continue;
+
+    if (line.trim()) {
+      inContent = true;
+      contentLines.push(line);
+    } else if (inContent) {
+      contentLines.push(line);
+    }
   }
-  if (err instanceof TypeError) {
-    // fetch throws TypeError for network errors
-    const msg = (err as Error).message ?? "";
-    if (msg.includes("fetch failed") || msg.includes("ECONNREFUSED")) {
-      return `Cannot connect to Hermes at ${url} — is the gateway running?`;
-    }
-    if (msg.includes("ENOTFOUND") || msg.includes("getaddrinfo")) {
-      return `Cannot resolve hostname for ${url} — check the connection URL`;
-    }
-    if (msg.includes("ETIMEDOUT") || msg.includes("ETIME")) {
-      return `Connection to ${url} timed out`;
-    }
-    return `Network error connecting to ${url}: ${msg}`;
-  }
-  return `Failed to connect to Hermes at ${url}: ${err instanceof Error ? err.message : String(err)}`;
+
+  return contentLines.join("\n").trim();
 }
 
-function anySignal(signals: AbortSignal[]): AbortSignal {
-  const controller = new AbortController();
-  for (const signal of signals) {
-    if (signal.aborted) {
-      controller.abort(signal.reason);
-      return controller.signal;
-    }
-    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
-  }
-  return controller.signal;
-}
-
-// === Registration ===
-
-export const hermesMeta: AdapterMeta = {
+const hermesMeta: AdapterMeta = {
   type: "hermes",
-  displayName: "Hermes",
-  description: "Connect to a Hermes agent gateway via SSE streaming",
-  defaultUrl: "http://localhost:8080",
+  displayName: "Hermes Agent",
+  description: "Local Hermes Agent via CLI. Uses hermes chat command for programmatic interaction.",
+  defaultUrl: "cli://hermes",
   configFields: [
-    { key: "auth_token", label: "Auth Token", type: "password", required: false, placeholder: "Bearer token for authentication" },
-    { key: "chat_endpoint", label: "Chat Endpoint", type: "string", required: false, placeholder: "/api/chat", default: "/api/chat", description: "POST endpoint for sending messages" },
-    { key: "health_endpoint", label: "Health Endpoint", type: "string", required: false, placeholder: "/api/health", default: "/api/health", description: "GET endpoint for health checks" },
-    { key: "timeout_ms", label: "Timeout (ms)", type: "number", required: false, placeholder: "30000", default: 30000 },
+    {
+      key: "hermes_path",
+      label: "Python Path",
+      type: "string",
+      required: false,
+      placeholder: "~/.hermes/hermes-agent/venv/bin/python",
+      description: "Path to the Hermes Python interpreter",
+    },
+    {
+      key: "max_turns",
+      label: "Max Turns",
+      type: "number",
+      required: false,
+      placeholder: "30",
+      description: "Maximum tool-calling iterations per turn",
+    },
+    {
+      key: "timeout_ms",
+      label: "Timeout (ms)",
+      type: "number",
+      required: false,
+      placeholder: "60000",
+      description: "Maximum time to wait for a response",
+    },
   ],
-  capabilities: { streaming: true, toolCalls: true, healthCheck: true },
-  maxContextTokens: 8192,
-  contextReset: true,
+  capabilities: {
+    streaming: false,
+    toolCalls: true,
+    healthCheck: true,
+  },
 };
 
 registerAdapter(hermesMeta, () => new HermesAdapter());

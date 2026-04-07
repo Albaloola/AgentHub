@@ -790,18 +790,18 @@ function seed(db: Database.Database) {
     1,
   );
 
-  // Hermes gateway: default agent gateway
+  // Hermes agent: local CLI-based agent (no HTTP API)
   const hermesId = uuid();
   db.prepare(`
     INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
     hermesId, "Hermes", null, "hermes",
-    "http://localhost:8080",
+    "cli://hermes",
     JSON.stringify({
-      chat_endpoint: "/api/chat",
-      health_endpoint: "/api/health",
-      timeout_ms: 30000,
+      hermes_path: `${process.env.HOME}/.hermes/hermes-agent/venv/bin/python`,
+      timeout_ms: 60000,
+      max_turns: 30,
     }),
     1,
   );
