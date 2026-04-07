@@ -36,6 +36,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [conversation, setConversation] = useState<ConversationWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [messageQueue, setMessageQueue] = useState<{ content: string; targetAgentId?: string }[]>([]);
+  const [chatFont, setChatFont] = useState<string>(() => {
+    try { return localStorage.getItem(`agenthub-chat-font-${id}`) || ""; } catch { return ""; }
+  });
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamContentRef = useRef("");
@@ -265,6 +268,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     getMessages(id).then(setMessages).catch(() => {});
   }
 
+  function handleChatFontChange(font: string) {
+    setChatFont(font);
+    try { localStorage.setItem(`agenthub-chat-font-${id}`, font); } catch {}
+  }
+
   if (loading) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center">
@@ -295,7 +303,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         />
 
         {/* Messages with starfield background */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto" id="chat-scroll">
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-y-auto chat-font"
+          id="chat-scroll"
+          style={chatFont ? { fontFamily: `'${chatFont.replace("-", " ")}', var(--font-chat)` } : undefined}
+        >
           <div className="relative z-10 mx-auto max-w-4xl space-y-3 p-6">
             {/* Empty state with ambient animation */}
             {messages.length === 0 && !isStreaming && (
@@ -359,6 +372,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           onCancel={handleCancel}
           isStreaming={isStreaming}
           agents={conversation?.type === "group" ? conversation.agents : undefined}
+          conversationId={id}
+          chatFont={chatFont}
+          onFontChange={handleChatFontChange}
         />
       </div>
 

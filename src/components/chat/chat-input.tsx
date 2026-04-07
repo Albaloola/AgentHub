@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2 } from "lucide-react";
+import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,15 +16,28 @@ import { CommandsMenu } from "./commands-menu";
 import { FileChips, UploadedFile } from "./file-chips";
 import { toast } from "sonner";
 
+const CHAT_FONTS = [
+  { value: "", label: "Default" },
+  { value: "geist", label: "Geist" },
+  { value: "inter", label: "Inter" },
+  { value: "nunito", label: "Nunito" },
+  { value: "lexend", label: "Lexend" },
+  { value: "caveat", label: "Caveat" },
+  { value: "comic-neue", label: "Comic Neue" },
+];
+
 interface ChatInputProps {
   onSend: (content: string, targetAgentId?: string, attachmentIds?: string[]) => void;
   onCancel?: () => void;
   isStreaming: boolean;
   agents?: Agent[];
   disabled?: boolean;
+  conversationId?: string;
+  onFontChange?: (font: string) => void;
+  chatFont?: string;
 }
 
-export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, conversationId, onFontChange, chatFont }: ChatInputProps) {
   const [content, setContent] = useState("");
   const [targetAgent, setTargetAgent] = useState<Agent | null>(null);
   const [commandTrigger, setCommandTrigger] = useState("");
@@ -187,6 +200,33 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled }: C
             >
               <Upload className={cn("h-3.5 w-3.5", uploading && "animate-spin")} />
             </Button>
+
+            {/* Per-chat font selector */}
+            {onFontChange && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 cursor-pointer",
+                    chatFont ? "text-blue-400" : "",
+                  )}
+                  onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.2)"; e.currentTarget.style.background = "rgba(59,130,246,0.1)"; }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
+                >
+                  <Type className="h-3.5 w-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="glass-strong rounded-xl">
+                  {CHAT_FONTS.map((f) => (
+                    <DropdownMenuItem
+                      key={f.value}
+                      onClick={() => onFontChange(f.value)}
+                      className={cn(chatFont === f.value && "text-blue-400")}
+                    >
+                      {f.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {!expanded && <div className="flex-1" />}
 
