@@ -395,13 +395,13 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           </div>
           <div className="flex gap-2 flex-wrap">
             {[
-              { label: "Blue", value: "rgba(59,130,246,0.1)" },
-              { label: "Violet", value: "rgba(139,92,246,0.1)" },
-              { label: "Cyan", value: "rgba(6,182,212,0.1)" },
-              { label: "Emerald", value: "rgba(16,185,129,0.1)" },
-              { label: "Amber", value: "rgba(245,158,11,0.1)" },
-              { label: "Rose", value: "rgba(251,86,91,0.1)" },
-              { label: "White", value: "rgba(242,242,242,0.07)" },
+              { label: "Blue", value: "rgba(59,130,246,0.3)" },
+              { label: "Violet", value: "rgba(139,92,246,0.3)" },
+              { label: "Cyan", value: "rgba(6,182,212,0.3)" },
+              { label: "Emerald", value: "rgba(16,185,129,0.3)" },
+              { label: "Amber", value: "rgba(245,158,11,0.3)" },
+              { label: "Rose", value: "rgba(251,86,91,0.3)" },
+              { label: "White", value: "rgba(242,242,242,0.2)" },
             ].map((c) => (
               <button
                 key={c.label}
@@ -426,13 +426,13 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           </div>
           <div className="flex gap-2 flex-wrap">
             {[
-              { label: "Emerald", value: "rgba(16,185,129,0.1)" },
-              { label: "Cyan", value: "rgba(6,182,212,0.1)" },
-              { label: "Violet", value: "rgba(139,92,246,0.1)" },
-              { label: "Blue", value: "rgba(59,130,246,0.1)" },
-              { label: "Amber", value: "rgba(245,158,11,0.1)" },
-              { label: "Rose", value: "rgba(251,86,91,0.1)" },
-              { label: "White", value: "rgba(242,242,242,0.07)" },
+              { label: "Emerald", value: "rgba(16,185,129,0.3)" },
+              { label: "Cyan", value: "rgba(6,182,212,0.3)" },
+              { label: "Violet", value: "rgba(139,92,246,0.3)" },
+              { label: "Blue", value: "rgba(59,130,246,0.3)" },
+              { label: "Amber", value: "rgba(245,158,11,0.3)" },
+              { label: "Rose", value: "rgba(251,86,91,0.3)" },
+              { label: "White", value: "rgba(242,242,242,0.2)" },
             ].map((c) => (
               <button
                 key={c.label}

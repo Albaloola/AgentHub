@@ -224,15 +224,15 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   autoScroll: true,
   notificationsEnabled: true,
   soundEffects: false,
-  glowColor: "rgba(59,130,246,0.1)",
-  agentGlowColor: "rgba(16,185,129,0.1)",
+  glowColor: "rgba(59,130,246,0.3)",
+  agentGlowColor: "rgba(16,185,129,0.3)",
   glowIntensity: 0.5,
   glowSpread: 20,
 };
 
 function loadUiPrefs(): AppState["uiPrefs"] {
   try {
-    const stored = localStorage.getItem("agenthub-ui-prefs-v3");
+    const stored = localStorage.getItem("agenthub-ui-prefs-v4");
     if (stored) {
       return { ...DEFAULT_UI_PREFS, ...JSON.parse(stored) };
     }
@@ -242,7 +242,7 @@ function loadUiPrefs(): AppState["uiPrefs"] {
 
 function saveUiPrefs(prefs: AppState["uiPrefs"]) {
   try {
-    localStorage.setItem("agenthub-ui-prefs-v3", JSON.stringify(prefs));
+    localStorage.setItem("agenthub-ui-prefs-v4", JSON.stringify(prefs));
   } catch {}
 }
 
