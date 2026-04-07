@@ -29,19 +29,33 @@ function Switch({
       )}
       {...props}
     >
-      {/* Trail - attached to the thumb, fading away behind it */}
-      <div className={cn(
-        "absolute rounded-full transition-all duration-300",
-        "group-data-[checked]/switch:opacity-100 group-data-[unchecked]/switch:opacity-0",
-      )}
+      {/* Trail - always visible, direction follows the thumb */}
+      <div
+        className="absolute rounded-full transition-all duration-300"
         style={{
           top: isDefault ? 5 : 3,
           bottom: isDefault ? 5 : 3,
           left: isDefault ? 3 : 2,
           right: isDefault ? 3 : 2,
-          background: "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2) 50%, transparent 100%)",
         }}
-      />
+      >
+        {/* Checked: bright at right (thumb), fades left */}
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full transition-opacity duration-300",
+            "group-data-[checked]/switch:opacity-100 group-data-[unchecked]/switch:opacity-0",
+          )}
+          style={{ background: "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2) 50%, transparent)" }}
+        />
+        {/* Unchecked: bright at left (thumb), fades right */}
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full transition-opacity duration-300",
+            "group-data-[unchecked]/switch:opacity-100 group-data-[checked]/switch:opacity-0",
+          )}
+          style={{ background: "linear-gradient(to right, rgba(255,255,255,0.4), rgba(255,255,255,0.1) 50%, transparent)" }}
+        />
+      </div>
 
       {/* Thumb - solid white with white glow */}
       <SwitchPrimitive.Thumb
