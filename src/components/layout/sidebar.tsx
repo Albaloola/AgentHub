@@ -586,39 +586,41 @@ export function Sidebar() {
         {!collapsed && (
           <>
             <div className="border-t border-white/[0.04] mx-2" />
-            <div className="flex items-center justify-between px-4 py-2">
-              <span className="text-sm font-medium uppercase text-muted-foreground/70">
-                Conversations
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-base font-semibold text-muted-foreground/80">
+                Chats
               </span>
-              <div className="flex items-center gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 rounded-md"
-                  onClick={() => setNewChatOpen(!newChatOpen)}
-                  title="New Chat"
-                >
-                  <MessageSquarePlus className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 rounded-md"
-                  onClick={handleNewFolder}
-                  title="New Folder"
-                >
-                  <FolderPlus className="h-3 w-3" />
-                </Button>
-              </div>
+            </div>
+
+            {/* Action buttons - big, clear, separated */}
+            <div className="px-3 pb-3 flex flex-col gap-2">
+              <button
+                onClick={() => setNewChatOpen(!newChatOpen)}
+                className="flex items-center gap-3 w-full rounded-xl border border-white/[0.08] px-4 py-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.15]"
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <MessageSquarePlus className="h-5 w-5 text-blue-400" />
+                <span className="text-sm font-medium">New Chat</span>
+              </button>
+              <button
+                onClick={handleNewFolder}
+                className="flex items-center gap-3 w-full rounded-xl border border-white/[0.08] px-4 py-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.15]"
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(139,92,246,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <FolderPlus className="h-5 w-5 text-violet-400" />
+                <span className="text-sm font-medium">New Folder</span>
+              </button>
             </div>
 
             {/* New chat agent picker dropdown */}
             {newChatOpen && (
-              <div className="mx-3 mb-2 rounded-xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in">
-                <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/[0.04]">
-                  <span className="text-[10px] text-muted-foreground/60 uppercase">Pick an agent</span>
-                  <button onClick={() => setNewChatOpen(false)} className="text-muted-foreground/40 hover:text-foreground">
-                    <X className="h-3 w-3" />
+              <div className="mx-3 mb-3 rounded-xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.04]">
+                  <span className="text-sm font-medium text-muted-foreground/70">Pick an agent</span>
+                  <button onClick={() => setNewChatOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06]">
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="py-1">
@@ -626,7 +628,7 @@ export function Sidebar() {
                     <button
                       key={agent.id}
                       onClick={() => handleNewChat(agent.id)}
-                      className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-white/[0.04] transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-white/[0.04] transition-colors"
                     >
                       <div className={cn("flex h-5 w-5 items-center justify-center rounded-md text-[8px] font-medium text-white", getAvatarColor(agent.id))}>
                         {getInitials(agent.name)}
@@ -648,26 +650,26 @@ export function Sidebar() {
                   return (
                     <div key={folder.id}>
                       <div
-                        className="group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
+                        className="group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
                         onClick={() => toggleFolder(folder.id)}
                       >
-                        <FolderIcon className="h-3.5 w-3.5 shrink-0" />
+                        <FolderIcon className="h-4 w-4 shrink-0" />
                         <span className="flex-1 truncate text-sm font-medium">
                           {folder.name}
                         </span>
-                        <span className="text-xs text-muted-foreground/50 group-hover:hidden">
+                        <span className="text-sm text-muted-foreground/50 group-hover:hidden">
                           {folderConvs.length}
                         </span>
                         <button
-                          className="hidden group-hover:flex h-4 w-4 items-center justify-center rounded-md text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="hidden group-hover:flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
                           title="Delete folder"
                         >
-                          <Trash2 className="h-2.5 w-2.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                         <ChevronRight
                           className={cn(
-                            "h-3 w-3 text-muted-foreground/50 transition-transform",
+                            "h-4 w-4 text-muted-foreground/50 transition-transform",
                             isOpen && "rotate-90",
                           )}
                         />
@@ -804,35 +806,35 @@ function ConversationItem({
       onMouseEnter={() => onHover(conv.id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        "group relative flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-200",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
         isActive
-          ? "bg-oklch(0.55_0.24_264_/0.08) text-foreground"
+          ? "bg-white/[0.06] text-foreground"
           : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03]",
       )}
     >
       {agent ? (
         <div
           className={cn(
-            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-medium text-white",
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-semibold text-white",
             getAvatarColor(agent.id),
           )}
         >
           {getInitials(agent.name)}
         </div>
       ) : (
-        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.05]">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.05]">
           {conv.type === "group" ? (
-            <Users className="h-3 w-3" />
+            <Users className="h-4 w-4" />
           ) : (
-            <MessageSquare className="h-3 w-3" />
+            <MessageSquare className="h-4 w-4" />
           )}
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="truncate font-medium">{conv.name}</div>
+        <div className="truncate text-sm font-medium">{conv.name}</div>
         {conv.last_message && (
-          <div className="truncate text-[10px] text-muted-foreground/50">
+          <div className="truncate text-xs text-muted-foreground/50">
             {conv.last_message.content.slice(0, 35)}
           </div>
         )}
@@ -856,10 +858,10 @@ function ConversationItem({
         <Button
           variant="ghost"
           size="icon"
-          className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100"
+          className="h-7 w-7 shrink-0 rounded-lg opacity-60 hover:opacity-100 hover:text-red-400 hover:bg-red-500/10"
           onClick={(e) => onDelete(conv.id, e)}
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       )}
     </Link>
