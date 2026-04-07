@@ -23,22 +23,18 @@ function SliderControl({
       min={min}
       max={max}
       className={cn(
-        "relative flex w-full touch-none items-center select-none",
+        "relative flex w-full touch-none items-center select-none py-2",
         className
       )}
       {...props}
     >
       <Slider.Control
-        className={cn(
-          "relative h-1.5 w-full grow overflow-hidden rounded-full bg-white/[0.08]"
-        )}
+        className="relative h-2 w-full grow overflow-hidden rounded-full bg-white/[0.15]"
       >
-        <Slider.Indicator className="absolute inset-y-0 left-0 rounded-full bg-oklch(0.55_0.24_264_/0.6)" />
+        <Slider.Indicator className="absolute inset-y-0 left-0 rounded-full bg-blue-500" />
       </Slider.Control>
       <Slider.Thumb
-        className={cn(
-          "block h-4 w-4 rounded-full border-2 border-oklch(0.55_0.24_264) bg-background shadow-[0_0_8px_oklch(0.55_0.24_264_/0.3)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oklch(0.55_0.24_264_/0.5) disabled:pointer-events-none disabled:opacity-50"
-        )}
+        className="block h-5 w-5 rounded-full border-2 border-blue-400 bg-white shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 disabled:pointer-events-none disabled:opacity-50"
       />
     </Slider.Root>
   )

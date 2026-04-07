@@ -101,7 +101,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             </div>
             <div>
               <h2 className="text-lg font-semibold">Settings</h2>
-              <p className="text-xs text-muted-foreground/60">Customize your AgentHub experience</p>
+              <p className="text-xs text-muted-foreground">Customize your AgentHub experience</p>
             </div>
           </div>
           <Button
@@ -124,11 +124,26 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                    "relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium",
                     isActive
                       ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
+                      : "text-muted-foreground"
                   )}
+                  style={{ transition: "all 0.3s ease" }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "#60a5fa";
+                      e.currentTarget.style.background = "rgba(59,130,246,0.08)";
+                      e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.15)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "";
+                      e.currentTarget.style.background = "";
+                      e.currentTarget.style.boxShadow = "";
+                    }
+                  }}
                 >
                   {isActive && (
                     <div className="absolute inset-0 rounded-xl bg-oklch(0.55_0.24_264_/0.08) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
@@ -174,7 +189,7 @@ function SettingRow({ label, desc, children }: { label: string; desc?: string; c
     <div className="flex items-center justify-between gap-4">
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium">{label}</div>
-        {desc && <div className="text-xs text-muted-foreground/60 mt-0.5">{desc}</div>}
+        {desc && <div className="text-xs text-muted-foreground mt-0.5">{desc}</div>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -185,7 +200,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Layout; title: strin
   return (
     <div className="flex items-center gap-2">
       <Icon className="h-4 w-4 text-muted-foreground" />
-      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">{title}</h3>
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">{title}</h3>
     </div>
   );
 }
@@ -230,7 +245,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
             </div>
             <div>
               <div className="text-sm font-medium">{opt.label}</div>
-              <div className="text-[11px] text-muted-foreground/60">{opt.desc}</div>
+              <div className="text-[11px] text-muted-foreground">{opt.desc}</div>
             </div>
           </button>
         ))}
@@ -241,9 +256,9 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       <SectionTitle icon={Type} title="Zoom" />
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground/60">Smaller</span>
+          <span className="text-xs text-muted-foreground">Smaller</span>
           <span className="text-xs font-mono text-foreground/80">{zoomPreview}%</span>
-          <span className="text-xs text-muted-foreground/60">Larger</span>
+          <span className="text-xs text-muted-foreground">Larger</span>
         </div>
         <Slider
           min={70}
@@ -257,7 +272,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-200"
           style={{ fontSize: `${zoomPreview * 0.16}px` }}
         >
-          <span className="text-muted-foreground/70">Preview text at {zoomPreview}% zoom</span>
+          <span className="text-foreground/70">Preview text at {zoomPreview}% zoom</span>
         </div>
       </div>
 
@@ -266,9 +281,9 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       <SectionTitle icon={Type} title="Font Size" />
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground/60">12px</span>
+          <span className="text-xs text-muted-foreground">12px</span>
           <span className="text-xs font-mono text-foreground/80">{fontPreview}px</span>
-          <span className="text-xs text-muted-foreground/60">24px</span>
+          <span className="text-xs text-muted-foreground">24px</span>
         </div>
         <Slider
           min={12}
@@ -282,7 +297,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-200"
           style={{ fontFamily: currentFontFamily, fontSize: `${fontPreview}px` }}
         >
-          <span className="text-muted-foreground/70">The quick brown fox jumps over the lazy dog</span>
+          <span className="text-foreground/70">The quick brown fox jumps over the lazy dog</span>
         </div>
       </div>
 
@@ -319,7 +334,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
               </div>
               <span className="text-xs font-medium">{font.label}</span>
             </div>
-            <span className="text-[11px] text-muted-foreground/50 truncate" style={font.style}>
+            <span className="text-[11px] text-muted-foreground truncate" style={font.style}>
               The quick brown fox
             </span>
           </button>
@@ -407,7 +422,7 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Glow Spread</span>
-            <span className="text-[10px] text-muted-foreground/50">{prefs.glowSpread}px</span>
+            <span className="text-[10px] text-muted-foreground">{prefs.glowSpread}px</span>
           </div>
           <input
             type="range"
@@ -415,9 +430,9 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
             max={60}
             value={prefs.glowSpread}
             onChange={(e) => setPref("glowSpread", parseInt(e.target.value))}
-            className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-500"
+            className="w-full h-2 bg-white/[0.15] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-400 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
           />
-          <div className="flex justify-between text-[9px] text-muted-foreground/30 mt-1">
+          <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
             <span>None</span>
             <span>Subtle</span>
             <span>Bright</span>
@@ -516,7 +531,7 @@ function SidebarTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
             </div>
             <div>
               <div className="text-xs font-medium">{opt.label}</div>
-              <div className="text-[10px] text-muted-foreground/60">{opt.desc}</div>
+              <div className="text-[10px] text-muted-foreground">{opt.desc}</div>
             </div>
           </button>
         ))}
