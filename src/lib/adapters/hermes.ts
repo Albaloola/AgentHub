@@ -12,7 +12,7 @@ import { spawn } from "child_process";
  *
  * Configuration via connection_config JSON:
  *   {
- *     "hermes_path": "/home/alba/.hermes/hermes-agent/venv/bin/python",
+ *     "hermes_path": "~/.hermes/hermes-agent/venv/bin/python",
  *     "timeout_ms": 60000,
  *     "max_turns": 30
  *   }
