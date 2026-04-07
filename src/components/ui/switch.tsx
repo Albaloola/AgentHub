@@ -29,19 +29,17 @@ function Switch({
       )}
       {...props}
     >
-      {/* Gradient trail - fades from transparent to white when checked */}
+      {/* Trail - starts transparent on the left, merges into the thumb */}
       <div className={cn(
-        "absolute inset-0 rounded-full transition-opacity duration-400",
+        "absolute inset-y-1 rounded-full transition-opacity duration-400",
         "group-data-[checked]/switch:opacity-100 group-data-[unchecked]/switch:opacity-0",
-      )}>
-        <div
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{
-            right: isDefault ? 18 : 12,
-            background: "linear-gradient(to right, transparent, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.45))",
-          }}
-        />
-      </div>
+      )}
+        style={{
+          left: isDefault ? 4 : 3,
+          right: isDefault ? 4 : 3,
+          background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.25) 70%, rgba(255,255,255,0.6) 100%)",
+        }}
+      />
 
       {/* Thumb - solid white with white glow */}
       <SwitchPrimitive.Thumb
