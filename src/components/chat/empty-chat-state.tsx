@@ -1,28 +1,31 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { MessageSquare, Sparkles, Zap, Brain, PenTool, Code2, Lightbulb } from "lucide-react";
+import { Sparkles, Code2, Lightbulb, FileText, Rocket, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SUGGESTION_POOLS = [
-  [
-    { icon: PenTool, text: "Write a blog post about AI agents", prompt: "Write a blog post about AI agents and their impact on productivity" },
-    { icon: Code2, text: "Explain how SSE streaming works", prompt: "Explain how Server-Sent Events streaming works in web applications" },
-    { icon: Brain, text: "Compare different LLM architectures", prompt: "Compare different LLM architectures and their trade-offs" },
-    { icon: Lightbulb, text: "Brainstorm startup ideas", prompt: "Brainstorm 5 innovative startup ideas in the AI space" },
-  ],
-  [
-    { icon: Zap, text: "Create a Python script for data analysis", prompt: "Create a Python script that analyzes CSV data and generates visualizations" },
-    { icon: Sparkles, text: "Write a creative short story", prompt: "Write a creative short story about a robot learning to paint" },
-    { icon: Code2, text: "Build a REST API with Express", prompt: "Build a REST API with Express.js that handles user authentication" },
-    { icon: Brain, text: "Summarize the latest AI research", prompt: "Summarize the key findings from recent AI research papers" },
-  ],
-  [
-    { icon: PenTool, text: "Draft an email to my team", prompt: "Draft a professional email to my team about our quarterly goals" },
-    { icon: Lightbulb, text: "Explain quantum computing simply", prompt: "Explain quantum computing in simple terms for a non-technical audience" },
-    { icon: Zap, text: "Generate SQL queries for analytics", prompt: "Generate SQL queries for common analytics patterns like cohort analysis" },
-    { icon: Code2, text: "Debug this TypeScript error", prompt: "Help me debug a TypeScript type error in my React application" },
-  ],
+const SUGGESTION_CARDS = [
+  {
+    tag: "Code Help",
+    tagColor: "#10b981",
+    description: "Help me write or debug code",
+    prompt: "Help me write clean, well-documented code for a task I describe",
+    icon: Code2,
+  },
+  {
+    tag: "Suggestions",
+    tagColor: "#f59e0b",
+    description: "Help with me ideas",
+    prompt: "Help me brainstorm creative ideas and suggestions for my project",
+    icon: Lightbulb,
+  },
+  {
+    tag: "Research",
+    tagColor: "#06b6d4",
+    description: "Help me research a topic",
+    prompt: "Help me research and summarize information about a topic",
+    icon: Search,
+  },
 ];
 
 export function EmptyChatState({
@@ -32,55 +35,91 @@ export function EmptyChatState({
   agentName?: string;
   onSuggestionClick: (prompt: string) => void;
 }) {
-  const [poolIndex, setPoolIndex] = useState(0);
-  const [fade, setFade] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  const suggestions = useMemo(() => SUGGESTION_POOLS[poolIndex % SUGGESTION_POOLS.length], [poolIndex]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(true);
-      setTimeout(() => {
-        setPoolIndex((prev) => (prev + 1) % SUGGESTION_POOLS.length);
-        setFade(false);
-      }, 500);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+  const firstName = agentName?.split(" ")[0]?.split("(")[0]?.trim() || "there";
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="relative mb-8">
-        <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-blue-500/10 to-violet-600/10 border border-white/[0.06] flex items-center justify-center">
-          <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
+    <div className={cn(
+      "flex flex-col items-center justify-center min-h-[60vh] text-center px-4 transition-opacity duration-700",
+      mounted ? "opacity-100" : "opacity-0",
+    )}>
+      {/* Glowing orb - aurora/nebula sphere effect */}
+      <div className="relative mb-8 w-48 h-48">
+        {/* Outer glow */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-cyan-500/15 via-blue-500/10 to-transparent blur-3xl animate-[luminance-pulse_4s_ease-in-out_infinite]" />
+        {/* Sphere body */}
+        <div className="absolute inset-6 rounded-full overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-600/15 to-violet-600/10 rounded-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-cyan-400/10 to-white/5 rounded-full" />
+          {/* Inner light refraction */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-8 bg-gradient-to-b from-white/10 to-transparent rounded-full blur-md" />
+          {/* Grid lines on sphere */}
+          <div className="absolute inset-0 rounded-full opacity-20"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: "24px 24px",
+              mask: "radial-gradient(circle, black 60%, transparent 70%)",
+              WebkitMask: "radial-gradient(circle, black 60%, transparent 70%)",
+            }}
+          />
         </div>
-        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 to-violet-600/5 blur-xl animate-[luminance-pulse_4s_ease-in-out_infinite]" />
+        {/* Ambient scatter */}
+        <div className="absolute -inset-8 rounded-full bg-gradient-to-b from-cyan-500/5 via-transparent to-transparent blur-2xl" />
       </div>
 
-      <h2 className="text-3xl font-semibold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent mb-3">
-        Ask anything
+      {/* Greeting */}
+      <h1 className="text-4xl font-light text-foreground/90 mb-1 tracking-tight">
+        Hey! {firstName}
+      </h1>
+      <h2 className="text-4xl font-light text-foreground/50 mb-10 tracking-tight">
+        What can I help with?
       </h2>
-      <p className="text-base text-muted-foreground/50 max-w-md mb-10">
-        {agentName ? `Start a conversation with ${agentName}` : "Start a conversation and watch the stars align"}
-      </p>
 
-      <div className="grid grid-cols-2 gap-3 max-w-lg w-full">
-        {suggestions.map((s, i) => {
-          const Icon = s.icon;
+      {/* Suggestion cards */}
+      <div className="flex gap-4 max-w-2xl w-full">
+        {SUGGESTION_CARDS.map((card, i) => {
+          const Icon = card.icon;
           return (
             <button
-              key={s.text + poolIndex}
-              onClick={() => onSuggestionClick(s.prompt)}
+              key={card.tag}
+              onClick={() => onSuggestionClick(card.prompt)}
               className={cn(
-                "flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all duration-500 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)] group",
-                fade ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+                "flex-1 flex flex-col items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left",
+                "transition-all duration-300 hover:bg-white/[0.05] group",
               )}
-              style={{ transitionDelay: `${i * 80}ms` }}
+              style={{
+                animationDelay: `${i * 100}ms`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = `0 0 12px ${card.tagColor}40, 0 0 30px ${card.tagColor}15`;
+                e.currentTarget.style.borderColor = `${card.tagColor}40`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+              }}
             >
-              <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
-              <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/90 transition-colors leading-snug">
-                {s.text}
+              {/* Colored tag */}
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border"
+                style={{
+                  color: card.tagColor,
+                  borderColor: `${card.tagColor}40`,
+                  background: `${card.tagColor}10`,
+                }}
+              >
+                <Icon className="h-3 w-3" />
+                {card.tag}
               </span>
+              {/* Description */}
+              <p className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors leading-relaxed">
+                {card.description}
+              </p>
             </button>
           );
         })}

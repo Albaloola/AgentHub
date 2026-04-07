@@ -66,16 +66,13 @@ export function CommandsMenu({ onSelect, triggerValue, disabled }: CommandsMenuP
 
   return (
     <Popover open={open && !disabled} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0"
-          disabled={disabled}
-          onClick={() => setOpen(!open)}
-        >
-          <Command className="h-3.5 w-3.5" />
-        </Button>
+      <PopoverTrigger
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all duration-200 hover:text-foreground cursor-pointer"
+        disabled={disabled}
+        onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.2)"; e.currentTarget.style.background = "rgba(59,130,246,0.1)"; }}
+        onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
+      >
+        <Command className="h-3.5 w-3.5" />
       </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start">
         {loading ? (
