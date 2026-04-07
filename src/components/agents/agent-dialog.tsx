@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, X as XIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,8 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
   const [connectionUrl, setConnectionUrl] = useState("");
   const [configValues, setConfigValues] = useState<Record<string, string | number | boolean>>({});
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [adapters, setAdapters] = useState<AdapterMeta[]>([]);
 
   useEffect(() => {
@@ -215,15 +218,74 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="avatar_url">
-              Avatar URL <span className="text-muted-foreground">(optional)</span>
+            <Label>
+              Avatar <span className="text-muted-foreground">(optional)</span>
             </Label>
-            <Input
-              id="avatar_url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://example.com/avatar.png"
-            />
+            <div className="flex items-center gap-3">
+              {/* Preview */}
+              {avatarUrl ? (
+                <div className="relative">
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="h-12 w-12 rounded-xl object-cover border border-white/[0.1]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAvatarUrl("")}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center rounded-full bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                  >
+                    <XIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="h-12 w-12 rounded-xl border border-dashed border-white/[0.15] flex items-center justify-center text-muted-foreground/40">
+                  <Upload className="h-5 w-5" />
+                </div>
+              )}
+              {/* Upload button */}
+              <div className="flex-1">
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setAvatarUploading(true);
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const res = await fetch("/api/upload", { method: "POST", body: formData });
+                      if (!res.ok) throw new Error("Upload failed");
+                      const data = await res.json();
+                      setAvatarUrl(`/api/uploads/${data.file_name}`);
+                    } catch {
+                      // fallback: try as data URL
+                      const reader = new FileReader();
+                      reader.onload = () => setAvatarUrl(reader.result as string);
+                      reader.readAsDataURL(file);
+                    } finally {
+                      setAvatarUploading(false);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {avatarUploading ? "Uploading..." : "Choose Image"}
+                </Button>
+                <p className="text-xs text-muted-foreground/50 mt-1">PNG, JPG, GIF, WebP, SVG</p>
+              </div>
+            </div>
           </div>
         </div>
 
