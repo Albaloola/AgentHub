@@ -261,37 +261,37 @@
     background: rgba(16, 16, 16, 0.55);
     backdrop-filter: blur(16px) saturate(1.2);
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
-    border: 1px solid rgba(61, 58, 57, 0.4);
+    border: 1px solid var(--glass-glow-color, rgba(59,130,246,0.1));
     box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 0.8px) var(--glass-glow-color, rgba(59,130,246,0.025)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.035)),
-      0 0 calc(var(--glass-glow-spread, 20) * 2px) var(--glass-glow-color, rgba(59,130,246,0.015));
+      inset 0 0 calc(var(--glass-glow-spread, 20) * 0.5px) var(--glass-glow-color, rgba(59,130,246,0.02)),
+      0 0 calc(var(--glass-glow-spread, 20) * 0.7px) var(--glass-glow-color, rgba(59,130,246,0.03)),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, rgba(59,130,246,0.015));
   }
 
   .glass-strong {
     background: rgba(8, 8, 9, 0.6);
     backdrop-filter: blur(24px) saturate(1.3);
     -webkit-backdrop-filter: blur(24px) saturate(1.3);
-    border: 1px solid rgba(61, 58, 57, 0.3);
+    border: 1px solid var(--glass-glow-color, rgba(59,130,246,0.1));
     box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.03)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.2px) var(--glass-glow-color, rgba(59,130,246,0.05)),
-      0 0 calc(var(--glass-glow-spread, 20) * 2.5px) var(--glass-glow-color, rgba(59,130,246,0.02));
+      inset 0 0 calc(var(--glass-glow-spread, 20) * 0.5px) var(--glass-glow-color, rgba(59,130,246,0.02)),
+      0 0 calc(var(--glass-glow-spread, 20) * 0.7px) var(--glass-glow-color, rgba(59,130,246,0.03)),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, rgba(59,130,246,0.015));
   }
 
-  /* Agent response bubbles - separate glow color */
+  /* Agent response bubbles */
   .glass-bubble {
     background: rgba(16, 16, 16, 0.55);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--agent-glow-color, rgba(16,185,129,0.15));
+    border: 1px solid var(--agent-glow-color, rgba(16,185,129,0.1));
     box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 0.6px) var(--agent-glow-color, rgba(16,185,129,0.025)),
-      0 0 calc(var(--glass-glow-spread, 20) * 0.8px) var(--agent-glow-color, rgba(16,185,129,0.04)),
-      0 0 calc(var(--glass-glow-spread, 20) * 2px) var(--agent-glow-color, rgba(16,185,129,0.02));
+      inset 0 0 calc(var(--glass-glow-spread, 20) * 0.5px) var(--agent-glow-color, rgba(16,185,129,0.02)),
+      0 0 calc(var(--glass-glow-spread, 20) * 0.7px) var(--agent-glow-color, rgba(16,185,129,0.03)),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--agent-glow-color, rgba(16,185,129,0.015));
   }
 
-  /* User message bubbles - same subtle glow level as agent bubbles */
+  /* User message bubbles */
   .glass-bubble-user {
     background: var(--accent-color-dim, rgba(26, 39, 68, 0.35));
     backdrop-filter: blur(12px);
