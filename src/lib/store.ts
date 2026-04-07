@@ -180,6 +180,7 @@ interface AppState {
   uiPrefs: {
     density: "compact" | "comfortable" | "spacious";
     fontSize: number;
+    zoom: number;
     fontFamily: string;
     sidebarCollapsed: boolean;
     ambientBackground: boolean;
@@ -208,6 +209,7 @@ interface AppState {
 const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   density: "spacious",
   fontSize: 16,
+  zoom: 100,
   fontFamily: "geist",
   sidebarCollapsed: false,
   ambientBackground: true,

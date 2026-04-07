@@ -11,10 +11,9 @@ interface SliderProps {
   defaultValue?: number[]
   onValueChange?: (value: number[]) => void
   onValueCommitted?: (value: number[]) => void
-  /** Milestone values that show notches and have snap-to behavior */
   milestones?: number[]
-  /** Snap distance in pixels - how close the thumb needs to be to snap */
-  snapDistance?: number
+  snapOnRelease?: boolean
+  unit?: string
   className?: string
 }
 
@@ -27,7 +26,8 @@ function SliderControl({
   onValueChange,
   onValueCommitted,
   milestones,
-  snapDistance = 8,
+  snapOnRelease = true,
+  unit = "",
   className,
 }: SliderProps) {
   const [internalValue, setInternalValue] = useState(
@@ -39,7 +39,6 @@ function SliderControl({
   const currentValue = controlledValue?.[0] ?? internalValue
   const percent = ((currentValue - min) / (max - min)) * 100
 
-  // Sync with controlled value
   useEffect(() => {
     if (controlledValue?.[0] !== undefined) {
       setInternalValue(controlledValue[0])
@@ -49,42 +48,48 @@ function SliderControl({
   const getValueFromPosition = useCallback((clientX: number): number => {
     if (!trackRef.current) return currentValue
     const rect = trackRef.current.getBoundingClientRect()
-    const x = clientX - rect.left
-    const rawPercent = Math.max(0, Math.min(1, x / rect.width))
+    const rawPercent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     let val = min + rawPercent * (max - min)
-
-    // Snap to step
+    // Round to step for smooth continuous movement
     val = Math.round(val / step) * step
+    return Math.max(min, Math.min(max, val))
+  }, [min, max, step, currentValue])
 
-    // Snap to milestones if close enough
-    if (milestones && trackRef.current) {
-      const pxPerUnit = rect.width / (max - min)
-      for (const ms of milestones) {
-        const msPx = (ms - min) * pxPerUnit
-        const valPx = (val - min) * pxPerUnit
-        if (Math.abs(valPx - msPx) < snapDistance) {
-          val = ms
-          break
-        }
+  const snapToMilestone = useCallback((val: number): number => {
+    if (!milestones || milestones.length === 0) return val
+    let closest = val
+    let closestDist = Infinity
+    for (const ms of milestones) {
+      const dist = Math.abs(val - ms)
+      if (dist < closestDist) {
+        closestDist = dist
+        closest = ms
       }
     }
+    // Only snap if within 1.5 steps of a milestone
+    if (closestDist <= step * 1.5) return closest
+    return val
+  }, [milestones, step])
 
-    return Math.max(min, Math.min(max, val))
-  }, [min, max, step, milestones, snapDistance, currentValue])
-
-  const updateValue = useCallback((clientX: number, commit = false) => {
+  const updateValue = useCallback((clientX: number) => {
     const val = getValueFromPosition(clientX)
     setInternalValue(val)
     onValueChange?.([val])
-    if (commit) onValueCommitted?.([val])
-  }, [getValueFromPosition, onValueChange, onValueCommitted])
+  }, [getValueFromPosition, onValueChange])
 
-  // Drag handlers
+  const commitValue = useCallback((clientX: number) => {
+    let val = getValueFromPosition(clientX)
+    if (snapOnRelease) val = snapToMilestone(val)
+    setInternalValue(val)
+    onValueChange?.([val])
+    onValueCommitted?.([val])
+  }, [getValueFromPosition, snapToMilestone, snapOnRelease, onValueChange, onValueCommitted])
+
   useEffect(() => {
     if (!dragging) return
     const handleMove = (e: MouseEvent) => updateValue(e.clientX)
     const handleUp = (e: MouseEvent) => {
-      updateValue(e.clientX, true)
+      commitValue(e.clientX)
       setDragging(false)
     }
     document.addEventListener("mousemove", handleMove)
@@ -97,7 +102,7 @@ function SliderControl({
       document.body.style.cursor = ""
       document.body.style.userSelect = ""
     }
-  }, [dragging, updateValue])
+  }, [dragging, updateValue, commitValue])
 
   return (
     <div
@@ -113,12 +118,12 @@ function SliderControl({
           setDragging(true)
         }}
       >
-        {/* Filled indicator - fades from transparent on the left to white */}
+        {/* Filled indicator - fades from transparent to white */}
         <div
-          className="absolute inset-y-0 left-0 rounded-full"
+          className="absolute inset-y-0 left-0 rounded-full transition-none"
           style={{
             width: `${percent}%`,
-            background: `linear-gradient(to right, transparent, rgba(255,255,255,0.3) 30%, rgba(255,255,255,0.7))`,
+            background: "linear-gradient(to right, transparent, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.65))",
           }}
         />
 
@@ -133,8 +138,8 @@ function SliderControl({
               style={{ left: `${msPercent}%` }}
             >
               <div className={cn(
-                "w-[2px] h-3 -translate-x-1/2 rounded-full transition-all duration-200",
-                isAtMilestone ? "bg-white h-4" : "bg-white/40",
+                "w-[2px] -translate-x-1/2 rounded-full transition-all duration-150",
+                isAtMilestone ? "h-4 bg-white" : "h-3 bg-white/30",
               )} />
             </div>
           )
@@ -144,13 +149,16 @@ function SliderControl({
       {/* Thumb */}
       <div
         className={cn(
-          "absolute h-5 w-5 rounded-full bg-white border-2 border-white/80 cursor-grab transition-transform duration-100",
-          dragging ? "scale-110 shadow-[0_0_14px_rgba(255,255,255,0.4)]" : "shadow-[0_0_8px_rgba(255,255,255,0.25)] hover:scale-110",
+          "absolute rounded-full bg-white cursor-grab",
+          dragging
+            ? "h-6 w-6 shadow-[0_0_16px_rgba(255,255,255,0.5)]"
+            : "h-5 w-5 shadow-[0_0_8px_rgba(255,255,255,0.3)] hover:shadow-[0_0_12px_rgba(255,255,255,0.4)]",
         )}
         style={{
-          left: `calc(${percent}% - 10px)`,
+          left: `calc(${percent}% - ${dragging ? 12 : 10}px)`,
           top: "50%",
-          transform: `translateY(-50%)${dragging ? " scale(1.1)" : ""}`,
+          transform: "translateY(-50%)",
+          transition: dragging ? "none" : "all 0.15s ease",
         }}
         onMouseDown={(e) => {
           e.preventDefault()
@@ -158,6 +166,19 @@ function SliderControl({
           setDragging(true)
         }}
       />
+
+      {/* Value tooltip while dragging */}
+      {dragging && (
+        <div
+          className="absolute -top-8 px-2 py-0.5 rounded-md bg-white text-black text-xs font-bold tabular-nums pointer-events-none"
+          style={{
+            left: `calc(${percent}% - 16px)`,
+            transition: "none",
+          }}
+        >
+          {currentValue}{unit}
+        </div>
+      )}
     </div>
   )
 }

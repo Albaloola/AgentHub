@@ -18,6 +18,12 @@ export function UiPrefsApplier() {
   useEffect(() => {
     document.documentElement.setAttribute("data-density", uiPrefs.density);
     document.documentElement.style.fontSize = `${uiPrefs.fontSize}px`;
+    // Zoom applies a CSS scale transform to the root
+    if (uiPrefs.zoom && uiPrefs.zoom !== 100) {
+      document.documentElement.style.zoom = `${uiPrefs.zoom}%`;
+    } else {
+      document.documentElement.style.zoom = "";
+    }
 
     const fontFamily = FONT_FAMILIES[uiPrefs.fontFamily] || FONT_FAMILIES.geist;
     document.documentElement.style.fontFamily = fontFamily;

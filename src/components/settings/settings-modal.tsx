@@ -207,6 +207,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Layout; title: strin
 
 function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
   const [fontPreview, setFontPreview] = useState(prefs.fontSize);
+  const [zoomPreview, setZoomPreview] = useState(prefs.zoom ?? 100);
 
   const FONT_FAMILIES: Record<string, string> = {
     geist: "var(--font-geist-sans)",
@@ -252,18 +253,42 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
 
       <Separator />
 
+      <SectionTitle icon={Type} title="Zoom" />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">75%</span>
+          <span className="text-lg font-bold text-foreground tabular-nums">{zoomPreview}%</span>
+          <span className="text-sm text-muted-foreground">150%</span>
+        </div>
+        <Slider
+          min={75}
+          max={150}
+          step={1}
+          milestones={[75, 80, 90, 100, 110, 125, 150]}
+          snapOnRelease
+          unit="%"
+          value={[zoomPreview]}
+          onValueChange={(v) => setZoomPreview(Array.isArray(v) ? v[0] : v)}
+          onValueCommitted={(v) => setPref("zoom", Array.isArray(v) ? v[0] : v)}
+        />
+      </div>
+
+      <Separator />
+
       <SectionTitle icon={Type} title="Font Size" />
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">12px</span>
-          <span className="text-xs font-mono text-foreground/80">{fontPreview}px</span>
-          <span className="text-xs text-muted-foreground">24px</span>
+          <span className="text-sm text-muted-foreground">12px</span>
+          <span className="text-lg font-bold text-foreground tabular-nums">{fontPreview}px</span>
+          <span className="text-sm text-muted-foreground">24px</span>
         </div>
         <Slider
           min={12}
           max={24}
           step={1}
           milestones={[12, 14, 16, 18, 20, 24]}
+          snapOnRelease
+          unit="px"
           value={[fontPreview]}
           onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
           onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
