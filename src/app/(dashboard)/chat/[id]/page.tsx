@@ -7,9 +7,9 @@ import { Loader2 } from "lucide-react";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { ToolPanel } from "@/components/chat/tool-panel";
-import { ThinkingPanel } from "@/components/chat/thinking-panel";
-import { SubagentTree } from "@/components/chat/subagent-tree";
+import { InlineThinking } from "@/components/chat/inline-thinking";
+import { TerminalViewer } from "@/components/chat/terminal-viewer";
+import { FloatingStats } from "@/components/chat/floating-stats";
 import { ArtifactsPanel } from "@/components/chat/artifacts-panel";
 import { useStore } from "@/lib/store";
 import { getMessages, getConversations, streamChat } from "@/lib/api";
@@ -26,8 +26,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setConversations,
     isStreaming, setIsStreaming, streamingAgentId, setStreamingAgentId,
     toolPanelOpen, setToolPanelOpen,
-    setThinkingContent,
-    addSubagent, updateSubagent, clearSubagents,
+    thinkingContent, thinkingComplete, setThinkingContent,
+    subagents, addSubagent, updateSubagent, clearSubagents,
+    generationStatus, setGenerationStatus,
+    autoApprove, setAutoApprove,
+    setThinkingStartTime, thinkingStartTime,
   } = useStore();
 
   const [conversation, setConversation] = useState<ConversationWithDetails | null>(null);
@@ -116,9 +119,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
     // Start streaming
     setIsStreaming(true);
+    setGenerationStatus("generating");
     streamContentRef.current = "";
     streamMsgIdRef.current = "";
     setThinkingContent("", false);
+    setThinkingStartTime(null);
 
     const abortController = new AbortController();
     abortRef.current = abortController;
@@ -191,6 +196,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       onDone: (data) => {
         setIsStreaming(false);
         setStreamingAgentId(null);
+        setGenerationStatus(streamContentRef.current ? "done" : "no_response");
         // Reload to sync with DB
         getMessages(id).then(setMessages).catch(() => {});
         getConversations().then(setConversations).catch(() => {});
@@ -201,6 +207,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       },
 
       onThinking: (content) => {
+        if (!thinkingStartTime) setThinkingStartTime(Date.now());
         setThinkingContent(content);
       },
 
@@ -312,16 +319,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               />
             ))}
 
-            {/* Thinking indicator with glow */}
-            {isStreaming && messages.length > 0 && messages[messages.length - 1].sender_agent_id === null && (
-              <div className="flex gap-3 animate-fade-in">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl glass neon-glow-sm">
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                </div>
-                <div className="glass-bubble rounded-2xl px-5 py-3 text-sm text-muted-foreground neon-border">
-                  <span className="animate-pulse neon-text">Agent is thinking...</span>
-                </div>
-              </div>
+            {/* Inline thinking block (Claude-style) */}
+            {(thinkingContent || isStreaming) && messages.length > 0 && messages[messages.length - 1].sender_agent_id === null && (
+              <InlineThinking
+                thinkingContent={thinkingContent}
+                isComplete={thinkingComplete}
+                isStreaming={isStreaming}
+              />
+            )}
+
+            {/* Terminal viewer for tool calls in the latest message */}
+            {messages.length > 0 && messages[messages.length - 1].tool_calls.length > 0 && (
+              <TerminalViewer
+                toolCalls={messages[messages.length - 1].tool_calls}
+                isStreaming={isStreaming && messages[messages.length - 1].sender_agent_id !== null}
+              />
             )}
 
             {/* Queue indicator */}
@@ -349,10 +361,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         />
       </div>
 
-      {/* Side Panels */}
-      <ToolPanel />
-      <ThinkingPanel />
-      <SubagentTree />
+      {/* Floating stats panel */}
+      <FloatingStats
+        messages={messages}
+        subagents={subagents}
+        isStreaming={isStreaming}
+        autoApprove={autoApprove}
+        onToggleAutoApprove={() => setAutoApprove(!autoApprove)}
+      />
       <ArtifactsPanel messages={messages} />
     </div>
   );

@@ -164,6 +164,18 @@ interface AppState {
   editingMessageId: string | null;
   setEditingMessageId: (id: string | null) => void;
 
+  // Generation status
+  generationStatus: "idle" | "generating" | "queued" | "no_response" | "done";
+  setGenerationStatus: (s: "idle" | "generating" | "queued" | "no_response" | "done") => void;
+
+  // Auto-approve agent permissions
+  autoApprove: boolean;
+  setAutoApprove: (v: boolean) => void;
+
+  // Thinking timestamp (for "Thought for Xs")
+  thinkingStartTime: number | null;
+  setThinkingStartTime: (t: number | null) => void;
+
   // UI Preferences (persisted)
   uiPrefs: {
     density: "compact" | "comfortable" | "spacious";
@@ -416,6 +428,15 @@ export const useStore = create<AppState>((set) => ({
   // Editing
   editingMessageId: null,
   setEditingMessageId: (id) => set({ editingMessageId: id }),
+
+  generationStatus: "idle",
+  setGenerationStatus: (s) => set({ generationStatus: s }),
+
+  autoApprove: false,
+  setAutoApprove: (v) => set({ autoApprove: v }),
+
+  thinkingStartTime: null,
+  setThinkingStartTime: (t) => set({ thinkingStartTime: t }),
 
   // UI Preferences
   uiPrefs: loadUiPrefs(),
