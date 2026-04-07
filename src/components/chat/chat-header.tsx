@@ -1,22 +1,16 @@
 "use client";
 
-import { RotateCcw, Wrench, ArrowLeft, Square } from "lucide-react";
+import { RotateCcw, Wrench, Square } from "lucide-react";
 import { LivingAvatar } from "@/components/ui/living-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { resetConversation as apiReset } from "@/lib/api";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import type { ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -41,7 +35,6 @@ export function ChatHeader({
   onStop,
   queueCount = 0,
 }: ChatHeaderProps) {
-  const router = useRouter();
   const [resetOpen, setResetOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
@@ -50,108 +43,76 @@ export function ChatHeader({
     setIsResetting(true);
     try {
       await apiReset(conversation.id);
-      toast.success("Conversation context cleared");
+      toast.success("Context cleared");
       setResetOpen(false);
       onReset();
     } catch {
-      toast.error("Failed to reset context");
+      toast.error("Failed to reset");
     } finally {
       setIsResetting(false);
     }
   }
 
-  return (
-    <div className="flex items-center gap-3 border-b border-white/[0.06] glass px-4 py-3 shrink-0">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 md:hidden rounded-lg"
-        onClick={() => router.push("/")}
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
+  if (!conversation) return null;
 
-      {conversation?.agents.map((agent) => (
-        <div key={agent.id} className="flex items-center gap-2">
+  return (
+    <div className="flex items-center gap-2 px-2 shrink-0">
+      {/* Agent info - compact inline */}
+      {conversation.agents.map((agent) => (
+        <div key={agent.id} className="flex items-center gap-1.5">
           <LivingAvatar
             name={agent.name}
             id={agent.id}
             state={isStreaming && streamingAgentId === agent.id ? "thinking" : "idle"}
-            size="md"
+            size="sm"
           />
-          <div>
-            <div className="text-sm font-medium">{agent.name}</div>
-            <div className="text-[10px] text-muted-foreground">
-              {agent.gateway_type}
-              {isStreaming && streamingAgentId === agent.id && (
-                <span className="ml-1 text-blue-400 animate-pulse">processing...</span>
-              )}
-            </div>
-          </div>
+          <span className="text-sm font-medium">{agent.name}</span>
+          {isStreaming && streamingAgentId === agent.id && (
+            <span className="text-[10px] text-blue-400 animate-pulse">generating...</span>
+          )}
         </div>
       ))}
 
-      <div className="ml-auto flex items-center gap-2">
-        {/* Queue count */}
-        {queueCount > 0 && (
-          <Badge variant="outline" className="text-[10px] neon-border text-blue-400 animate-pulse">
-            {queueCount} queued
-          </Badge>
-        )}
+      {conversation.type === "group" && (
+        <Badge variant="outline" className="text-[9px] px-1.5 py-0">Group</Badge>
+      )}
 
-        {conversation?.type === "group" && (
-          <Badge variant="outline" className="text-[10px]">Group</Badge>
-        )}
+      {queueCount > 0 && (
+        <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-amber-400 border-amber-500/30">
+          {queueCount} queued
+        </Badge>
+      )}
 
-        {/* Stop button (visible during streaming) */}
-        {isStreaming && onStop && (
-          <Button
-            variant="destructive"
-            size="sm"
-            className="gap-1 rounded-lg neon-rose"
-            onClick={onStop}
-          >
-            <Square className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline text-xs">Stop</span>
-          </Button>
-        )}
+      <div className="flex-1" />
 
-        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogTrigger render={
-            <Button variant="outline" size="sm" className="gap-1 rounded-lg" disabled={isStreaming}>
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-xs">Reset</span>
-            </Button>
-          } />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset Conversation Context</DialogTitle>
-              <DialogDescription>
-                This will clear all messages in this conversation. The agent(s) will lose all context.
-                This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleReset} disabled={isResetting}>
-                {isResetting ? "Resetting..." : "Reset Context"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Button
-          variant={toolPanelOpen ? "secondary" : "outline"}
-          size="sm"
-          onClick={onToggleToolPanel}
-          className={cn("gap-1 rounded-lg transition-all duration-200", toolPanelOpen && "neon-amber")}
-          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15)"; }}
-          onMouseLeave={(e) => { if (!toolPanelOpen) e.currentTarget.style.boxShadow = "none"; }}
-        >
-          <Wrench className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline text-xs">Tools</span>
+      {/* Actions */}
+      {isStreaming && onStop && (
+        <Button variant="destructive" size="sm" className="h-6 gap-1 rounded-md text-[10px] px-2" onClick={onStop}>
+          <Square className="h-2.5 w-2.5" />
+          Stop
         </Button>
-      </div>
+      )}
+
+      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+        <DialogTrigger render={
+          <Button variant="ghost" size="sm" className="h-6 gap-1 rounded-md text-[10px] px-2 text-muted-foreground" disabled={isStreaming}>
+            <RotateCcw className="h-2.5 w-2.5" />
+            Reset
+          </Button>
+        } />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Context</DialogTitle>
+            <DialogDescription>Clear all messages. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleReset} disabled={isResetting}>
+              {isResetting ? "Resetting..." : "Reset"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -33,18 +33,27 @@ function generateStars(count: number, seed: number, sizeRange: [number, number],
 
 const STARFIELD_STYLES = `
   @keyframes root-star-drift {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-12vw, -8vh); }
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-6vw, -4vh) rotate(0.5deg); }
+    50% { transform: translate(0, -8vh) rotate(0deg); }
+    75% { transform: translate(6vw, -4vh) rotate(-0.5deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
   }
 
   @keyframes root-star-drift-reverse {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(10vw, 6vh); }
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(5vw, 3vh) rotate(0.5deg); }
+    50% { transform: translate(0, 6vh) rotate(0deg); }
+    75% { transform: translate(-5vw, 3vh) rotate(-0.5deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
   }
 
   @keyframes root-star-drift-slow {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-6vw, -4vh); }
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-3vw, -2vh) rotate(-0.3deg); }
+    50% { transform: translate(0, -4vh) rotate(0deg); }
+    75% { transform: translate(3vw, -2vh) rotate(0.3deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
   }
 
   @keyframes root-twinkle {

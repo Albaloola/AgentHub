@@ -301,6 +301,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             {messages.length === 0 && !isStreaming && (
               <EmptyChatState
                 agentName={conversation?.agents?.[0]?.name}
+                agentId={conversation?.agents?.[0]?.id}
                 onSuggestionClick={(prompt) => sendMessage(prompt)}
               />
             )}
