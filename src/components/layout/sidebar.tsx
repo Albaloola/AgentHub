@@ -445,13 +445,13 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <>
-              <span className="text-lg font-semibold whitespace-nowrap bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">AgentHub</span>
+              <span className="text-lg font-semibold whitespace-nowrap text-foreground">AgentHub</span>
               <button
                 onClick={handleCollapseChange}
-                className="ml-auto h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] transition-all"
+                className="ml-auto h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition-all duration-300"
                 title="Collapse sidebar"
               >
-                <PanelLeftClose className="h-4 w-4" />
+                <PanelLeftClose className="h-4.5 w-4.5" />
               </button>
             </>
           )}
@@ -488,7 +488,7 @@ export function Sidebar() {
           <div className="flex items-center justify-end px-3 pt-2">
             <button
               onClick={() => setConfigOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04] transition-all"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-all duration-300"
             >
               <SlidersHorizontal className="h-3 w-3" />
               Configure
@@ -553,8 +553,8 @@ export function Sidebar() {
                       className={cn(
                         "flex w-full items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-all duration-200",
                         hasActiveChild
-                          ? "text-foreground/80"
-                          : "text-muted-foreground/50 hover:text-muted-foreground/80",
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       <CategoryIcon className="h-3 w-3 shrink-0" />
@@ -584,20 +584,25 @@ export function Sidebar() {
                               href={item.href}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-300 border neon-interactive",
+                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border",
                                 isActive
                                   ? cn("border-current", category.activeColor)
-                                  : "border-transparent text-muted-foreground/70 hover:text-foreground",
+                                  : "border-transparent text-muted-foreground",
                               )}
-                              style={isActive ? {
-                                boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}, 0 0 24px ${CATEGORY_GLOW[category.label]}40`,
-                              } : undefined}
+                              style={{
+                                transition: "all 0.3s ease",
+                                ...(isActive ? {
+                                  boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}, 0 0 24px ${CATEGORY_GLOW[category.label]}40`,
+                                } : {}),
+                              }}
                               onMouseEnter={(e) => {
                                 if (!isActive) {
                                   const c = CATEGORY_GLOW[category.label];
                                   e.currentTarget.style.boxShadow = `0 0 10px ${c}, 0 0 30px ${c}60`;
                                   e.currentTarget.style.borderColor = `${c}80`;
                                   e.currentTarget.style.background = `${c}15`;
+                                  e.currentTarget.style.color = c;
+                                  e.currentTarget.style.transform = "scale(1.05)";
                                 }
                               }}
                               onMouseLeave={(e) => {
@@ -605,6 +610,8 @@ export function Sidebar() {
                                   e.currentTarget.style.boxShadow = "none";
                                   e.currentTarget.style.borderColor = "transparent";
                                   e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.color = "";
+                                  e.currentTarget.style.transform = "scale(1)";
                                 }
                               }}
                             >
@@ -636,8 +643,8 @@ export function Sidebar() {
                       className={cn(
                         "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-200",
                         hasActiveChild
-                          ? "text-foreground/80"
-                          : "text-muted-foreground/50 hover:text-muted-foreground/80",
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       <CategoryIcon className="h-3 w-3 shrink-0" />
@@ -667,26 +674,33 @@ export function Sidebar() {
                               href={item.href}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-300",
+                                "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm",
                                 isActive
                                   ? cn("text-foreground", category.activeColor)
-                                  : "text-muted-foreground/70 hover:text-foreground",
+                                  : "text-muted-foreground",
                               )}
-                              style={isActive ? {
-                                background: `${CATEGORY_GLOW[category.label]}15`,
-                                boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}40, inset 0 0 12px ${CATEGORY_GLOW[category.label]}10`,
-                              } : undefined}
+                              style={{
+                                transition: "all 0.3s ease",
+                                ...(isActive ? {
+                                  background: `${CATEGORY_GLOW[category.label]}15`,
+                                  boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}40, inset 0 0 12px ${CATEGORY_GLOW[category.label]}10`,
+                                } : {}),
+                              }}
                               onMouseEnter={(e) => {
                                 if (!isActive) {
                                   const c = CATEGORY_GLOW[category.label];
                                   e.currentTarget.style.boxShadow = `0 0 10px ${c}50, inset 0 0 10px ${c}08`;
                                   e.currentTarget.style.background = `${c}10`;
+                                  e.currentTarget.style.color = c;
+                                  e.currentTarget.style.transform = "scale(1.03)";
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (!isActive) {
                                   e.currentTarget.style.boxShadow = "none";
                                   e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.color = "";
+                                  e.currentTarget.style.transform = "scale(1)";
                                 }
                               }}
                             >
@@ -727,7 +741,7 @@ export function Sidebar() {
         {!collapsed && (
           <>
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-base font-semibold text-muted-foreground/80">
+              <span className="text-base font-semibold text-foreground">
                 Chats
               </span>
               <button
@@ -736,7 +750,7 @@ export function Sidebar() {
                   "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all",
                   editChatsMode
                     ? "text-blue-400 bg-blue-500/10"
-                    : "text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04]",
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]",
                 )}
               >
                 <Pencil className="h-3 w-3" />
@@ -770,8 +784,8 @@ export function Sidebar() {
             {newChatOpen && (
               <div className="mx-3 mb-3 rounded-xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.04]">
-                  <span className="text-sm font-medium text-muted-foreground/70">Pick an agent</span>
-                  <button onClick={() => setNewChatOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06]">
+                  <span className="text-sm font-medium text-muted-foreground">Pick an agent</span>
+                  <button onClick={() => setNewChatOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06]">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -802,18 +816,18 @@ export function Sidebar() {
                   return (
                     <div key={folder.id}>
                       <div
-                        className="group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
+                        className="group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
                         onClick={() => toggleFolder(folder.id)}
                       >
                         <FolderIcon className="h-4 w-4 shrink-0" />
                         <span className="flex-1 truncate text-sm font-medium">
                           {folder.name}
                         </span>
-                        <span className="text-sm text-muted-foreground/50 group-hover:hidden">
+                        <span className="text-sm text-muted-foreground group-hover:hidden">
                           {folderConvs.length}
                         </span>
                         <button
-                          className="hidden group-hover:flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="hidden group-hover:flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }}
                           title="Delete folder"
                         >
@@ -821,7 +835,7 @@ export function Sidebar() {
                         </button>
                         <ChevronRight
                           className={cn(
-                            "h-4 w-4 text-muted-foreground/50 transition-transform",
+                            "h-4 w-4 text-muted-foreground transition-transform",
                             isOpen && "rotate-90",
                           )}
                         />
@@ -829,7 +843,7 @@ export function Sidebar() {
                       {isOpen && (
                         <div className="ml-2 border-l border-white/[0.06] pl-1 space-y-0.5">
                           {folderConvs.length === 0 ? (
-                            <p className="px-2 py-1 text-xs text-muted-foreground/50">
+                            <p className="px-2 py-1 text-xs text-muted-foreground">
                               Empty
                             </p>
                           ) : (
@@ -855,7 +869,7 @@ export function Sidebar() {
                 {hasFolders && unfiledConvs.length > 0 && (
                   <div className="pt-1">
                     <div className="px-2 py-1">
-                      <span className="text-xs font-medium uppercase text-muted-foreground/50">
+                      <span className="text-xs font-medium uppercase text-muted-foreground">
                         Unfiled
                       </span>
                     </div>
@@ -875,7 +889,7 @@ export function Sidebar() {
                 ))}
 
                 {conversations.length === 0 && (
-                  <p className="px-3 py-4 text-center text-sm text-muted-foreground/50">
+                  <p className="px-3 py-4 text-center text-sm text-muted-foreground">
                     No conversations yet.
                     <br />
                     Chat with an agent to start one.
@@ -955,7 +969,7 @@ function ConversationItem({
         "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
         isActive
           ? "bg-white/[0.06] text-foreground"
-          : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.03]",
+          : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]",
       )}
     >
       {agent ? (
@@ -980,7 +994,7 @@ function ConversationItem({
       <div className="flex-1 min-w-0">
         <div className="truncate text-sm font-medium">{conv.name}</div>
         {conv.last_message && (
-          <div className="truncate text-xs text-muted-foreground/50">
+          <div className="truncate text-xs text-muted-foreground">
             {conv.last_message.content.slice(0, 35)}
           </div>
         )}
