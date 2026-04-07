@@ -426,7 +426,7 @@ export function Sidebar() {
       <aside
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.04] bg-sidebar/95 backdrop-blur-xl",
+          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.04] bg-sidebar/95 backdrop-blur-xl overflow-visible",
           "md:relative md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           !isResizingSidebar && "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
@@ -469,7 +469,7 @@ export function Sidebar() {
         {/* Navigation (resizable height) */}
         <div
           ref={navRef}
-          className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-1"
+          className="min-h-0 overflow-y-auto scrollbar-hidden px-1.5 py-1"
           style={{ height: collapsed ? "auto" : navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (
@@ -762,7 +762,7 @@ export function Sidebar() {
               </div>
             )}
 
-            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-2 pb-2">
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hidden px-2 pb-2">
               <div className="space-y-1 pb-4">
                 {folders.map((folder) => {
                   const isOpen = expandedFolders[folder.id] ?? false;
@@ -889,23 +889,20 @@ export function Sidebar() {
           )}
         </div>
 
-      </aside>
-
-      {/* Right edge resize handle */}
-      {!collapsed && (
-        <div
-          className="self-stretch shrink-0"
-          style={{ width: 8, marginLeft: -4, cursor: "col-resize", zIndex: 50 }}
-          onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }}
-        >
+        {/* Right edge resize handle - inside aside, extends beyond */}
+        {!collapsed && (
           <div
-            className={cn(
-              "h-full mx-auto transition-colors",
-              isResizingSidebar ? "w-[3px] bg-blue-400/60" : "w-[2px] bg-transparent hover:bg-white/30",
-            )}
-          />
-        </div>
-      )}
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setIsResizingSidebar(true); }}
+            style={{ cursor: "col-resize" }}
+            className="absolute top-0 bottom-0 -right-[5px] w-[10px] z-[60]"
+          >
+            <div className={cn(
+              "absolute top-0 bottom-0 left-1/2 -translate-x-1/2 transition-all",
+              isResizingSidebar ? "w-[3px] bg-blue-400/60" : "w-[1px] bg-transparent hover:w-[3px] hover:bg-white/30",
+            )} />
+          </div>
+        )}
+      </aside>
 
       {!sidebarOpen && (
         <Button

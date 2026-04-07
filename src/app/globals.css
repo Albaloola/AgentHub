@@ -538,6 +538,15 @@
 }
 [data-density="spacious"] .prose { font-size: 17px; }
 
+/* Hidden scrollbar (keeps scroll functionality) */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 /* Toggle: disable all animations */
 .animations-disabled *,
 .animations-disabled *::before,
