@@ -306,12 +306,15 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       <SectionTitle icon={Type} title="Font Family" />
       <div className="grid grid-cols-2 gap-2">
         {[
-          { value: "geist", label: "Geist Sans", style: { fontFamily: "var(--font-geist-sans)" } },
-          { value: "inter", label: "Inter", style: { fontFamily: "Inter, system-ui, sans-serif" } },
-          { value: "plus-jakarta", label: "Plus Jakarta", style: { fontFamily: "Plus Jakarta Sans, system-ui, sans-serif" } },
-          { value: "ibm-plex", label: "IBM Plex Sans", style: { fontFamily: "IBM Plex Sans, system-ui, sans-serif" } },
-          { value: "sf-pro", label: "SF Pro", style: { fontFamily: "SF Pro Display, system-ui, sans-serif" } },
-          { value: "jetbrains-mono", label: "JetBrains Mono", style: { fontFamily: "JetBrains Mono, monospace" } },
+          { value: "geist", label: "Geist Sans", cat: "Default", style: { fontFamily: "var(--font-geist-sans)" } },
+          { value: "inter", label: "Inter", cat: "Clean", style: { fontFamily: "'Inter', system-ui" } },
+          { value: "nunito", label: "Nunito", cat: "Smooth", style: { fontFamily: "'Nunito', system-ui" } },
+          { value: "lexend", label: "Lexend", cat: "Easy Read", style: { fontFamily: "'Lexend', system-ui" } },
+          { value: "plus-jakarta", label: "Plus Jakarta", cat: "Modern", style: { fontFamily: "'Plus Jakarta Sans', system-ui" } },
+          { value: "ibm-plex", label: "IBM Plex Sans", cat: "Technical", style: { fontFamily: "'IBM Plex Sans', system-ui" } },
+          { value: "jetbrains-mono", label: "JetBrains Mono", cat: "Code", style: { fontFamily: "'JetBrains Mono', monospace" } },
+          { value: "caveat", label: "Caveat", cat: "Handwriting", style: { fontFamily: "'Caveat', cursive" } },
+          { value: "comic-neue", label: "Comic Neue", cat: "Casual", style: { fontFamily: "'Comic Neue', cursive" } },
         ].map((font) => (
           <button
             key={font.value}
@@ -333,8 +336,9 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
                 {prefs.fontFamily === font.value && <Check className="h-2.5 w-2.5 text-white" />}
               </div>
               <span className="text-xs font-medium">{font.label}</span>
+              <span className="text-[9px] text-muted-foreground ml-auto">{font.cat}</span>
             </div>
-            <span className="text-[11px] text-muted-foreground truncate" style={font.style}>
+            <span className="text-sm text-muted-foreground truncate" style={font.style}>
               The quick brown fox
             </span>
           </button>
