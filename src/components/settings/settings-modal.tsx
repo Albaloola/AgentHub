@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 type UiPrefs = ReturnType<typeof useStore.getState>["uiPrefs"];
 type SetUiPref = ReturnType<typeof useStore.getState>["setUiPref"];
@@ -388,67 +389,19 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       <SectionTitle icon={Sparkles} title="Glass Glow" />
 
       <div className="space-y-4">
-        {/* UI panel glow color */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Panel Glow</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { label: "Blue", value: "rgba(59,130,246,0.3)" },
-              { label: "Violet", value: "rgba(139,92,246,0.3)" },
-              { label: "Cyan", value: "rgba(6,182,212,0.3)" },
-              { label: "Emerald", value: "rgba(16,185,129,0.3)" },
-              { label: "Amber", value: "rgba(245,158,11,0.3)" },
-              { label: "Rose", value: "rgba(251,86,91,0.3)" },
-              { label: "White", value: "rgba(242,242,242,0.2)" },
-            ].map((c) => (
-              <button
-                key={c.label}
-                onClick={() => setPref("glowColor", c.value)}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] border transition-all",
-                  prefs.glowColor === c.value
-                    ? "border-white/20 bg-white/10"
-                    : "border-white/[0.06] hover:border-white/[0.12]"
-                )}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Panel glow */}
+        <GlowColorPicker
+          label="Panel Glow"
+          value={prefs.glowColor}
+          onChange={(v) => setPref("glowColor", v)}
+        />
 
-        {/* Agent response glow color */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Agent Bubble Glow</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { label: "Emerald", value: "rgba(16,185,129,0.3)" },
-              { label: "Cyan", value: "rgba(6,182,212,0.3)" },
-              { label: "Violet", value: "rgba(139,92,246,0.3)" },
-              { label: "Blue", value: "rgba(59,130,246,0.3)" },
-              { label: "Amber", value: "rgba(245,158,11,0.3)" },
-              { label: "Rose", value: "rgba(251,86,91,0.3)" },
-              { label: "White", value: "rgba(242,242,242,0.2)" },
-            ].map((c) => (
-              <button
-                key={c.label}
-                onClick={() => setPref("agentGlowColor", c.value)}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] border transition-all",
-                  prefs.agentGlowColor === c.value
-                    ? "border-white/20 bg-white/10"
-                    : "border-white/[0.06] hover:border-white/[0.12]"
-                )}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Agent bubble glow */}
+        <GlowColorPicker
+          label="Agent Bubble Glow"
+          value={prefs.agentGlowColor}
+          onChange={(v) => setPref("agentGlowColor", v)}
+        />
 
         {/* Glow spread */}
         <div>
@@ -608,5 +561,72 @@ function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
         </Button>
       </SettingRow>
     </>
+  );
+}
+
+// Color picker for glow settings with presets + custom
+const GLOW_PRESETS = [
+  { label: "Blue", value: "rgba(59,130,246,0.3)", dot: "#3b82f6" },
+  { label: "Violet", value: "rgba(139,92,246,0.3)", dot: "#8b5cf6" },
+  { label: "Cyan", value: "rgba(6,182,212,0.3)", dot: "#06b6d4" },
+  { label: "Emerald", value: "rgba(16,185,129,0.3)", dot: "#10b981" },
+  { label: "Amber", value: "rgba(245,158,11,0.3)", dot: "#f59e0b" },
+  { label: "Rose", value: "rgba(251,86,91,0.3)", dot: "#fb565b" },
+  { label: "White", value: "rgba(242,242,242,0.2)", dot: "#f2f2f2" },
+];
+
+function GlowColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const isPreset = GLOW_PRESETS.some((p) => p.value === value);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <div className="h-4 w-4 rounded-full border border-white/[0.15]" style={{ background: value }} />
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {GLOW_PRESETS.map((c) => (
+          <button
+            key={c.label}
+            onClick={() => { onChange(c.value); setCustomOpen(false); }}
+            className={cn(
+              "flex items-center gap-2 rounded-xl border-2 p-2.5 transition-all duration-200",
+              value === c.value
+                ? "border-white/30 bg-white/[0.08]"
+                : "border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]",
+            )}
+          >
+            <div className="h-3.5 w-3.5 rounded-full shrink-0" style={{ background: c.dot, boxShadow: `0 0 6px ${c.dot}60` }} />
+            <span className="text-xs">{c.label}</span>
+          </button>
+        ))}
+        <button
+          onClick={() => setCustomOpen(!customOpen)}
+          className={cn(
+            "flex items-center gap-2 rounded-xl border-2 p-2.5 transition-all duration-200",
+            !isPreset && !customOpen
+              ? "border-white/30 bg-white/[0.08]"
+              : customOpen
+                ? "border-blue-400/40 bg-blue-500/10"
+                : "border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03]",
+          )}
+        >
+          <div className="h-3.5 w-3.5 rounded-full shrink-0" style={{
+            background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)",
+          }} />
+          <span className="text-xs">Custom</span>
+        </button>
+      </div>
+      {customOpen && (
+        <div className="mt-3">
+          <ColorPicker
+            color={value}
+            onChange={onChange}
+            onClose={() => setCustomOpen(false)}
+          />
+        </div>
+      )}
+    </div>
   );
 }
