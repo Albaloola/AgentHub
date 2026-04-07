@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -196,6 +196,58 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
+  // Resizable sidebar width (px)
+  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+
+  // Resizable nav/chats split (% of sidebar height for nav)
+  const [navHeightPercent, setNavHeightPercent] = useState(55);
+  const [isResizingSplit, setIsResizingSplit] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  // Sidebar width drag handler
+  useEffect(() => {
+    if (!isResizingSidebar) return;
+    const handleMove = (e: MouseEvent) => {
+      const newWidth = Math.max(200, Math.min(450, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+    const handleUp = () => setIsResizingSidebar(false);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizingSidebar]);
+
+  // Nav/chats split drag handler
+  useEffect(() => {
+    if (!isResizingSplit) return;
+    const handleMove = (e: MouseEvent) => {
+      if (!sidebarRef.current) return;
+      const rect = sidebarRef.current.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const pct = Math.max(20, Math.min(80, (y / rect.height) * 100));
+      setNavHeightPercent(pct);
+    };
+    const handleUp = () => setIsResizingSplit(false);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleUp);
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizingSplit]);
+
   useEffect(() => {
     setHydrated(true);
     loadData();
@@ -351,12 +403,14 @@ export function Sidebar() {
       )}
 
       <aside
+        ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.04] bg-sidebar/95 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.04] bg-sidebar/95 backdrop-blur-xl",
           "md:relative md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          collapsed ? "w-[52px]" : "w-64",
+          !isResizingSidebar && "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
         )}
+        style={{ width: collapsed ? 52 : sidebarWidth }}
       >
         {/* Logo */}
         <div
@@ -375,8 +429,11 @@ export function Sidebar() {
           )}
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-2">
+        {/* Navigation (resizable height) */}
+        <div
+          className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-2"
+          style={{ height: collapsed ? "auto" : `${navHeightPercent}%`, flexShrink: 0 }}
+        >
           {collapsed ? (
             <div className="flex flex-col items-center gap-1">
               {ALL_NAV_ITEMS.map((item) => {
@@ -582,10 +639,23 @@ export function Sidebar() {
           )}
         </div>
 
+        {/* Draggable divider between nav and chats */}
+        {!collapsed && (
+          <div
+            className="relative mx-2 group cursor-row-resize"
+            onMouseDown={() => setIsResizingSplit(true)}
+          >
+            <div className={cn(
+              "h-px transition-colors",
+              isResizingSplit ? "bg-blue-400/50" : "bg-white/[0.06] group-hover:bg-white/[0.15]",
+            )} />
+            <div className="absolute inset-x-0 -top-2 -bottom-2" />
+          </div>
+        )}
+
         {/* Conversations */}
         {!collapsed && (
           <>
-            <div className="border-t border-white/[0.04] mx-2" />
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-base font-semibold text-muted-foreground/80">
                 Chats
@@ -764,6 +834,19 @@ export function Sidebar() {
             </button>
           )}
         </div>
+
+        {/* Right edge resize handle */}
+        {!collapsed && (
+          <div
+            className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize group z-50"
+            onMouseDown={() => setIsResizingSidebar(true)}
+          >
+            <div className={cn(
+              "absolute right-0 top-0 bottom-0 w-px transition-colors",
+              isResizingSidebar ? "bg-blue-400/60" : "bg-transparent group-hover:bg-white/[0.15]",
+            )} />
+          </div>
+        )}
       </aside>
 
       {!sidebarOpen && (
