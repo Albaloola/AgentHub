@@ -455,25 +455,30 @@ export function Sidebar() {
               </button>
             </>
           )}
-          {collapsed && (
+          {/* Empty - expand button is below the logo when collapsed */}
+        </div>
+
+        {/* Expand button when collapsed - big and clear, above nav icons */}
+        {collapsed && (
+          <div className="shrink-0 flex justify-center py-3 border-b border-white/[0.04]">
             <Tooltip>
               <TooltipTrigger
                 render={
                   <button
                     type="button"
                     onClick={handleCollapseChange}
-                    className="absolute top-14 left-1/2 -translate-x-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] transition-all"
+                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/[0.06] text-foreground/70 hover:text-foreground hover:bg-white/[0.12] transition-all"
                   />
                 }
               >
-                <PanelLeft className="h-4 w-4" />
+                <PanelLeft className="h-5 w-5" />
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
+              <TooltipContent side="right" sideOffset={12}>
                 Expand sidebar
               </TooltipContent>
             </Tooltip>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Content zone (nav + chats) - ref for split resize calculation */}
         <div ref={contentZoneRef} className="flex-1 flex flex-col min-h-0">
