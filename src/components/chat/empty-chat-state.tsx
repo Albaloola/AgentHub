@@ -49,62 +49,86 @@ export function EmptyChatState({
       "flex flex-col items-center justify-center min-h-[65vh] text-center px-4 transition-opacity duration-700",
       mounted ? "opacity-100" : "opacity-0",
     )}>
-      {/* Planet avatar with star ring (Uranus-style) */}
-      <div className="relative mb-10 group">
-        {/* Outer star ring */}
-        <div className="absolute inset-[-30px] rounded-full border border-white/[0.04] animate-[spin_60s_linear_infinite]">
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-            <div
-              key={deg}
-              className="absolute h-1 w-1 rounded-full bg-white/40"
-              style={{
-                top: "50%",
-                left: "50%",
-                transform: `rotate(${deg}deg) translateX(80px) translateY(-50%)`,
-              }}
-            />
-          ))}
-        </div>
+      {/* Planet avatar with balanced orbital rings */}
+      <div className="relative mb-10" style={{ width: 200, height: 200 }}>
+        {/* Ambient glow behind everything */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-blue-500/12 via-violet-500/8 to-cyan-500/4 blur-3xl animate-[luminance-pulse_4s_ease-in-out_infinite]" />
 
-        {/* Middle ring (tilted like Uranus) */}
+        {/* Outer ring - spins clockwise, centered */}
         <div
-          className="absolute inset-[-20px] rounded-full border border-white/[0.06] animate-[spin_40s_linear_infinite_reverse]"
-          style={{ transform: "rotateX(60deg)" }}
+          className="absolute rounded-full border border-white/[0.06]"
+          style={{
+            top: "50%", left: "50%",
+            width: 180, height: 180,
+            marginTop: -90, marginLeft: -90,
+            animation: "spin 50s linear infinite",
+          }}
         >
-          {[0, 60, 120, 180, 240, 300].map((deg) => (
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => (
             <div
               key={deg}
-              className="absolute h-1.5 w-1.5 rounded-full bg-blue-400/30"
+              className="absolute rounded-full bg-white"
               style={{
-                top: "50%",
-                left: "50%",
-                transform: `rotate(${deg}deg) translateX(65px) translateY(-50%)`,
+                width: i % 2 === 0 ? 3 : 2,
+                height: i % 2 === 0 ? 3 : 2,
+                top: "50%", left: "50%",
+                transform: `rotate(${deg}deg) translateX(90px) translateY(-50%)`,
+                animation: `luminance-pulse ${2 + (i % 3)}s ease-in-out infinite`,
+                animationDelay: `${i * 0.4}s`,
+                opacity: 0.6,
               }}
             />
           ))}
         </div>
 
-        {/* Ambient glow */}
-        <div className="absolute -inset-8 rounded-full bg-gradient-to-b from-blue-500/10 via-violet-500/5 to-transparent blur-2xl animate-[luminance-pulse_4s_ease-in-out_infinite]" />
+        {/* Inner ring - spins counter-clockwise, smaller */}
+        <div
+          className="absolute rounded-full border border-white/[0.04]"
+          style={{
+            top: "50%", left: "50%",
+            width: 140, height: 140,
+            marginTop: -70, marginLeft: -70,
+            animation: "spin 35s linear infinite reverse",
+          }}
+        >
+          {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+            <div
+              key={deg}
+              className="absolute rounded-full"
+              style={{
+                width: 4,
+                height: 4,
+                top: "50%", left: "50%",
+                transform: `rotate(${deg}deg) translateX(70px) translateY(-50%)`,
+                background: i % 2 === 0 ? "rgba(96,165,250,0.7)" : "rgba(139,92,246,0.6)",
+                boxShadow: i % 2 === 0
+                  ? "0 0 6px rgba(96,165,250,0.5), 0 0 12px rgba(96,165,250,0.2)"
+                  : "0 0 6px rgba(139,92,246,0.5), 0 0 12px rgba(139,92,246,0.2)",
+                animation: `luminance-pulse ${1.5 + (i % 4) * 0.5}s ease-in-out infinite`,
+                animationDelay: `${i * 0.3}s`,
+              }}
+            />
+          ))}
+        </div>
 
-        {/* Planet body (agent avatar) */}
-        <div className="relative">
+        {/* Planet body (agent avatar) - centered in 200x200 */}
+        <div className="absolute" style={{ top: "50%", left: "50%", marginTop: -48, marginLeft: -48 }}>
           {agentId ? (
             <div
               className={cn(
-                "flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white shadow-xl",
+                "relative flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white",
                 getAvatarColor(agentId),
               )}
               style={{
-                boxShadow: "0 0 30px rgba(59,130,246,0.15), 0 0 60px rgba(139,92,246,0.08), inset 0 -8px 20px rgba(0,0,0,0.3)",
+                boxShadow: "0 0 25px rgba(59,130,246,0.12), 0 0 50px rgba(139,92,246,0.06), inset 0 -6px 16px rgba(0,0,0,0.3)",
               }}
             >
               {getInitials(agentName || "?")}
               {/* Surface sheen */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-6 bg-gradient-to-b from-white/15 to-transparent rounded-full blur-sm" />
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-5 bg-gradient-to-b from-white/15 to-transparent rounded-full blur-sm" />
             </div>
           ) : (
-            <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 via-violet-500/15 to-cyan-500/10 flex items-center justify-center">
+            <div className="flex h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 via-violet-500/15 to-cyan-500/10 items-center justify-center">
               <Sparkles className="h-10 w-10 text-muted-foreground/30" />
             </div>
           )}
