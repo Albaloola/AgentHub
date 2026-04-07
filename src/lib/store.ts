@@ -197,13 +197,18 @@ interface AppState {
     autoScroll: boolean;
     notificationsEnabled: boolean;
     soundEffects: boolean;
+    titleFont: string;
+    chatFont: string;
     glowColor: string;
     agentGlowColor: string;
     glowIntensity: number;
     glowSpread: number;
   };
   setUiPref: <K extends keyof AppState["uiPrefs"]>(key: K, value: AppState["uiPrefs"][K]) => void;
+  commitUiPrefs: () => void;
+  revertUiPrefs: () => void;
   resetUiPrefs: () => void;
+  hasUnsavedPrefs: boolean;
 }
 
 const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
@@ -211,6 +216,8 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   fontSize: 16,
   zoom: 100,
   fontFamily: "geist",
+  titleFont: "geist",
+  chatFont: "geist",
   sidebarCollapsed: false,
   ambientBackground: true,
   animationsEnabled: true,
@@ -448,16 +455,26 @@ export const useStore = create<AppState>((set) => ({
   thinkingStartTime: null,
   setThinkingStartTime: (t) => set({ thinkingStartTime: t }),
 
-  // UI Preferences
+  // UI Preferences (preview immediately, save explicitly)
   uiPrefs: loadUiPrefs(),
+  hasUnsavedPrefs: false,
   setUiPref: (key, value) =>
     set((state) => {
       const next = { ...state.uiPrefs, [key]: value };
-      saveUiPrefs(next);
-      return { uiPrefs: next };
+      // Apply for preview but do NOT save to localStorage
+      return { uiPrefs: next, hasUnsavedPrefs: true };
     }),
+  commitUiPrefs: () => {
+    const state = useStore.getState();
+    saveUiPrefs(state.uiPrefs);
+    set({ hasUnsavedPrefs: false });
+  },
+  revertUiPrefs: () => {
+    const saved = loadUiPrefs();
+    set({ uiPrefs: saved, hasUnsavedPrefs: false });
+  },
   resetUiPrefs: () => {
     saveUiPrefs(DEFAULT_UI_PREFS);
-    set({ uiPrefs: { ...DEFAULT_UI_PREFS } });
+    set({ uiPrefs: { ...DEFAULT_UI_PREFS }, hasUnsavedPrefs: false });
   },
 }));

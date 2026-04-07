@@ -68,11 +68,16 @@ export function UiPrefsApplier() {
       root.style.removeProperty("-moz-transform-origin");
     }
 
-    // Font family - load from CDN if needed
+    // Font families - load from CDN if needed
     const fontKey = uiPrefs.fontFamily || "geist";
+    const titleKey = uiPrefs.titleFont || fontKey;
+    const chatKey = uiPrefs.chatFont || fontKey;
     if (fontKey !== "geist") loadFont(fontKey);
-    const fontFamily = FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist;
-    root.style.fontFamily = fontFamily;
+    if (titleKey !== "geist" && titleKey !== fontKey) loadFont(titleKey);
+    if (chatKey !== "geist" && chatKey !== fontKey && chatKey !== titleKey) loadFont(chatKey);
+    root.style.fontFamily = FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist;
+    root.style.setProperty("--font-title", FONT_FAMILIES[titleKey] || FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist);
+    root.style.setProperty("--font-chat", FONT_FAMILIES[chatKey] || FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist);
 
     // Animations
     if (!uiPrefs.animationsEnabled) {

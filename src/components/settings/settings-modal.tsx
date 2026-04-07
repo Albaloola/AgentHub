@@ -49,8 +49,33 @@ interface SettingsModalProps {
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<string>("layout");
-  const { uiPrefs, setUiPref, resetUiPrefs } = useStore();
+  const { uiPrefs, setUiPref, commitUiPrefs, revertUiPrefs, resetUiPrefs, hasUnsavedPrefs } = useStore();
   const modalRef = useRef<HTMLDivElement>(null);
+  const revertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-revert after 10 seconds if unsaved
+  useEffect(() => {
+    if (hasUnsavedPrefs) {
+      if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+      revertTimerRef.current = setTimeout(() => {
+        revertUiPrefs();
+      }, 10000);
+    } else {
+      if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+    }
+    return () => { if (revertTimerRef.current) clearTimeout(revertTimerRef.current); };
+  }, [hasUnsavedPrefs, revertUiPrefs]);
+
+  function handleSave() {
+    commitUiPrefs();
+    if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+  }
+
+  function handleClose() {
+    if (hasUnsavedPrefs) revertUiPrefs();
+    if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+    onClose();
+  }
 
   // Focus trap and escape key
   useEffect(() => {
@@ -89,7 +114,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Settings">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
@@ -108,11 +133,26 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-lg hover:bg-white/[0.06]"
-            onClick={onClose}
+            onClick={handleClose}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Save/revert bar - visible when there are unsaved changes */}
+        {hasUnsavedPrefs && (
+          <div className="flex items-center justify-between px-5 py-2.5 border-b border-amber-500/20 bg-amber-500/5 animate-fade-in">
+            <span className="text-sm text-amber-400 font-medium">Unsaved changes (reverts in 10s)</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="h-7 text-xs rounded-lg" onClick={() => revertUiPrefs()}>
+                Revert
+              </Button>
+              <Button size="sm" className="h-7 text-xs rounded-lg bg-blue-500 hover:bg-blue-600" onClick={handleSave}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex h-[calc(85vh-80px)]">
           <div className="w-44 shrink-0 border-r border-white/[0.06] p-3 space-y-1">
@@ -344,7 +384,58 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           </button>
         ))}
       </div>
+
+      <Separator />
+
+      <SectionTitle icon={Type} title="Title Font" />
+      <p className="text-xs text-muted-foreground mb-2">Used for page headings, panel titles, and navigation</p>
+      <FontPicker
+        value={prefs.titleFont || prefs.fontFamily}
+        onChange={(v) => setPref("titleFont", v)}
+      />
+
+      <Separator />
+
+      <SectionTitle icon={Type} title="Chat Font" />
+      <p className="text-xs text-muted-foreground mb-2">Used for message bubbles and chat text</p>
+      <FontPicker
+        value={prefs.chatFont || prefs.fontFamily}
+        onChange={(v) => setPref("chatFont", v)}
+      />
     </>
+  );
+}
+
+function FontPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const fonts = [
+    { value: "geist", label: "Geist Sans" },
+    { value: "inter", label: "Inter" },
+    { value: "nunito", label: "Nunito" },
+    { value: "lexend", label: "Lexend" },
+    { value: "plus-jakarta", label: "Plus Jakarta" },
+    { value: "ibm-plex", label: "IBM Plex" },
+    { value: "jetbrains-mono", label: "JetBrains Mono" },
+    { value: "caveat", label: "Caveat" },
+    { value: "comic-neue", label: "Comic Neue" },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {fonts.map((f) => (
+        <button
+          key={f.value}
+          onClick={() => onChange(f.value)}
+          className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200",
+            value === f.value
+              ? "border-blue-400/50 bg-blue-500/10 text-blue-400"
+              : "border-white/[0.08] text-muted-foreground hover:border-white/[0.15] hover:text-foreground",
+          )}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

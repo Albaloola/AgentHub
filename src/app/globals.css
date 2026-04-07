@@ -51,6 +51,10 @@
 :root {
   --radius: 0.5rem;
 
+  /* Font categories */
+  --font-title: var(--font-geist-sans), system-ui, sans-serif;
+  --font-chat: var(--font-geist-sans), system-ui, sans-serif;
+
   /* Accent system (configurable via settings) */
   --accent-hue: 217;
   --accent-sat: 91%;
