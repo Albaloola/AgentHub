@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Code2, Lightbulb, Search, FileText, Rocket, Sparkles } from "lucide-react";
+import { Code2, Lightbulb, Search, FileText, Rocket, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
@@ -42,7 +42,15 @@ export function EmptyChatState({
   }, []);
 
   const firstName = agentName?.split("(")[0]?.trim() || "there";
-  const suggestions = ALL_SUGGESTIONS.slice(activeSet * 3, activeSet * 3 + 3);
+
+  function switchSet(idx: number) {
+    if (idx === activeSet) return;
+    setTransitioning(true);
+    setTimeout(() => {
+      setActiveSet(idx);
+      setTransitioning(false);
+    }, 300);
+  }
 
   return (
     <div className={cn(
@@ -143,56 +151,79 @@ export function EmptyChatState({
         What can I help with?
       </h2>
 
-      {/* Rotating suggestion cards - fixed height so they expand down, not up */}
-      <div className="max-w-2xl w-full" style={{ minHeight: 120 }}>
-        <div className={cn(
-          "flex gap-4 w-full transition-all duration-400",
-          transitioning ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0",
-        )}>
-          {suggestions.map((card) => {
-            const Icon = card.icon;
-            return (
-              <button
-                key={card.tag}
-                onClick={() => onSuggestionClick(card.prompt)}
-                className="flex-1 flex flex-col items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all duration-300 hover:bg-white/[0.05] group"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 0 12px ${card.tagColor}40, 0 0 30px ${card.tagColor}15`;
-                  e.currentTarget.style.borderColor = `${card.tagColor}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                }}
-              >
-                <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border"
-                  style={{ color: card.tagColor, borderColor: `${card.tagColor}40`, background: `${card.tagColor}10` }}
-                >
-                  <Icon className="h-3 w-3" />
-                  {card.tag}
-                </span>
-                <p className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors leading-relaxed">
-                  {card.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+      {/* Rotating suggestion cards - fixed height container, cards overlay */}
+      <div className="relative max-w-2xl w-full" style={{ height: 110 }}>
+        {[0, 1].map((setIdx) => {
+          const cards = ALL_SUGGESTIONS.slice(setIdx * 3, setIdx * 3 + 3);
+          const isVisible = activeSet === setIdx && !transitioning;
+          return (
+            <div
+              key={setIdx}
+              className={cn(
+                "absolute inset-0 flex gap-4 transition-all duration-500",
+                isVisible
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 translate-y-4 pointer-events-none",
+              )}
+            >
+              {cards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={card.tag}
+                    onClick={() => onSuggestionClick(card.prompt)}
+                    className="flex-1 flex flex-col items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all duration-300 hover:bg-white/[0.05] group"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = `0 0 12px ${card.tagColor}40, 0 0 30px ${card.tagColor}15`;
+                      e.currentTarget.style.borderColor = `${card.tagColor}40`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    }}
+                  >
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border"
+                      style={{ color: card.tagColor, borderColor: `${card.tagColor}40`, background: `${card.tagColor}10` }}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {card.tag}
+                    </span>
+                    <p className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors leading-relaxed">
+                      {card.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Clickable dots to toggle between suggestion sets */}
-      <div className="flex gap-2 mt-6 mb-8">
+      {/* Navigation: prev arrow + dots + next arrow */}
+      <div className="flex items-center gap-3 mt-6 mb-8">
+        <button
+          onClick={() => switchSet((activeSet - 1 + 2) % 2)}
+          className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
         {[0, 1].map((i) => (
           <button
             key={i}
-            onClick={() => { setTransitioning(true); setTimeout(() => { setActiveSet(i); setTransitioning(false); }, 300); }}
+            onClick={() => switchSet(i)}
             className={cn(
               "rounded-full transition-all duration-300 cursor-pointer",
               activeSet === i ? "w-5 h-2 bg-blue-400/60" : "w-2 h-2 bg-white/15 hover:bg-white/30",
             )}
           />
         ))}
+        <button
+          onClick={() => switchSet((activeSet + 1) % 2)}
+          className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
