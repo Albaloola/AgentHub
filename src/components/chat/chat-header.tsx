@@ -1,16 +1,17 @@
 "use client";
 
-import { RotateCcw, Wrench, Square } from "lucide-react";
+import { RotateCcw, Wrench, Square, Search, X, ChevronUp, ChevronDown, Minimize2, Loader2, History, Share2 } from "lucide-react";
 import { LivingAvatar } from "@/components/ui/living-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ShareDialog } from "@/components/chat/share-dialog";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { resetConversation as apiReset } from "@/lib/api";
-import { useState } from "react";
+import { resetConversation as apiReset, compactConversation } from "@/lib/api";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -22,6 +23,8 @@ interface ChatHeaderProps {
   onToggleToolPanel: () => void;
   onReset: () => void;
   onStop?: () => void;
+  onReplay?: () => void;
+  replayOpen?: boolean;
   queueCount?: number;
 }
 
@@ -33,10 +36,92 @@ export function ChatHeader({
   onToggleToolPanel,
   onReset,
   onStop,
+  onReplay,
+  replayOpen = false,
   queueCount = 0,
 }: ChatHeaderProps) {
   const [resetOpen, setResetOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [compactOpen, setCompactOpen] = useState(false);
+  const [isCompacting, setIsCompacting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<number[]>([]);
+  const [searchIndex, setSearchIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchIndex(0);
+      // Clear highlights
+      document.querySelectorAll(".search-highlight").forEach((el) => {
+        const parent = el.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(el.textContent || ""), el);
+          parent.normalize();
+        }
+      });
+      return;
+    }
+
+    // Find matching message bubbles
+    const scrollEl = document.getElementById("chat-scroll");
+    if (!scrollEl) return;
+
+    // Clear previous highlights
+    scrollEl.querySelectorAll(".search-highlight").forEach((el) => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ""), el);
+        parent.normalize();
+      }
+    });
+
+    const messageBubbles = scrollEl.querySelectorAll("[data-message-id]");
+    const indices: number[] = [];
+    const query = searchQuery.toLowerCase();
+
+    messageBubbles.forEach((bubble, i) => {
+      const text = bubble.textContent?.toLowerCase() || "";
+      if (text.includes(query)) {
+        indices.push(i);
+      }
+    });
+
+    setSearchResults(indices);
+    setSearchIndex(0);
+
+    if (indices.length > 0) {
+      messageBubbles[indices[0]]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [searchQuery]);
+
+  const navigateSearch = useCallback((direction: "next" | "prev") => {
+    if (searchResults.length === 0) return;
+    const newIndex = direction === "next"
+      ? (searchIndex + 1) % searchResults.length
+      : (searchIndex - 1 + searchResults.length) % searchResults.length;
+    setSearchIndex(newIndex);
+    const scrollEl = document.getElementById("chat-scroll");
+    if (!scrollEl) return;
+    const bubbles = scrollEl.querySelectorAll("[data-message-id]");
+    bubbles[searchResults[newIndex]]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [searchResults, searchIndex]);
+
+  function closeSearch() {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchIndex(0);
+  }
 
   async function handleReset() {
     if (!conversation) return;
@@ -50,6 +135,21 @@ export function ChatHeader({
       toast.error("Failed to reset");
     } finally {
       setIsResetting(false);
+    }
+  }
+
+  async function handleCompact() {
+    if (!conversation) return;
+    setIsCompacting(true);
+    try {
+      const result = await compactConversation(conversation.id);
+      toast.success(`Compacted: removed ${result.removed_count} messages`);
+      setCompactOpen(false);
+      onReset();
+    } catch {
+      toast.error("Failed to compact conversation");
+    } finally {
+      setIsCompacting(false);
     }
   }
 
@@ -68,34 +168,132 @@ export function ChatHeader({
           />
           <span className="text-sm font-medium">{agent.name}</span>
           {isStreaming && streamingAgentId === agent.id && (
-            <span className="text-[10px] text-blue-400 animate-pulse">generating...</span>
+            <span className="text-[0.625rem] text-blue-400 animate-pulse" aria-live="polite">generating...</span>
           )}
         </div>
       ))}
 
       {conversation.type === "group" && (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0">Group</Badge>
+        <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0">Group</Badge>
       )}
 
       {queueCount > 0 && (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-amber-400 border-amber-500/30">
+        <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0 text-amber-400 border-amber-500/30">
           {queueCount} queued
         </Badge>
       )}
 
       <div className="flex-1" />
 
+      {/* In-conversation search */}
+      {searchOpen && (
+        <div className="flex items-center gap-1.5 rounded-lg border border-foreground/[0.08] bg-foreground/[0.04] px-2 py-1 animate-fade-in">
+          <Search className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") navigateSearch(e.shiftKey ? "prev" : "next");
+              if (e.key === "Escape") closeSearch();
+            }}
+            placeholder="Search messages..."
+            className="bg-transparent text-xs outline-none w-32 placeholder:text-muted-foreground/40"
+          />
+          {searchResults.length > 0 && (
+            <span className="text-[0.625rem] text-muted-foreground/50 tabular-nums shrink-0">
+              {searchIndex + 1}/{searchResults.length}
+            </span>
+          )}
+          <button onClick={() => navigateSearch("prev")} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Previous search result">
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <button onClick={() => navigateSearch("next")} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Next search result">
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          <button onClick={closeSearch} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Close search">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
       {/* Actions */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 gap-1 rounded-md text-[0.625rem] px-2 text-muted-foreground"
+        onClick={() => setShareOpen(true)}
+        title="Share conversation"
+        aria-label="Share conversation"
+      >
+        <Share2 className="h-2.5 w-2.5" />
+        Share
+      </Button>
+
+      {onReplay && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-6 gap-1 rounded-md text-[0.625rem] px-2",
+            replayOpen ? "text-blue-400" : "text-muted-foreground",
+          )}
+          onClick={onReplay}
+          disabled={isStreaming}
+          title="Replay conversation"
+          aria-label="Replay conversation"
+        >
+          <History className="h-2.5 w-2.5" />
+          Replay
+        </Button>
+      )}
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 gap-1 rounded-md text-[0.625rem] px-2 text-muted-foreground"
+        onClick={() => setSearchOpen(!searchOpen)}
+        title="Search messages (Ctrl+F)"
+        aria-label="Search messages"
+      >
+        <Search className="h-2.5 w-2.5" />
+      </Button>
+
       {isStreaming && onStop && (
-        <Button variant="destructive" size="sm" className="h-6 gap-1 rounded-md text-[10px] px-2" onClick={onStop}>
+        <Button variant="destructive" size="sm" className="h-6 gap-1 rounded-md text-[0.625rem] px-2" onClick={onStop}>
           <Square className="h-2.5 w-2.5" />
           Stop
         </Button>
       )}
 
+      <Dialog open={compactOpen} onOpenChange={setCompactOpen}>
+        <DialogTrigger render={
+          <Button variant="ghost" size="sm" className="h-6 gap-1 rounded-md text-[0.625rem] px-2 text-muted-foreground" disabled={isStreaming} title="Compact conversation">
+            <Minimize2 className="h-2.5 w-2.5" />
+            Compact
+          </Button>
+        } />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Compact Conversation</DialogTitle>
+            <DialogDescription>
+              Keeps first message, pinned messages, and last 10. Reduces token usage.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompactOpen(false)}>Cancel</Button>
+            <Button onClick={handleCompact} disabled={isCompacting}>
+              {isCompacting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+              {isCompacting ? "Compacting..." : "Compact"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogTrigger render={
-          <Button variant="ghost" size="sm" className="h-6 gap-1 rounded-md text-[10px] px-2 text-muted-foreground" disabled={isStreaming}>
+          <Button variant="ghost" size="sm" className="h-6 gap-1 rounded-md text-[0.625rem] px-2 text-muted-foreground" disabled={isStreaming}>
             <RotateCcw className="h-2.5 w-2.5" />
             Reset
           </Button>
@@ -108,11 +306,19 @@ export function ChatHeader({
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleReset} disabled={isResetting}>
+              {isResetting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
               {isResetting ? "Resetting..." : "Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ShareDialog
+        conversationId={conversation.id}
+        conversationName={conversation.name}
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+      />
     </div>
   );
 }

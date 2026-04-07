@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { getAnalytics, getAgents, getConversations } from "@/lib/api";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { GATEWAY_LABELS } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function AnalyticsPage() {
-  const { agents, setAgents, conversations, setConversations, analytics, setAnalytics } = useStore();
+  const { agents, setAgents, conversations, setConversations, analytics, setAnalytics } = useStore(useShallow((s) => ({ agents: s.agents, setAgents: s.setAgents, conversations: s.conversations, setConversations: s.setConversations, analytics: s.analytics, setAnalytics: s.setAnalytics })));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -242,13 +243,13 @@ export default function AnalyticsPage() {
                       />
                       <div className="relative grid grid-cols-6 gap-2 px-3 py-2.5 items-center">
                         <div className="col-span-2 flex items-center gap-2 min-w-0">
-                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-medium text-white", getAvatarColor(stat.agent_id))}>
+                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-medium text-white", getAvatarColor(stat.agent_id))}>
                             {getInitials(stat.agent_name)}
                           </div>
                           <div className="min-w-0">
                             <div className="text-sm font-medium truncate">{stat.agent_name}</div>
                             {agent && (
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[0.625rem] text-muted-foreground">
                                 {GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}
                               </div>
                             )}

@@ -17,6 +17,16 @@ import {
   getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase,
   getDocuments, uploadDocument, deleteDocument,
 } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { KnowledgeBase, KBDocument } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -49,6 +59,8 @@ export default function KnowledgePage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTargetId, setUploadTargetId] = useState<string | null>(null);
+  const [deletingKB, setDeletingKB] = useState<KnowledgeBase | null>(null);
+  const [deletingDoc, setDeletingDoc] = useState<{ kbId: string; doc: KBDocument } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -273,10 +285,10 @@ export default function KnowledgePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{kb.name}</span>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-[0.625rem]">
                         {kb.document_count} doc{kb.document_count !== 1 ? "s" : ""}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600">
+                      <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
                         {kb.total_chunks} chunk{kb.total_chunks !== 1 ? "s" : ""}
                       </Badge>
                     </div>
@@ -305,7 +317,7 @@ export default function KnowledgePage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={(e) => handleDeleteKB(kb.id, e)}
+                      onClick={(e) => { e.stopPropagation(); setDeletingKB(kb); }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -349,12 +361,12 @@ export default function KnowledgePage() {
                                 <span className="text-sm font-medium truncate">{doc.file_name}</span>
                                 <Badge
                                   variant="outline"
-                                  className={`text-[10px] ${fileTypeBadgeColor(doc.file_type)}`}
+                                  className={`text-[0.625rem] ${fileTypeBadgeColor(doc.file_type)}`}
                                 >
                                   {doc.file_type.toUpperCase()}
                                 </Badge>
                               </div>
-                              <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                              <div className="flex items-center gap-3 mt-0.5 text-[0.625rem] text-muted-foreground">
                                 <span>{formatFileSize(doc.file_size)}</span>
                                 <span>{doc.chunk_count} chunk{doc.chunk_count !== 1 ? "s" : ""}</span>
                                 <span>{new Date(doc.created_at).toLocaleDateString()}</span>
@@ -364,7 +376,7 @@ export default function KnowledgePage() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
-                              onClick={() => handleDeleteDoc(kb.id, doc.id)}
+                              onClick={() => setDeletingDoc({ kbId: kb.id, doc })}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -394,6 +406,56 @@ export default function KnowledgePage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!deletingKB} onOpenChange={(open) => { if (!open) setDeletingKB(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Knowledge Base</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingKB?.name}&quot;? This will permanently remove the knowledge base and all its documents. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingKB) {
+                  handleDeleteKB(deletingKB.id, { stopPropagation: () => {} } as React.MouseEvent);
+                  setDeletingKB(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deletingDoc} onOpenChange={(open) => { if (!open) setDeletingDoc(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingDoc?.doc.file_name}&quot;? This will permanently remove the document and its chunks. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingDoc) {
+                  handleDeleteDoc(deletingDoc.kbId, deletingDoc.doc.id);
+                  setDeletingDoc(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

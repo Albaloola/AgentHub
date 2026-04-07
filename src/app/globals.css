@@ -62,24 +62,24 @@
   --accent-color-dim: hsl(var(--accent-hue), var(--accent-sat), 20%);
   --accent-color-glow: hsla(var(--accent-hue), var(--accent-sat), 45%, 0.3);
 
-  /* Surface system (VoltAgent-inspired warm darks) */
-  --background: #050507;         /* Abyss Black */
-  --foreground: #f2f2f2;         /* Snow White */
-  --card: #101010;               /* Carbon Surface */
-  --card-foreground: #f2f2f2;
-  --popover: #101010;
-  --popover-foreground: #f2f2f2;
-  --primary: #f2f2f2;
-  --primary-foreground: #101010;
-  --secondary: #1a1a1c;
-  --secondary-foreground: #f2f2f2;
-  --muted: #1a1a1c;
-  --muted-foreground: #8b949e;   /* Steel Slate */
-  --accent: #1a1a1c;
-  --accent-foreground: #f2f2f2;
-  --destructive: #fb565b;        /* Danger Coral */
-  --border: #3d3a39;             /* Warm Charcoal */
-  --input: #1a1a1c;
+  /* Surface system (light mode defaults) */
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #1c1917;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #1c1917;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  --accent: #f5f5f4;
+  --accent-foreground: #1c1917;
+  --destructive: #dc2626;
+  --border: #d6d3d1;
+  --input: #f5f5f4;
   --ring: #3b82f6;
 
   /* Chart colors */
@@ -90,14 +90,34 @@
   --chart-5: #ef4444;
 
   /* Sidebar */
-  --sidebar: #080809;
-  --sidebar-foreground: #f2f2f2;
+  --sidebar: #f7f7f6;
+  --sidebar-foreground: #1c1917;
   --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #f2f2f2;
-  --sidebar-accent: #1a1a1c;
-  --sidebar-accent-foreground: #f2f2f2;
-  --sidebar-border: #3d3a39;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f4;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
   --sidebar-ring: #3b82f6;
+
+  /* Glass morphism (light mode) */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border-color: rgba(0, 0, 0, 0.08);
+  --glass-inner-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+
+  /* Neon lighting (light mode) */
+  --neon-blue-shadow: 0 2px 8px rgba(59,130,246,0.15), 0 0 0 1px rgba(59,130,246,0.2);
+  --neon-blue-shadow-hover: 0 4px 12px rgba(59,130,246,0.25), 0 0 0 1px rgba(59,130,246,0.35);
+  --neon-violet-shadow: 0 2px 8px rgba(139,92,246,0.15), 0 0 0 1px rgba(139,92,246,0.2);
+  --neon-violet-shadow-hover: 0 4px 12px rgba(139,92,246,0.25), 0 0 0 1px rgba(139,92,246,0.35);
+  --neon-emerald-shadow: 0 2px 8px rgba(16,185,129,0.15), 0 0 0 1px rgba(16,185,129,0.2);
+  --neon-emerald-shadow-hover: 0 4px 12px rgba(16,185,129,0.25), 0 0 0 1px rgba(16,185,129,0.35);
+  --neon-amber-shadow: 0 2px 8px rgba(245,158,11,0.15), 0 0 0 1px rgba(245,158,11,0.2);
+  --neon-amber-shadow-hover: 0 4px 12px rgba(245,158,11,0.25), 0 0 0 1px rgba(245,158,11,0.35);
+  --neon-cyan-shadow: 0 2px 8px rgba(6,182,212,0.15), 0 0 0 1px rgba(6,182,212,0.2);
+  --neon-cyan-shadow-hover: 0 4px 12px rgba(6,182,212,0.25), 0 0 0 1px rgba(6,182,212,0.35);
+  --neon-rose-shadow: 0 2px 8px rgba(251,86,91,0.15), 0 0 0 1px rgba(251,86,91,0.2);
+  --neon-rose-shadow-hover: 0 4px 12px rgba(251,86,91,0.25), 0 0 0 1px rgba(251,86,91,0.35);
+  --neon-text-shadow: none;
 }
 
 .dark {
@@ -119,6 +139,39 @@
   --border: #3d3a39;
   --input: #1a1a1c;
   --ring: #3b82f6;
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #8b5cf6;
+  --chart-5: #ef4444;
+  --sidebar: #080809;
+  --sidebar-foreground: #f2f2f2;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #f2f2f2;
+  --sidebar-accent: #1a1a1c;
+  --sidebar-accent-foreground: #f2f2f2;
+  --sidebar-border: #3d3a39;
+  --sidebar-ring: #3b82f6;
+
+  /* Glass morphism (dark mode) */
+  --glass-bg: rgba(16, 16, 16, 0.5);
+  --glass-border-color: var(--glass-glow-color, rgba(59,130,246,0.3));
+  --glass-inner-shadow: inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.08));
+
+  /* Neon lighting (dark mode) */
+  --neon-blue-shadow: 0 0 6px rgba(59,130,246,0.4), 0 0 20px rgba(59,130,246,0.15);
+  --neon-blue-shadow-hover: 0 0 10px rgba(59,130,246,0.6), 0 0 35px rgba(59,130,246,0.25), 0 0 60px rgba(59,130,246,0.1);
+  --neon-violet-shadow: 0 0 6px rgba(139,92,246,0.4), 0 0 20px rgba(139,92,246,0.15);
+  --neon-violet-shadow-hover: 0 0 10px rgba(139,92,246,0.6), 0 0 35px rgba(139,92,246,0.25), 0 0 60px rgba(139,92,246,0.1);
+  --neon-emerald-shadow: 0 0 6px rgba(16,185,129,0.4), 0 0 20px rgba(16,185,129,0.15);
+  --neon-emerald-shadow-hover: 0 0 10px rgba(16,185,129,0.6), 0 0 35px rgba(16,185,129,0.25), 0 0 60px rgba(16,185,129,0.1);
+  --neon-amber-shadow: 0 0 6px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15);
+  --neon-amber-shadow-hover: 0 0 10px rgba(245,158,11,0.6), 0 0 35px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.1);
+  --neon-cyan-shadow: 0 0 6px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.15);
+  --neon-cyan-shadow-hover: 0 0 10px rgba(6,182,212,0.6), 0 0 35px rgba(6,182,212,0.25), 0 0 60px rgba(6,182,212,0.1);
+  --neon-rose-shadow: 0 0 6px rgba(251,86,91,0.4), 0 0 20px rgba(251,86,91,0.15);
+  --neon-rose-shadow-hover: 0 0 10px rgba(251,86,91,0.6), 0 0 35px rgba(251,86,91,0.25), 0 0 60px rgba(251,86,91,0.1);
+  --neon-text-shadow: 0 0 8px;
 }
 
 /* ========================================
@@ -133,12 +186,24 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "calt", "rlig";
   }
-  /* Title font applies to all headings */
-  h1, h2, h3, h4, h5, h6 {
+  /* Title font applies to all headings, panel titles, nav labels, card titles, buttons */
+  h1, h2, h3, h4, h5, h6,
+  .title-font,
+  nav a, nav button,
+  [class*="HudPanel"] .font-medium,
+  .sidebar-title,
+  .card-title {
     font-family: var(--font-title);
   }
-  /* Chat font applies to message content */
-  .prose, .chat-font {
+  /* Button labels use title font */
+  button .font-medium,
+  a .font-medium {
+    font-family: var(--font-title);
+  }
+  /* Chat font applies to message content, chat areas, and prose */
+  .prose, .chat-font,
+  .message-content,
+  [id="chat-scroll"] {
     font-family: var(--font-chat);
   }
 }
@@ -270,30 +335,28 @@
      --agent-glow-color: agent response bubble glow (set via settings) */
 
   .glass {
-    background: rgba(16, 16, 16, 0.5);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px) saturate(1.2);
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
-    border: 1px solid var(--glass-glow-color, rgba(59,130,246,0.3));
-    box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.08)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, rgba(59,130,246,0.12)),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, rgba(59,130,246,0.06));
+    border: 1px solid var(--glass-border-color);
+    box-shadow: var(--glass-inner-shadow),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, transparent);
   }
 
   .glass-strong {
-    background: rgba(8, 8, 9, 0.55);
+    background: var(--glass-bg);
     backdrop-filter: blur(24px) saturate(1.3);
     -webkit-backdrop-filter: blur(24px) saturate(1.3);
-    border: 1px solid var(--glass-glow-color, rgba(59,130,246,0.3));
-    box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.08)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, rgba(59,130,246,0.12)),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, rgba(59,130,246,0.06));
+    border: 1px solid var(--glass-border-color);
+    box-shadow: var(--glass-inner-shadow),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, transparent);
   }
 
   /* Agent response bubbles - strong visible glow */
   .glass-bubble {
-    background: rgba(16, 16, 16, 0.5);
+    background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--agent-glow-color, rgba(16,185,129,0.3));
@@ -318,7 +381,7 @@
   /* Starfield background for chat */
   .starfield {
     position: relative;
-    background: #050507;
+    background: var(--background);
     overflow: hidden;
   }
 
@@ -437,61 +500,61 @@
 
   /* Blue neon - primary actions */
   .neon-blue {
-    box-shadow: 0 0 6px rgba(59,130,246,0.4), 0 0 20px rgba(59,130,246,0.15);
+    box-shadow: var(--neon-blue-shadow);
     border-color: rgba(59,130,246,0.4);
   }
   .neon-blue:hover {
-    box-shadow: 0 0 10px rgba(59,130,246,0.6), 0 0 35px rgba(59,130,246,0.25), 0 0 60px rgba(59,130,246,0.1);
+    box-shadow: var(--neon-blue-shadow-hover);
     border-color: rgba(59,130,246,0.6);
   }
 
   /* Violet neon - secondary/creative */
   .neon-violet {
-    box-shadow: 0 0 6px rgba(139,92,246,0.4), 0 0 20px rgba(139,92,246,0.15);
+    box-shadow: var(--neon-violet-shadow);
     border-color: rgba(139,92,246,0.4);
   }
   .neon-violet:hover {
-    box-shadow: 0 0 10px rgba(139,92,246,0.6), 0 0 35px rgba(139,92,246,0.25), 0 0 60px rgba(139,92,246,0.1);
+    box-shadow: var(--neon-violet-shadow-hover);
     border-color: rgba(139,92,246,0.6);
   }
 
   /* Emerald neon - success/connected */
   .neon-emerald {
-    box-shadow: 0 0 6px rgba(16,185,129,0.4), 0 0 20px rgba(16,185,129,0.15);
+    box-shadow: var(--neon-emerald-shadow);
     border-color: rgba(16,185,129,0.4);
   }
   .neon-emerald:hover {
-    box-shadow: 0 0 10px rgba(16,185,129,0.6), 0 0 35px rgba(16,185,129,0.25), 0 0 60px rgba(16,185,129,0.1);
+    box-shadow: var(--neon-emerald-shadow-hover);
     border-color: rgba(16,185,129,0.6);
   }
 
   /* Amber neon - warnings/attention */
   .neon-amber {
-    box-shadow: 0 0 6px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15);
+    box-shadow: var(--neon-amber-shadow);
     border-color: rgba(245,158,11,0.4);
   }
   .neon-amber:hover {
-    box-shadow: 0 0 10px rgba(245,158,11,0.6), 0 0 35px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.1);
+    box-shadow: var(--neon-amber-shadow-hover);
     border-color: rgba(245,158,11,0.6);
   }
 
   /* Cyan neon - info/data */
   .neon-cyan {
-    box-shadow: 0 0 6px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.15);
+    box-shadow: var(--neon-cyan-shadow);
     border-color: rgba(6,182,212,0.4);
   }
   .neon-cyan:hover {
-    box-shadow: 0 0 10px rgba(6,182,212,0.6), 0 0 35px rgba(6,182,212,0.25), 0 0 60px rgba(6,182,212,0.1);
+    box-shadow: var(--neon-cyan-shadow-hover);
     border-color: rgba(6,182,212,0.6);
   }
 
   /* Rose neon - destructive/stop */
   .neon-rose {
-    box-shadow: 0 0 6px rgba(251,86,91,0.4), 0 0 20px rgba(251,86,91,0.15);
+    box-shadow: var(--neon-rose-shadow);
     border-color: rgba(251,86,91,0.4);
   }
   .neon-rose:hover {
-    box-shadow: 0 0 10px rgba(251,86,91,0.6), 0 0 35px rgba(251,86,91,0.25), 0 0 60px rgba(251,86,91,0.1);
+    box-shadow: var(--neon-rose-shadow-hover);
     border-color: rgba(251,86,91,0.6);
   }
 
@@ -520,12 +583,60 @@
   }
 
   /* Neon text glow */
-  .text-neon-blue { color: #60a5fa; text-shadow: 0 0 8px rgba(59,130,246,0.5); }
-  .text-neon-violet { color: #a78bfa; text-shadow: 0 0 8px rgba(139,92,246,0.5); }
-  .text-neon-emerald { color: #34d399; text-shadow: 0 0 8px rgba(16,185,129,0.5); }
-  .text-neon-amber { color: #fbbf24; text-shadow: 0 0 8px rgba(245,158,11,0.5); }
-  .text-neon-cyan { color: #22d3ee; text-shadow: 0 0 8px rgba(6,182,212,0.5); }
-  .text-neon-rose { color: #fb7185; text-shadow: 0 0 8px rgba(251,86,91,0.5); }
+  .text-neon-blue { color: #60a5fa; text-shadow: var(--neon-text-shadow) rgba(59,130,246,0.5); }
+  .text-neon-violet { color: #a78bfa; text-shadow: var(--neon-text-shadow) rgba(139,92,246,0.5); }
+  .text-neon-emerald { color: #34d399; text-shadow: var(--neon-text-shadow) rgba(16,185,129,0.5); }
+  .text-neon-amber { color: #fbbf24; text-shadow: var(--neon-text-shadow) rgba(245,158,11,0.5); }
+  .text-neon-cyan { color: #22d3ee; text-shadow: var(--neon-text-shadow) rgba(6,182,212,0.5); }
+  .text-neon-rose { color: #fb7185; text-shadow: var(--neon-text-shadow) rgba(251,86,91,0.5); }
+}
+
+/* ========================================
+   LIGHT MODE OVERRIDES
+   ======================================== */
+
+/* Light mode: replace stars with subtle dot grid */
+:root:not(.dark) .starfield::before {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  animation: none;
+}
+:root:not(.dark) .starfield::after {
+  background-image: none;
+  background: radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.03), transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(139,92,246,0.03), transparent 50%);
+  animation: none;
+}
+
+/* Light mode: hide meteors */
+:root:not(.dark) .meteor {
+  display: none;
+}
+
+/* Light mode: scrollbar */
+:root:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+}
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* Light mode: resize handles */
+:root:not(.dark) .dashboard-grid .react-resizable-handle::after {
+  border-right-color: rgba(0, 0, 0, 0.15) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Light mode: light sweep hover */
+:root:not(.dark) .light-sweep-hover::after {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.02), transparent);
+}
+
+/* Light mode: nav neon hover */
+:root:not(.dark) .nav-neon:hover {
+  background: rgba(59,130,246,0.06);
+  box-shadow: 0 1px 4px rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.2);
 }
 
 /* ========================================
@@ -550,6 +661,26 @@
 }
 [data-density="spacious"] .prose { font-size: 17px; }
 
+/* ========================================
+   VIEWPORT-AWARE AUTO-SCALING
+   The root font-size scales with viewport width so ALL rem-based
+   Tailwind values (text, spacing, sizing) scale proportionally.
+   This means the entire UI naturally scales from 1080p to 4K
+   without needing to touch individual components.
+
+   At 1920px viewport → 16px base (standard)
+   At 1080px viewport → ~14px base (slightly smaller)
+   At 2560px viewport → ~18px base (slightly larger)
+   At 3840px viewport → ~20px base (comfortable on 4K)
+
+   The manual zoom setting in Settings multiplies on top of this.
+   ======================================== */
+
+:root {
+  /* Fluid root font — the single source of truth for UI scale */
+  font-size: clamp(14px, 0.625rem + 0.4vw, 22px);
+}
+
 /* Hidden scrollbar (keeps scroll functionality) */
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
@@ -566,4 +697,138 @@
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+}
+
+/* ========================================
+   REACT-GRID-LAYOUT OVERRIDES
+   ======================================== */
+
+.dashboard-grid .react-grid-item {
+  transition: all 200ms ease;
+}
+
+.dashboard-grid .react-grid-item.react-draggable-dragging {
+  z-index: 50;
+  opacity: 0.9;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.1);
+  border-radius: 1rem;
+}
+
+.dashboard-grid .react-grid-placeholder {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border: 1px dashed rgba(59, 130, 246, 0.3) !important;
+  border-radius: 1rem !important;
+  opacity: 1 !important;
+}
+
+/* Resize handles - all 8 directions */
+.dashboard-grid .react-resizable-handle {
+  background: none !important;
+}
+
+/* Corner handles: visible triangle indicators */
+.dashboard-grid .react-resizable-handle::after {
+  border-right-color: rgba(255, 255, 255, 0.15) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dashboard-grid .react-resizable-handle:hover::after {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Edge handles (n/s/e/w): hide triangle, cursor is enough */
+.dashboard-grid .react-resizable-handle-n::after,
+.dashboard-grid .react-resizable-handle-s::after,
+.dashboard-grid .react-resizable-handle-e::after,
+.dashboard-grid .react-resizable-handle-w::after {
+  display: none !important;
+}
+
+/* Edge handles: show a subtle line on hover */
+.dashboard-grid .react-resizable-handle-n:hover,
+.dashboard-grid .react-resizable-handle-s:hover {
+  background: linear-gradient(to bottom, rgba(59,130,246,0.3), transparent) !important;
+}
+.dashboard-grid .react-resizable-handle-e:hover,
+.dashboard-grid .react-resizable-handle-w:hover {
+  background: linear-gradient(to right, rgba(59,130,246,0.3), transparent) !important;
+}
+
+/* Page transition */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* ========================================
+   FLUID LAYOUT SYSTEM
+   Scales with viewport instead of fixed px breakpoints.
+   Ensures UI looks good from 1080p to 4K.
+   ======================================== */
+
+/* Main content column (chat messages, pages) - fluid between 600px and 1100px */
+.fluid-content-width {
+  width: 100%;
+  max-width: clamp(600px, 65vw, 1100px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Narrower content (settings, detail pages) */
+.fluid-narrow-width {
+  width: 100%;
+  max-width: clamp(500px, 55vw, 900px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Wide content (dashboards, grids) */
+.fluid-wide-width {
+  width: 100%;
+  max-width: clamp(800px, 80vw, 1400px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Fluid text sizes that scale with viewport */
+.text-fluid-xs { font-size: clamp(0.65rem, 0.6rem + 0.2vw, 0.8rem); }
+.text-fluid-sm { font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.95rem); }
+.text-fluid-base { font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1.1rem); }
+.text-fluid-lg { font-size: clamp(1rem, 0.9rem + 0.4vw, 1.35rem); }
+.text-fluid-xl { font-size: clamp(1.25rem, 1rem + 0.6vw, 1.75rem); }
+.text-fluid-2xl { font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2.25rem); }
+.text-fluid-3xl { font-size: clamp(1.875rem, 1.5rem + 1vw, 3rem); }
+
+/* Fluid spacing */
+.p-fluid { padding: clamp(0.75rem, 0.5rem + 0.5vw, 1.5rem); }
+.gap-fluid { gap: clamp(0.5rem, 0.25rem + 0.4vw, 1rem); }
+
+/* ========================================
+   LINE CLAMP UTILITIES
+   ======================================== */
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ========================================
+   FOCUS VISIBLE (keyboard navigation)
+   ======================================== */
+
+/* Focus visible ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* Remove default focus outline when clicking */
+:focus:not(:focus-visible) {
+  outline: none;
 }

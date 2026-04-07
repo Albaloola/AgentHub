@@ -84,7 +84,7 @@ export function ColorPicker({ color, onChange, onClose }: ColorPickerProps) {
   }, [dragging, handleCanvasInteraction]);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] glass-strong p-4 space-y-4 animate-fade-in w-72">
+    <div className="rounded-2xl border border-foreground/[0.08] glass-strong p-4 space-y-4 animate-fade-in w-72">
       {/* Saturation/Lightness canvas */}
       <div
         ref={canvasRef}
@@ -174,7 +174,7 @@ export function ColorPicker({ color, onChange, onClose }: ColorPickerProps) {
       {/* Preview + value */}
       <div className="flex items-center gap-3">
         <div
-          className="h-10 w-10 rounded-xl border border-white/[0.1] shrink-0"
+          className="h-10 w-10 rounded-xl border border-foreground/[0.1] shrink-0"
           style={{ background: currentColor }}
         />
         <div className="flex-1">

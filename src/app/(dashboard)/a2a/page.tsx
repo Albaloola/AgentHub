@@ -22,7 +22,8 @@ import { toast } from "sonner";
 type CardWithName = A2AAgentCard & { agent_name?: string };
 
 export default function A2APage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [cards, setCards] = useState<CardWithName[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -190,7 +191,7 @@ export default function A2APage() {
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-medium text-white shrink-0",
+                        "flex h-10 w-10 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
                         getAvatarColor(card.agent_id),
                       )}
                     >
@@ -202,7 +203,7 @@ export default function A2APage() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px]",
+                            "text-[0.625rem]",
                             card.is_published
                               ? "border-emerald-500/30 text-emerald-600"
                               : "border-muted-foreground/30 text-muted-foreground",

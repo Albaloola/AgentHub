@@ -1,8 +1,13 @@
 "use client";
 
 import { X, FileText, Image, FileCode, File } from "lucide-react";
-import type { UploadedFile } from "./file-attachment";
-export type { UploadedFile } from "./file-attachment";
+
+export interface UploadedFile {
+  id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+}
 
 interface FileChipsProps {
   files: UploadedFile[];
@@ -33,8 +38,8 @@ export function FileChips({ files, onRemove }: FileChipsProps) {
           className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs"
         >
           {getFileIcon(file.file_type)}
-          <span className="max-w-[120px] truncate">{file.file_name}</span>
-          <span className="text-[10px] text-muted-foreground">{formatFileSize(file.file_size)}</span>
+          <span className="max-w-[7.5rem] truncate">{file.file_name}</span>
+          <span className="text-[0.625rem] text-muted-foreground">{formatFileSize(file.file_size)}</span>
           <button
             className="ml-1 rounded-sm p-0.5 hover:bg-accent"
             onClick={() => onRemove(file.id)}

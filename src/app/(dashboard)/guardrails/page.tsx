@@ -53,7 +53,8 @@ const PATTERN_HELPERS: Record<string, string> = {
 };
 
 export default function GuardrailsPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [rules, setRules] = useState<GuardrailRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -215,17 +216,17 @@ export default function GuardrailsPage() {
                       <span className="font-medium">{rule.name}</span>
                       <Badge
                         variant="outline"
-                        className={cn("text-[10px]", TYPE_COLORS[rule.type])}
+                        className={cn("text-[0.625rem]", TYPE_COLORS[rule.type])}
                       >
                         {TYPE_LABELS[rule.type] || rule.type}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={cn("text-[10px]", ACTION_COLORS[rule.action])}
+                        className={cn("text-[0.625rem]", ACTION_COLORS[rule.action])}
                       >
                         {rule.action}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-[0.625rem]">
                         {rule.scope}
                         {agentName ? `: ${agentName}` : ""}
                       </Badge>
@@ -375,7 +376,7 @@ function CreateGuardrailDialog({
             onChange={(e) => setPattern(e.target.value)}
             rows={3}
           />
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[0.625rem] text-muted-foreground mt-1">
             {PATTERN_HELPERS[type]}
           </p>
         </div>

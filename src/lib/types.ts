@@ -473,6 +473,27 @@ export interface KBDocument {
   created_at: string;
 }
 
+export interface ReplaySnapshot {
+  id: string;
+  conversation_id: string;
+  message_index: number;
+  timestamp_ms: number;
+  snapshot_data: string; // JSON string of ReplaySnapshotData
+  created_at: string;
+}
+
+export interface ReplaySnapshotData {
+  event: "message_added" | "message_edited" | "message_deleted" | "tool_call" | "agent_start" | "handoff" | "checkpoint";
+  message_id?: string;
+  agent_id?: string;
+  agent_name?: string;
+  content_preview?: string;
+  token_count?: number;
+  response_time_ms?: number;
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+
 // === Phase 3-8 Types ===
 
 export interface Persona {
@@ -581,6 +602,21 @@ export interface OnboardingState {
   is_complete: boolean;
   current_step: number;
   created_at: string;
+}
+
+export type PermissionLevel = "viewer" | "editor" | "admin";
+
+export interface ConversationPermission {
+  conversation_id: string;
+  user_id: string;
+  permission: PermissionLevel;
+  created_at: string;
+}
+
+export interface ConversationPermissionWithUser extends ConversationPermission {
+  display_name: string;
+  email: string | null;
+  avatar_url: string | null;
 }
 
 export interface A2AAgentCard {

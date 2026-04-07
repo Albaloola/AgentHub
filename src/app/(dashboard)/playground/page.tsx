@@ -42,7 +42,8 @@ const ENV_ICONS: Record<string, typeof Code2> = {
 };
 
 export default function PlaygroundPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +52,9 @@ export default function PlaygroundPage() {
   const [selectedVersionId, setSelectedVersionId] = useState<string>("custom");
   const [behaviorMode, setBehaviorMode] = useState<BehaviorMode>("default");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [variables, setVariables] = useState("[]");
+  const [modelParams, setModelParams] = useState("{}");
+  const [editEnvironment, setEditEnvironment] = useState<string>("dev");
   const [testInput, setTestInput] = useState("");
   const [response, setResponse] = useState("");
   const [running, setRunning] = useState(false);
@@ -91,12 +95,15 @@ export default function PlaygroundPage() {
     }
   }, [selectedAgentId]);
 
-  // When version selection changes, update system prompt
+  // When version selection changes, update system prompt + metadata
   useEffect(() => {
     if (selectedVersionId !== "custom") {
       const version = versions.find((v) => v.id === selectedVersionId);
       if (version) {
         setSystemPrompt(version.content);
+        setVariables(version.variables || "[]");
+        setModelParams(version.model_params || "{}");
+        setEditEnvironment(version.environment || "dev");
       }
     }
   }, [selectedVersionId, versions]);
@@ -106,10 +113,42 @@ export default function PlaygroundPage() {
     [versions, selectedAgentId],
   );
 
-  const activeVersions = useMemo(
-    () => versions.filter((v) => v.is_active),
-    [versions],
+  const activeVersion = useMemo(
+    () => agentVersions.find((v) => v.is_active),
+    [agentVersions],
   );
+
+  const selectedVersion = useMemo(
+    () => selectedVersionId !== "custom" ? agentVersions.find((v) => v.id === selectedVersionId) : null,
+    [agentVersions, selectedVersionId],
+  );
+
+  // Auto-diff: when viewing a non-active version, compare against active
+  const autoDiff = useMemo(() => {
+    if (!selectedVersion || selectedVersion.is_active || !activeVersion) return null;
+    const linesA = activeVersion.content.split("\n");
+    const linesB = selectedVersion.content.split("\n");
+    const maxLen = Math.max(linesA.length, linesB.length);
+    const lines: { lineA: string; lineB: string; status: "same" | "changed" | "added" | "removed" }[] = [];
+    let changeCount = 0;
+    for (let i = 0; i < maxLen; i++) {
+      const a = i < linesA.length ? linesA[i] : undefined;
+      const b = i < linesB.length ? linesB[i] : undefined;
+      if (a === b) {
+        lines.push({ lineA: a ?? "", lineB: b ?? "", status: "same" });
+      } else {
+        changeCount++;
+        if (a !== undefined && b !== undefined) {
+          lines.push({ lineA: a, lineB: b, status: "changed" });
+        } else if (a === undefined) {
+          lines.push({ lineA: "", lineB: b ?? "", status: "added" });
+        } else {
+          lines.push({ lineA: a ?? "", lineB: "", status: "removed" });
+        }
+      }
+    }
+    return changeCount > 0 ? { lines, changeCount } : null;
+  }, [selectedVersion, activeVersion]);
 
   async function handleRun() {
     if (!selectedAgentId) {
@@ -227,9 +266,9 @@ export default function PlaygroundPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Playground</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Prompt Engineering</h1>
         <p className="text-sm text-muted-foreground/60 mt-1">
-          Test prompts, manage versions, and experiment with agent behavior
+          Craft prompts, manage versions across environments, and test agent behavior
         </p>
       </div>
 
@@ -247,7 +286,7 @@ export default function PlaygroundPage() {
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-medium text-white",
+                        "flex h-5 w-5 items-center justify-center rounded-full text-[0.5rem] font-medium text-white",
                         getAvatarColor(agent.id),
                       )}
                     >
@@ -302,7 +341,33 @@ export default function PlaygroundPage() {
         <div className="space-y-3">
           <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">System Prompt</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  System Prompt
+                  {selectedVersion && (
+                    <Badge variant="outline" className={cn("text-[0.625rem]", selectedVersion.is_active ? "border-emerald-500/30 text-emerald-500" : "border-border")}>
+                      v{selectedVersion.version}
+                    </Badge>
+                  )}
+                  {selectedVersionId === "custom" && (
+                    <Badge variant="outline" className="text-[0.625rem] border-violet-500/30 text-violet-500">
+                      custom
+                    </Badge>
+                  )}
+                </CardTitle>
+                <div className="w-32">
+                  <Select value={editEnvironment} onValueChange={(v) => v && setEditEnvironment(v)}>
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dev">dev</SelectItem>
+                      <SelectItem value="staging">staging</SelectItem>
+                      <SelectItem value="production">production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -317,6 +382,77 @@ export default function PlaygroundPage() {
               />
             </CardContent>
           </Card>
+
+          {/* Variables & Model Params */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground">Template Variables</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder='[{"name": "user_name", "default": "World"}]'
+                  value={variables}
+                  onChange={(e) => setVariables(e.target.value)}
+                  rows={3}
+                  className="font-mono text-xs"
+                />
+              </CardContent>
+            </Card>
+            <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground">Model Parameters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder='{"temperature": 0.7, "max_tokens": 4096}'
+                  value={modelParams}
+                  onChange={(e) => setModelParams(e.target.value)}
+                  rows={3}
+                  className="font-mono text-xs"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Auto-diff against active version */}
+          {autoDiff && (
+            <Card className="border-amber-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs flex items-center gap-2 text-amber-500">
+                  <GitCompare className="h-3 w-3" />
+                  {autoDiff.changeCount} line{autoDiff.changeCount !== 1 ? "s" : ""} differ from active v{activeVersion?.version}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="rounded-b-lg overflow-auto max-h-40">
+                  <table className="w-full text-[0.6875rem] font-mono">
+                    <tbody>
+                      {autoDiff.lines.filter((l) => l.status !== "same").map((line, i) => (
+                        <tr
+                          key={i}
+                          className={cn(
+                            line.status === "changed" && "bg-yellow-500/10",
+                            line.status === "added" && "bg-emerald-500/10",
+                            line.status === "removed" && "bg-red-500/10",
+                          )}
+                        >
+                          <td className="px-2 py-0.5 w-1 select-none text-center">
+                            {line.status === "changed" && <span className="text-yellow-600">~</span>}
+                            {line.status === "added" && <span className="text-emerald-600">+</span>}
+                            {line.status === "removed" && <span className="text-red-600">-</span>}
+                          </td>
+                          <td className="px-2 py-0.5 whitespace-pre-wrap">
+                            {line.status === "removed" ? line.lineA : line.lineB}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="transition-all duration-300 hover:shadow-[0_0_20px_oklch(0.55_0.24_264/0.06)]">
             <CardHeader className="pb-2">
@@ -361,7 +497,7 @@ export default function PlaygroundPage() {
               {running && <Loader2 className="h-3 w-3 animate-spin" />}
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 min-h-[300px]">
+          <CardContent className="flex-1 min-h-[18.75rem]">
             {response ? (
               <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
                 <ReactMarkdown
@@ -413,7 +549,8 @@ export default function PlaygroundPage() {
           <div>
             <h2 className="text-lg font-semibold">Prompt Versions</h2>
             <p className="text-xs text-muted-foreground">
-              {agentVersions.length} versions, {agentVersions.filter((v) => v.is_active).length} active
+              {agentVersions.length} version{agentVersions.length !== 1 ? "s" : ""}
+              {activeVersion ? ` \u00b7 active: v${activeVersion.version} (${activeVersion.environment})` : " \u00b7 none active"}
             </p>
           </div>
           <div className="flex gap-2">
@@ -433,6 +570,9 @@ export default function PlaygroundPage() {
               <CreateVersionDialog
                 agentId={selectedAgentId}
                 content={systemPrompt}
+                variables={variables}
+                modelParams={modelParams}
+                initialEnvironment={editEnvironment}
                 onCreated={(v) => {
                   setVersions((prev) => [v, ...prev]);
                   setCreateVersionOpen(false);
@@ -480,7 +620,7 @@ export default function PlaygroundPage() {
               </div>
               {diffResult && (
                 <div className="rounded-md border border-border overflow-auto max-h-64">
-                  <table className="w-full text-[11px] font-mono">
+                  <table className="w-full text-[0.6875rem] font-mono">
                     <tbody>
                       {diffResult.lines.map((line, i) => (
                         <tr
@@ -535,7 +675,7 @@ export default function PlaygroundPage() {
               .map((version) => {
                 const EnvIcon = ENV_ICONS[version.environment] || Code2;
                 return (
-                  <Card key={version.id} className="overflow-hidden">
+                  <Card key={version.id} className={cn("overflow-hidden transition-all duration-300", version.is_active && "shadow-[0_0_16px_oklch(0.55_0.24_155/0.15)] border-emerald-500/30")}>
                     <div className="flex items-center gap-3 p-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
                         <EnvIcon className="h-4 w-4 text-muted-foreground" />
@@ -552,12 +692,12 @@ export default function PlaygroundPage() {
                           )}
                           <Badge
                             variant="outline"
-                            className={cn("text-[10px]", ENV_COLORS[version.environment])}
+                            className={cn("text-[0.625rem]", ENV_COLORS[version.environment])}
                           >
                             {version.environment}
                           </Badge>
                           {version.is_active && (
-                            <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600">
+                            <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
                               active
                             </Badge>
                           )}
@@ -572,6 +712,9 @@ export default function PlaygroundPage() {
                           variant="ghost" size="sm" className="h-7 text-xs"
                           onClick={() => {
                             setSystemPrompt(version.content);
+                            setVariables(version.variables || "[]");
+                            setModelParams(version.model_params || "{}");
+                            setEditEnvironment(version.environment || "dev");
                             setSelectedVersionId(version.id);
                           }}
                         >
@@ -607,14 +750,20 @@ export default function PlaygroundPage() {
 function CreateVersionDialog({
   agentId,
   content,
+  variables,
+  modelParams,
+  initialEnvironment,
   onCreated,
 }: {
   agentId: string;
   content: string;
+  variables: string;
+  modelParams: string;
+  initialEnvironment: string;
   onCreated: (version: PromptVersion) => void;
 }) {
   const [name, setName] = useState("");
-  const [environment, setEnvironment] = useState<string>("dev");
+  const [environment, setEnvironment] = useState<string>(initialEnvironment);
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -628,10 +777,16 @@ function CreateVersionDialog({
     }
     setSaving(true);
     try {
+      let parsedVars: string[] | undefined;
+      let parsedParams: Record<string, unknown> | undefined;
+      try { parsedVars = JSON.parse(variables); } catch { /* keep undefined */ }
+      try { parsedParams = JSON.parse(modelParams); } catch { /* keep undefined */ }
       const result = await createPromptVersion({
         agent_id: agentId,
         name: name.trim() || undefined,
         content: content.trim(),
+        variables: parsedVars,
+        model_params: parsedParams,
         environment,
       });
       onCreated({
@@ -640,8 +795,8 @@ function CreateVersionDialog({
         name: name.trim(),
         version: 0, // Will be set by server
         content: content.trim(),
-        variables: "[]",
-        model_params: "{}",
+        variables: variables,
+        model_params: modelParams,
         is_active: false,
         environment: environment as PromptVersion["environment"],
         created_at: new Date().toISOString(),
@@ -683,7 +838,7 @@ function CreateVersionDialog({
 
         <div>
           <Label className="text-xs">Content Preview</Label>
-          <pre className="mt-1 text-[11px] bg-muted rounded-md p-3 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+          <pre className="mt-1 text-[0.6875rem] bg-muted rounded-md p-3 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
             {content.slice(0, 300)}{content.length > 300 ? "..." : ""}
           </pre>
         </div>

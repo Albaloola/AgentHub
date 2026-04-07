@@ -144,7 +144,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
 
       <div className={cn(
         "glass-strong rounded-2xl transition-all duration-300 overflow-hidden",
-        expanded ? "min-h-[300px]" : "",
+        expanded ? "min-h-[18.75rem]" : "",
       )}>
         <FileChips files={attachedFiles} onRemove={removeFile} />
 
@@ -154,11 +154,11 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
             {agents && agents.length > 1 && (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-white/5 px-3 h-8 text-xs hover:bg-white/10 transition-colors shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/30 bg-foreground/5 px-3 h-8 text-xs hover:bg-foreground/10 transition-colors shrink-0"
                 >
                   {targetAgent ? (
                     <>
-                      <div className={cn("h-4 w-4 rounded-md text-[8px] font-medium text-white flex items-center justify-center", getAvatarColor(targetAgent.id))}>
+                      <div className={cn("h-4 w-4 rounded-md text-[0.5rem] font-medium text-white flex items-center justify-center", getAvatarColor(targetAgent.id))}>
                         {getInitials(targetAgent.name)}
                       </div>
                       <span>{targetAgent.name}</span>
@@ -172,7 +172,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
                   <DropdownMenuItem onClick={() => setTargetAgent(null)}>All agents</DropdownMenuItem>
                   {agents.map((agent) => (
                     <DropdownMenuItem key={agent.id} onClick={() => setTargetAgent(agent)}>
-                      <div className={cn("h-4 w-4 rounded-md text-[8px] font-medium text-white flex items-center justify-center mr-2", getAvatarColor(agent.id))}>
+                      <div className={cn("h-4 w-4 rounded-md text-[0.5rem] font-medium text-white flex items-center justify-center mr-2", getAvatarColor(agent.id))}>
                         {getInitials(agent.name)}
                       </div>
                       {agent.name}
@@ -198,6 +198,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
               className="h-7 w-7 shrink-0 rounded-lg transition-all duration-200"
               disabled={disabled || uploading || isStreaming}
               onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach file"
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(139,92,246,0.5), 0 0 20px rgba(139,92,246,0.2)"; e.currentTarget.style.background = "rgba(139,92,246,0.1)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
             >
@@ -212,6 +213,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
                     "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 cursor-pointer",
                     chatFont ? "text-blue-400" : "",
                   )}
+                  aria-label="Change chat font"
                   onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.2)"; e.currentTarget.style.background = "rgba(59,130,246,0.1)"; }}
                   onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
                 >
@@ -239,6 +241,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
               className="h-7 w-7 shrink-0 rounded-lg transition-all duration-200"
               onClick={() => setExpanded(!expanded)}
               title={expanded ? "Minimize" : "Expand"}
+              aria-label={expanded ? "Minimize input" : "Expand input"}
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(6,182,212,0.5), 0 0 20px rgba(6,182,212,0.2)"; e.currentTarget.style.background = "rgba(6,182,212,0.1)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
             >
@@ -246,21 +249,28 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
             </Button>
           </div>
 
-          {/* Text area */}
-          <div className="flex items-end gap-2 flex-1 w-full">
-            <Textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleInput}
-              onKeyDown={handleKeyDown}
-              placeholder="Send a message..."
-              disabled={disabled}
-              className={cn(
-                "resize-none text-sm bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/40",
-                expanded ? "min-h-[200px] flex-1" : "min-h-[44px] max-h-[300px]",
+          {/* Text area + token count */}
+          <div className="flex items-end gap-2 flex-1 w-full relative">
+            <div className="flex-1 relative">
+              <Textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleInput}
+                onKeyDown={handleKeyDown}
+                placeholder="Send a message..."
+                disabled={disabled}
+                className={cn(
+                  "resize-none text-sm bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/40",
+                  expanded ? "min-h-[12.5rem]" : "min-h-[2.75rem] max-h-[300px]",
+                )}
+                rows={expanded ? 8 : 2}
+              />
+              {content.length > 0 && (
+                <div className="absolute bottom-1 right-1 text-[0.625rem] text-muted-foreground/40 tabular-nums pointer-events-none">
+                  ~{Math.ceil(content.length / 4)} tokens
+                </div>
               )}
-              rows={expanded ? 8 : 2}
-            />
+            </div>
 
             {isStreaming ? (
               <Button
@@ -268,6 +278,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
                 size="icon"
                 className="shrink-0 h-10 w-10 rounded-xl"
                 onClick={onCancel}
+                aria-label="Stop generating"
               >
                 <Square className="h-4 w-4" />
               </Button>
@@ -277,6 +288,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
                 className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 neon-action transition-all duration-200 hover:scale-105"
                 onClick={handleSend}
                 disabled={!content.trim() || disabled}
+                aria-label="Send message"
               >
                 <Send className="h-4 w-4" />
               </Button>

@@ -54,7 +54,7 @@ export function HudPanel({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl border border-white/[0.06] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover-lift",
+        "flex flex-col rounded-2xl border border-foreground/[0.06] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover-lift",
         "bg-card/80 backdrop-blur-xl",
         accent !== "none" && `border-t-2 ${ACCENT_STYLES[accent]}`,
         maximized && "fixed inset-4 z-50",
@@ -65,9 +65,9 @@ export function HudPanel({
       {/* Header */}
       <div
         className={cn(
-          "relative flex items-center gap-2 px-4 shrink-0 border-b border-white/[0.04] transition-colors duration-200",
+          "relative flex items-center gap-2 px-4 shrink-0 border-b border-foreground/[0.04] transition-colors duration-200 panel-drag-header",
           variant === "compact" ? "py-2" : "py-2.5",
-          collapsible && "cursor-pointer hover:bg-white/[0.02]",
+          collapsible && "cursor-pointer hover:bg-foreground/[0.02]",
         )}
         onClick={collapsible ? () => setCollapsed(!collapsed) : undefined}
       >
@@ -78,7 +78,7 @@ export function HudPanel({
         <span className={cn("font-medium flex-1", variant === "compact" ? "text-xs" : "text-sm")}>{title}</span>
 
         {status && (
-          <span className="text-[10px] text-muted-foreground/60">{status}</span>
+          <span className="text-[0.625rem] text-muted-foreground/60">{status}</span>
         )}
 
         {badge}
@@ -131,17 +131,17 @@ export function HudStat({
 }) {
   return (
     <div className={cn(
-      "flex items-center gap-3 rounded-xl border border-white/[0.06] bg-card/60 backdrop-blur-sm p-3 transition-all duration-300 hover-lift hover:bg-card/80",
+      "flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-card/60 backdrop-blur-sm p-fluid transition-all duration-300 hover-lift hover:bg-card/80",
       accent !== "none" && `border-l-2 ${ACCENT_STYLES[accent].split(" ")[0]}`,
     )}>
       {icon && <span className="text-muted-foreground">{icon}</span>}
       <div>
-        <div className="text-xl font-bold tabular-nums">{value}</div>
-        <div className="text-[10px] text-muted-foreground">{label}</div>
+        <div className="text-fluid-xl font-bold tabular-nums">{value}</div>
+        <div className="text-fluid-xs text-muted-foreground">{label}</div>
       </div>
       {trend && (
         <div className={cn(
-          "ml-auto text-[10px] font-medium",
+          "ml-auto text-[0.625rem] font-medium",
           trend === "up" ? "text-emerald-400" : trend === "down" ? "text-red-400" : "text-muted-foreground",
         )}>
           {trend === "up" ? "+" : trend === "down" ? "-" : "="}

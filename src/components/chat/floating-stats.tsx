@@ -104,7 +104,9 @@ export function FloatingStats({
             </div>
             <button
               onClick={() => setExpanded(false)}
-              className="h-6 w-6 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/5 transition-colors"
+              className="h-6 w-6 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/5 transition-colors"
+              aria-label="Close stats panel"
+              aria-expanded={true}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -118,7 +120,7 @@ export function FloatingStats({
                   {formatTokens(stats.totalTokens)}
                 </div>
                 {isStreaming && (
-                  <span className="text-[10px] text-blue-400 animate-pulse">streaming...</span>
+                  <span className="text-[0.625rem] text-blue-400 animate-pulse">streaming...</span>
                 )}
               </StatSection>
 
@@ -138,7 +140,7 @@ export function FloatingStats({
                     {stats.toolCallsList.map((tc) => (
                       <div
                         key={tc.id}
-                        className="flex items-center gap-2 text-xs rounded-lg px-2 py-1 bg-white/[0.03]"
+                        className="flex items-center gap-2 text-xs rounded-lg px-2 py-1 bg-foreground/[0.03]"
                       >
                         <ToolStatusIcon status={tc.status} />
                         <span className="font-mono text-foreground/80 truncate flex-1">
@@ -147,7 +149,7 @@ export function FloatingStats({
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[9px] px-1 py-0 rounded-md",
+                            "text-[0.5625rem] px-1 py-0 rounded-md",
                             tc.status === "success"
                               ? "text-emerald-400 border-emerald-500/20"
                               : tc.status === "error"
@@ -172,7 +174,7 @@ export function FloatingStats({
                     {subagents.map((sa) => (
                       <div
                         key={sa.id}
-                        className="flex items-center gap-2 text-xs rounded-lg px-2 py-1 bg-white/[0.03]"
+                        className="flex items-center gap-2 text-xs rounded-lg px-2 py-1 bg-foreground/[0.03]"
                       >
                         <SubagentStatusIcon status={sa.status} />
                         <span className="text-foreground/80 truncate flex-1">
@@ -181,7 +183,7 @@ export function FloatingStats({
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[9px] px-1 py-0 rounded-md",
+                            "text-[0.5625rem] px-1 py-0 rounded-md",
                             sa.status === "completed"
                               ? "text-emerald-400 border-emerald-500/20"
                               : sa.status === "failed"
@@ -218,6 +220,8 @@ export function FloatingStats({
         /* Collapsed pill */
         <button
           onClick={() => setExpanded(true)}
+          aria-label="Open stats panel"
+          aria-expanded={false}
           className={cn(
             "flex flex-col items-center gap-2 rounded-2xl px-2.5 py-3 transition-all duration-300",
             "glass-strong border border-border/20 hover:border-border/40",
@@ -235,7 +239,7 @@ export function FloatingStats({
           {/* Token count */}
           <div className="flex flex-col items-center">
             <Coins className="h-3 w-3 text-amber-400/70" />
-            <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">
+            <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
               {formatTokens(stats.totalTokens)}
             </span>
           </div>
@@ -243,7 +247,7 @@ export function FloatingStats({
           {/* Tool calls count */}
           <div className="flex flex-col items-center">
             <Wrench className="h-3 w-3 text-violet-400/70" />
-            <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">
+            <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
               {stats.totalToolCalls}
             </span>
           </div>
@@ -252,7 +256,7 @@ export function FloatingStats({
           {subagents.length > 0 && (
             <div className="flex flex-col items-center">
               <Network className="h-3 w-3 text-emerald-400/70" />
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums mt-0.5">
+              <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
                 {subagents.length}
               </span>
             </div>

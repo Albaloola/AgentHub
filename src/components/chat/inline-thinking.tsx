@@ -34,11 +34,13 @@ export function InlineThinking({
       {/* Pill trigger */}
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-label={expanded ? "Collapse thinking" : "Expand thinking"}
+        aria-expanded={expanded}
         className={cn(
           "flex items-center gap-2 rounded-2xl px-4 py-2 text-xs transition-all duration-300",
           "glass-bubble border border-border/20 hover:border-border/40",
           !isComplete && isStreaming && "shadow-[0_0_12px_rgba(59,130,246,0.3),0_0_24px_rgba(59,130,246,0.15)] animate-pulse",
-          isComplete && "hover:bg-white/5",
+          isComplete && "hover:bg-foreground/5",
         )}
       >
         <Brain

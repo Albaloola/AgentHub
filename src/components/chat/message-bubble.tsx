@@ -96,7 +96,7 @@ export function MessageBubble({
           <Sparkles className="h-4 w-4 text-amber-400" />
         </div>
         <div className="flex-1 glass-bubble rounded-2xl px-5 py-3 text-sm border-amber-500/20">
-          <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400 mb-2">Compacted Context</Badge>
+          <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-400 mb-2">Compacted Context</Badge>
           <div className="prose prose-sm max-w-none dark:prose-invert text-muted-foreground">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           </div>
@@ -107,6 +107,7 @@ export function MessageBubble({
 
   return (
     <div
+      data-message-id={message.id}
       className={cn(
         "group flex gap-3 px-2 py-1.5",
         isUser ? "flex-row-reverse" : "flex-row",
@@ -129,7 +130,7 @@ export function MessageBubble({
           size="md"
         />
       ) : (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-xs font-semibold text-white">?</div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-xs font-semibold text-foreground">?</div>
       )}
 
       {/* Content */}
@@ -141,15 +142,15 @@ export function MessageBubble({
               <span className="text-xs font-medium text-muted-foreground/80">{message.agent.name}</span>
             )}
             {!!message.is_pinned && <Bookmark className="h-3 w-3 text-amber-400 fill-amber-400" />}
-            {!!message.is_edited && <span className="text-[10px] text-muted-foreground/50 italic">(edited)</span>}
-            <span className="text-[10px] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
+            {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
+            <span className="text-[0.625rem] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
           </div>
         )}
 
         {isUser && !!(message.is_pinned || message.is_edited) && (
           <div className="flex items-center gap-2 px-1">
             {!!message.is_pinned && <Bookmark className="h-3 w-3 text-amber-400 fill-amber-400" />}
-            {!!message.is_edited && <span className="text-[10px] text-muted-foreground/50 italic">(edited)</span>}
+            {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
           </div>
         )}
 
@@ -169,7 +170,7 @@ export function MessageBubble({
               ref={editRef}
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-[60px] text-sm bg-transparent border-border/30 rounded-xl"
+              className="min-h-[3.75rem] text-sm bg-transparent border-border/30 rounded-xl"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSaveEdit();
                 if (e.key === "Escape") setEditing(false);
@@ -180,7 +181,7 @@ export function MessageBubble({
                 {saving ? "Saving..." : "Save & Send"}
               </Button>
               <Button size="sm" variant="ghost" className="h-7 text-xs rounded-lg" onClick={() => setEditing(false)}>Cancel</Button>
-              <span className="text-[10px] text-muted-foreground/50 self-center ml-auto">Ctrl+Enter</span>
+              <span className="text-[0.625rem] text-muted-foreground/50 self-center ml-auto">Ctrl+Enter</span>
             </div>
           </div>
         ) : (
@@ -229,9 +230,9 @@ export function MessageBubble({
           )
         )}
 
-        {/* Action bar */}
+        {/* Action bar - wraps on mobile */}
         {showActions && hovered && !editing && !isStreaming && (
-          <div className="flex items-center gap-0.5 px-1 animate-fade-in" style={{ animationDuration: "150ms" }}>
+          <div className="flex items-center gap-0.5 px-1 animate-fade-in flex-wrap overflow-hidden max-w-full" style={{ animationDuration: "150ms" }}>
             {isUser && (
               <ActionBtn icon={Pencil} onClick={() => { setEditContent(message.content); setEditing(true); }} title="Edit" glowColor="#3b82f6" />
             )}
@@ -247,7 +248,7 @@ export function MessageBubble({
             <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={!!message.is_pinned} activeColor="text-amber-400" glowColor="#f59e0b" />
             <CopyBtn text={message.content} />
             {message.token_count > 0 && (
-              <span className="text-[10px] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
+              <span className="text-[0.625rem] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
             )}
           </div>
         )}
@@ -272,6 +273,7 @@ function ActionBtn({ icon: Icon, onClick, title, active, activeColor, glowColor 
       className={cn("h-7 w-7 rounded-lg transition-all duration-200", active && activeColor)}
       onClick={onClick}
       title={title}
+      aria-label={title}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = `0 0 8px ${glow}60, 0 0 20px ${glow}25`;
         e.currentTarget.style.background = `${glow}15`;
@@ -295,6 +297,7 @@ function CopyBtn({ text }: { text: string }) {
       className="h-7 w-7 rounded-lg transition-all duration-200"
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
       title="Copy"
+      aria-label="Copy message"
       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(6,182,212,0.5), 0 0 20px rgba(6,182,212,0.2)"; e.currentTarget.style.background = "rgba(6,182,212,0.1)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
     >
@@ -323,11 +326,11 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         </div>
         <div className="flex items-center gap-1">
           {lineCount > 30 && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={() => setCollapsed(!collapsed)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expand code" : "Collapse code"} aria-expanded={!collapsed}>
               <ChevronDown className={cn("h-3 w-3 transition-transform", !collapsed && "rotate-180")} />
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>
+          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }} aria-label="Copy code">
             {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
           </Button>
         </div>
@@ -359,22 +362,22 @@ function ToolCallPill({ toolCall }: { toolCall: MessageWithToolCalls["tool_calls
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className={cn("flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-all hover:bg-white/5 w-full glass", statusColor)}>
+      <CollapsibleTrigger className={cn("flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-all hover:bg-foreground/5 w-full glass", statusColor)} aria-expanded={open}>
         <Wrench className="h-3 w-3" />
         <span className="font-mono font-medium">{toolCall.tool_name}</span>
-        <Badge variant="outline" className={cn("ml-auto text-[10px] px-1.5 py-0 rounded-md", statusColor)}>{toolCall.status}</Badge>
+        <Badge variant="outline" className={cn("ml-auto text-[0.625rem] px-1.5 py-0 rounded-md", statusColor)}>{toolCall.status}</Badge>
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1.5 rounded-xl border border-border/20 glass p-3 text-xs font-mono space-y-2">
           <div>
             <span className="text-muted-foreground/60">Input:</span>
-            <pre className="mt-1 whitespace-pre-wrap break-all text-[11px] text-foreground/80">{formatJSON(toolCall.input)}</pre>
+            <pre className="mt-1 whitespace-pre-wrap break-all text-[0.6875rem] text-foreground/80">{formatJSON(toolCall.input)}</pre>
           </div>
           {toolCall.output && toolCall.output !== "{}" && (
             <div>
               <span className="text-muted-foreground/60">Output:</span>
-              <pre className="mt-1 whitespace-pre-wrap break-all text-[11px] text-foreground/80">{formatJSON(toolCall.output)}</pre>
+              <pre className="mt-1 whitespace-pre-wrap break-all text-[0.6875rem] text-foreground/80">{formatJSON(toolCall.output)}</pre>
             </div>
           )}
         </div>

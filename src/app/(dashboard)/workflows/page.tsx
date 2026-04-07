@@ -16,6 +16,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/lib/store";
 import { getWorkflows, createWorkflow, updateWorkflow, deleteWorkflow, getAgents } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import type { Workflow, WorkflowNode, WorkflowEdge, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
@@ -23,12 +33,14 @@ import { toast } from "sonner";
 type ViewMode = "list" | "canvas";
 
 export default function WorkflowsPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [workflows, setWorkflowsState] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [activeWorkflow, setActiveWorkflow] = useState<Workflow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(null);
 
   useEffect(() => {
     loadData();
@@ -203,7 +215,7 @@ export default function WorkflowsPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px]",
+                          "text-[0.625rem]",
                           wf.is_active ? "border-emerald-500/30 text-emerald-600" : "",
                         )}
                       >
@@ -237,7 +249,7 @@ export default function WorkflowsPage() {
                     </Button>
                     <Button
                       variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(wf.id)}
+                      onClick={() => setDeletingWorkflow(wf)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -248,6 +260,31 @@ export default function WorkflowsPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!deletingWorkflow} onOpenChange={(open) => { if (!open) setDeletingWorkflow(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingWorkflow?.name}&quot;? This will permanently remove the workflow and all its nodes. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingWorkflow) {
+                  handleDelete(deletingWorkflow.id);
+                  setDeletingWorkflow(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -431,7 +468,7 @@ function WorkflowCanvas({
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <h2 className="font-medium">{workflow.name}</h2>
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-[0.625rem]">
             {nodes.length} nodes
           </Badge>
         </div>
@@ -541,7 +578,7 @@ function WorkflowCanvas({
                     node.type === "delay" ? "bg-violet-600/10" : "bg-emerald-600/10",
                   )}>
                     {agent ? (
-                      <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white", getAvatarColor(agent.id))}>
+                      <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[0.5625rem] font-medium text-white", getAvatarColor(agent.id))}>
                         {getInitials(agent.name)}
                       </div>
                     ) : (
@@ -554,7 +591,7 @@ function WorkflowCanvas({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium truncate">{node.label}</div>
-                    <div className="text-[10px] text-muted-foreground capitalize">{node.type}</div>
+                    <div className="text-[0.625rem] text-muted-foreground capitalize">{node.type}</div>
                   </div>
                 </div>
 

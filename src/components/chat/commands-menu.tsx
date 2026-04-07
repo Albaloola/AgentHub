@@ -109,15 +109,15 @@ export function CommandsMenu({ onSelect, triggerValue, disabled }: CommandsMenuP
 
   return (
     <div className="absolute bottom-full left-0 right-0 mb-2 z-50 animate-fade-in">
-      <div className="mx-4 rounded-xl border border-white/[0.12] glass-strong overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.3)]">
+      <div className="mx-4 rounded-xl border border-foreground/[0.12] glass-strong overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.3)]">
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-foreground/[0.06]">
           <Command className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">Commands</span>
-          <span className="text-[10px] text-muted-foreground ml-auto">
-            <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-[9px]">&uarr;&darr;</kbd> navigate
-            <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-[9px] ml-1">Enter</kbd> select
-            <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-[9px] ml-1">Esc</kbd> close
+          <span className="text-[0.625rem] text-muted-foreground ml-auto">
+            <kbd className="px-1 py-0.5 rounded bg-foreground/[0.06] text-[0.5625rem]">&uarr;&darr;</kbd> navigate
+            <kbd className="px-1 py-0.5 rounded bg-foreground/[0.06] text-[0.5625rem] ml-1">Enter</kbd> select
+            <kbd className="px-1 py-0.5 rounded bg-foreground/[0.06] text-[0.5625rem] ml-1">Esc</kbd> close
           </span>
         </div>
 
@@ -139,8 +139,8 @@ export function CommandsMenu({ onSelect, triggerValue, disabled }: CommandsMenuP
                 className={cn(
                   "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-all duration-150",
                   i === selectedIndex
-                    ? "bg-white/[0.06] text-foreground"
-                    : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground",
+                    ? "bg-foreground/[0.06] text-foreground"
+                    : "text-muted-foreground hover:bg-foreground/[0.03] hover:text-foreground",
                 )}
                 onClick={() => {
                   onSelect(cmd.name + " ");

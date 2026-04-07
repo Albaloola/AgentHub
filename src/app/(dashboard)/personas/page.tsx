@@ -40,7 +40,8 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function PersonasPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -256,14 +257,14 @@ function PersonaCard({
             <div className="flex items-center gap-2">
               <span className="font-medium truncate">{persona.name}</span>
               {persona.is_builtin && (
-                <Badge variant="outline" className="text-[10px] shrink-0">built-in</Badge>
+                <Badge variant="outline" className="text-[0.625rem] shrink-0">built-in</Badge>
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <Badge variant="outline" className="text-[10px]">{persona.category}</Badge>
+              <Badge variant="outline" className="text-[0.625rem]">{persona.category}</Badge>
               <Badge
                 variant="outline"
-                className="text-[10px] border-blue-500/30 text-blue-600"
+                className="text-[0.625rem] border-blue-500/30 text-blue-600"
               >
                 {persona.behavior_mode}
               </Badge>

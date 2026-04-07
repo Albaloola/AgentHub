@@ -43,7 +43,8 @@ function getTypeLabel(type: string): string {
 }
 
 export default function IntegrationsPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -181,15 +182,15 @@ export default function IntegrationsPage() {
                         <span className="font-medium truncate">{integration.name}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[0.625rem]">
                           {getTypeLabel(integration.type)}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={
                             integration.is_active
-                              ? "text-[10px] border-emerald-500/30 text-emerald-600"
-                              : "text-[10px] border-gray-500/30 text-gray-500"
+                              ? "text-[0.625rem] border-emerald-500/30 text-emerald-600"
+                              : "text-[0.625rem] border-gray-500/30 text-gray-500"
                           }
                         >
                           {integration.is_active ? "connected" : "disconnected"}

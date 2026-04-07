@@ -52,7 +52,8 @@ function formatCost(cost: number): string {
 }
 
 export default function TracesPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [traces, setTracesState] = useState<Trace[]>([]);
   const [conversations, setConversations] = useState<ConversationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,7 +257,7 @@ export default function TracesPage() {
                   {agent ? (
                     <div
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-medium text-white shrink-0",
+                        "flex h-8 w-8 items-center justify-center rounded-full text-[0.625rem] font-medium text-white shrink-0",
                         getAvatarColor(agent.id),
                       )}
                     >
@@ -276,14 +277,14 @@ export default function TracesPage() {
                         </span>
                       )}
                       {agent && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[0.625rem]">
                           {agent.name}
                         </Badge>
                       )}
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px]",
+                          "text-[0.625rem]",
                           trace.status === "error"
                             ? "border-red-500/30 text-red-600"
                             : "border-emerald-500/30 text-emerald-600",
@@ -321,7 +322,7 @@ export default function TracesPage() {
                           </span>
                           <div className="flex gap-2 flex-wrap">
                             {Object.entries(SPAN_LABEL_COLORS).map(([type, cls]) => (
-                              <span key={type} className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium", cls)}>
+                              <span key={type} className={cn("text-[0.5625rem] px-1.5 py-0.5 rounded font-medium", cls)}>
                                 {type}
                               </span>
                             ))}
@@ -347,7 +348,7 @@ export default function TracesPage() {
                                 )}
                                 onClick={() => setSelectedSpan(isSelected ? null : span)}
                               >
-                                <span className="text-[10px] text-muted-foreground w-20 truncate shrink-0">
+                                <span className="text-[0.625rem] text-muted-foreground w-20 truncate shrink-0">
                                   {span.name}
                                 </span>
                                 <div className="flex-1 h-5 relative bg-muted rounded overflow-hidden">
@@ -360,7 +361,7 @@ export default function TracesPage() {
                                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-muted-foreground w-14 text-right shrink-0">
+                                <span className="text-[0.625rem] text-muted-foreground w-14 text-right shrink-0">
                                   {formatDuration(span.duration_ms)}
                                 </span>
                               </div>
@@ -387,7 +388,7 @@ export default function TracesPage() {
                               <div>
                                 <Badge
                                   variant="outline"
-                                  className={cn("text-[10px]", SPAN_LABEL_COLORS[selectedSpan.type])}
+                                  className={cn("text-[0.625rem]", SPAN_LABEL_COLORS[selectedSpan.type])}
                                 >
                                   {selectedSpan.type}
                                 </Badge>
@@ -399,7 +400,7 @@ export default function TracesPage() {
                                 <Badge
                                   variant="outline"
                                   className={cn(
-                                    "text-[10px]",
+                                    "text-[0.625rem]",
                                     selectedSpan.status === "error"
                                       ? "border-red-500/30 text-red-600"
                                       : "border-emerald-500/30 text-emerald-600",
@@ -422,16 +423,16 @@ export default function TracesPage() {
                           </div>
                           {selectedSpan.input && (
                             <div>
-                              <Label className="text-[10px]">Input</Label>
-                              <pre className="mt-1 text-[10px] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+                              <Label className="text-[0.625rem]">Input</Label>
+                              <pre className="mt-1 text-[0.625rem] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
                                 {selectedSpan.input}
                               </pre>
                             </div>
                           )}
                           {selectedSpan.output && (
                             <div>
-                              <Label className="text-[10px]">Output</Label>
-                              <pre className="mt-1 text-[10px] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+                              <Label className="text-[0.625rem]">Output</Label>
+                              <pre className="mt-1 text-[0.625rem] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
                                 {selectedSpan.output}
                               </pre>
                             </div>

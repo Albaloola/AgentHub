@@ -178,7 +178,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </div>
         </ScrollArea>
 
-        <div className="border-t border-border px-3 py-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+        <div className="border-t border-border px-3 py-2 flex items-center gap-3 text-[0.625rem] text-muted-foreground">
           <span>↑↓ Navigate</span>
           <span>↵ Select</span>
           <span>Esc Close</span>

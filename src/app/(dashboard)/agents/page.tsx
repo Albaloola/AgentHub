@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bot,
@@ -14,6 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStore } from "@/lib/store";
 import {
   getAgents,
@@ -31,12 +42,29 @@ import { toast } from "sonner";
 
 export default function AgentsPage() {
   const router = useRouter();
-  const { agents, setAgents, updateAgentStatus } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
+  const updateAgentStatus = useStore((s) => s.updateAgentStatus);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | undefined>();
   const [checkingHealth, setCheckingHealth] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
+  const [deletingAgent, setDeletingAgent] = useState<AgentWithStatus | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to collapse expanded card
+  useEffect(() => {
+    if (!expandedAgent) return;
+    function handleClickOutside(e: MouseEvent) {
+      // Close if clicking outside the grid entirely
+      if (gridRef.current && !gridRef.current.contains(e.target as Node)) {
+        setExpandedAgent(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [expandedAgent]);
 
   useEffect(() => {
     loadAgents();
@@ -165,7 +193,15 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <div ref={gridRef} className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        {refreshing && agents.length === 0 && (
+          <>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <AgentCardSkeleton key={i} />
+            ))}
+          </>
+        )}
+
         {agents.map((agent) => {
           const glowColor = agent.status === "online" ? "#10b981" : agent.status === "error" ? "#fb565b" : "#8b949e";
           const isExpanded = expandedAgent === agent.id;
@@ -222,7 +258,7 @@ export default function AgentsPage() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate text-foreground">{agent.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="text-[0.625rem]">
                       {GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}
                     </Badge>
                     <span className="text-xs text-muted-foreground truncate">
@@ -308,7 +344,7 @@ export default function AgentsPage() {
                   variant="outline"
                   size="icon"
                   className="h-9 w-9 transition-all duration-300"
-                  onClick={() => handleDelete(agent)}
+                  onClick={() => setDeletingAgent(agent)}
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(251,86,91,0.6), 0 0 30px rgba(251,86,91,0.25)"; e.currentTarget.style.borderColor = "rgba(251,86,91,0.5)"; e.currentTarget.style.color = "#fb7185"; e.currentTarget.style.transform = "scale(1.05)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; e.currentTarget.style.transform = ""; }}
                 >
@@ -320,11 +356,11 @@ export default function AgentsPage() {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  isExpanded ? "max-h-[400px] opacity-100 mt-2" : "max-h-0 opacity-0",
+                  isExpanded ? "max-h-[25rem] opacity-100 mt-2" : "max-h-0 opacity-0",
                 )}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="border-t border-white/[0.06] pt-4 space-y-3">
+                <div className="border-t border-foreground/[0.06] pt-4 space-y-3">
                   <h4 className="text-sm font-semibold text-foreground">Agent Details</h4>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -402,6 +438,31 @@ export default function AgentsPage() {
         )}
       </div>
 
+      <AlertDialog open={!!deletingAgent} onOpenChange={(open) => { if (!open) setDeletingAgent(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingAgent?.name}&quot;? This action cannot be undone. All associated data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingAgent) {
+                  handleDelete(deletingAgent);
+                  setDeletingAgent(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AgentDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -409,6 +470,41 @@ export default function AgentsPage() {
         onSave={editingAgent ? handleEdit : handleCreate}
       />
     </div>
+  );
+}
+
+function AgentCardSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-5 space-y-4">
+        {/* Header */}
+        <div className="flex items-start gap-3">
+          <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton className="h-5 w-32" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </div>
+          <Skeleton className="h-5 w-9 rounded-full" />
+        </div>
+
+        {/* Status Info */}
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-12" />
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-9 flex-1 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

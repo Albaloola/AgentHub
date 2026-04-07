@@ -4,11 +4,12 @@ import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { useRouter } from "next/navigation";
 import { v4 as uuid } from "uuid";
 
 export function ChatTabs() {
-  const { openTabs, activeTabId, addTab, removeTab, setActiveTabId } = useStore();
+  const { openTabs, activeTabId, addTab, removeTab, setActiveTabId } = useStore(useShallow((s) => ({ openTabs: s.openTabs, activeTabId: s.activeTabId, addTab: s.addTab, removeTab: s.removeTab, setActiveTabId: s.setActiveTabId })));
   const router = useRouter();
 
   function handleTabClick(tabId: string, conversationId: string) {
@@ -30,7 +31,7 @@ export function ChatTabs() {
   if (openTabs.length === 0) {
     return (
       <div className="flex items-center px-3 py-1.5">
-        <Button variant="ghost" size="sm" className="h-8 gap-1 text-sm rounded-lg hover:bg-white/5 transition-all duration-200" onClick={handleNewChat}>
+        <Button variant="ghost" size="sm" className="h-8 gap-1 text-sm rounded-lg hover:bg-foreground/5 transition-all duration-200" onClick={handleNewChat}>
           <Plus className="h-3.5 w-3.5" />
           New Chat
         </Button>
@@ -46,10 +47,10 @@ export function ChatTabs() {
           <div
             key={tab.id}
             className={cn(
-              "group relative flex items-center gap-1 rounded-full px-4 py-1.5 text-sm cursor-pointer transition-all duration-300 max-w-[180px] shrink-0",
+              "group relative flex items-center gap-1 rounded-full px-4 py-1.5 text-sm cursor-pointer transition-all duration-300 max-w-[11.25rem] shrink-0",
               isActive
                 ? "text-foreground"
-                : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04]",
+                : "text-muted-foreground/70 hover:text-foreground hover:bg-foreground/[0.04]",
             )}
             onClick={() => handleTabClick(tab.id, tab.conversationId)}
           >
@@ -63,8 +64,9 @@ export function ChatTabs() {
 
             <span className="relative z-10 truncate flex-1">{tab.title}</span>
             <button
-              className="relative z-10 ml-1 rounded-full p-0.5 opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all duration-200"
+              className="relative z-10 ml-1 rounded-full p-0.5 opacity-0 group-hover:opacity-100 hover:bg-foreground/10 transition-all duration-200"
               onClick={(e) => handleTabClose(e, tab.id)}
+              aria-label={`Close tab: ${tab.title}`}
             >
               <X className="h-3 w-3" />
             </button>
@@ -72,7 +74,7 @@ export function ChatTabs() {
         );
       })}
 
-      <Button variant="ghost" size="sm" className="relative z-10 h-8 w-8 shrink-0 p-0 rounded-full hover:bg-white/5 transition-all duration-200" onClick={handleNewChat}>
+      <Button variant="ghost" size="sm" className="relative z-10 h-8 w-8 shrink-0 p-0 rounded-full hover:bg-foreground/5 transition-all duration-200" onClick={handleNewChat} aria-label="New chat">
         <Plus className="h-3.5 w-3.5" />
       </Button>
     </div>

@@ -125,34 +125,34 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
     <div
       className={cn(
         "flex flex-col border-l border-border bg-card transition-all duration-200",
-        expanded ? "w-[600px]" : "w-[380px]",
+        expanded ? "w-[37.5rem]" : "w-[23.75rem]",
       )}
     >
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <Code2 className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium flex-1">{current.title}</span>
-        <Badge variant="outline" className="text-[10px]">{current.language}</Badge>
+        <Badge variant="outline" className="text-[0.625rem]">{current.language}</Badge>
 
         {artifacts.length > 1 && (
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.max(0, activeIndex - 1))} disabled={activeIndex === 0}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.max(0, activeIndex - 1))} disabled={activeIndex === 0} aria-label="Previous artifact">
               <ChevronLeft className="h-3 w-3" />
             </Button>
             <span className="text-xs text-muted-foreground">{activeIndex + 1}/{artifacts.length}</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.min(artifacts.length - 1, activeIndex + 1))} disabled={activeIndex === artifacts.length - 1}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setActiveIndex(Math.min(artifacts.length - 1, activeIndex + 1))} disabled={activeIndex === artifacts.length - 1} aria-label="Next artifact">
               <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
         )}
 
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy} title="Copy code">
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy} title="Copy code" aria-label="Copy code">
           {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
         </Button>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)} title={expanded ? "Shrink" : "Expand"}>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)} title={expanded ? "Shrink" : "Expand"} aria-label={expanded ? "Shrink panel" : "Expand panel"}>
           {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
         </Button>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)} aria-label="Close artifacts panel">
           <X className="h-3 w-3" />
         </Button>
       </div>

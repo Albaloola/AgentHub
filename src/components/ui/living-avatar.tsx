@@ -13,7 +13,7 @@ interface LivingAvatarProps {
 }
 
 const SIZE_MAP = {
-  sm: "h-7 w-7 text-[10px]",
+  sm: "h-7 w-7 text-[0.625rem]",
   md: "h-9 w-9 text-xs",
   lg: "h-12 w-12 text-sm",
   xl: "h-16 w-16 text-lg",
@@ -47,7 +47,7 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
           state === "speaking" && "opacity-30 animate-[luminance-pulse_1.5s_ease-in-out_infinite] bg-gradient-to-r from-blue-400/20 via-cyan-400/20 to-violet-400/20 blur-md",
           state === "error" && "opacity-30 bg-red-500/20 blur-md",
           state === "success" && "opacity-30 bg-emerald-500/20 blur-md",
-          state === "idle" && "opacity-20 bg-white/[0.03] blur-sm",
+          state === "idle" && "opacity-20 bg-foreground/[0.03] blur-sm",
         )}
       />
 
@@ -60,7 +60,7 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
           state === "error" && "border-2 border-red-500/50 shadow-[0_0_8px_oklch(0.5_0.2_25/0.3)]",
           state === "success" && "border-2 border-emerald-500/50 shadow-[0_0_8px_oklch(0.5_0.2_162/0.3)]",
           state === "offline" && "border-2 border-gray-600/30",
-          state === "idle" && "border-2 border-white/[0.08] hover:border-white/[0.15]",
+          state === "idle" && "border-2 border-foreground/[0.08] hover:border-foreground/[0.15]",
         )}
         style={state === "thinking" ? {
           background: "conic-gradient(from 0deg, transparent, rgba(99,102,241,0.5), rgba(139,92,246,0.4), transparent)",
@@ -85,7 +85,7 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
 
         {/* Breathing overlay for thinking */}
         {state === "thinking" && (
-          <div className="absolute inset-0 rounded-xl bg-white/10 animate-[pulse_1.5s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 rounded-xl bg-foreground/10 animate-[pulse_1.5s_ease-in-out_infinite]" />
         )}
 
         {/* Sound wave rings for speaking */}

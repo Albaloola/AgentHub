@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import {
   getNotifications, markNotificationRead,
   markAllNotificationsRead, deleteNotification,
@@ -32,7 +33,7 @@ function getNotificationIcon(type: string) {
 }
 
 export function NotificationCenter() {
-  const { notifications, setNotifications, unreadCount, setUnreadCount } = useStore();
+  const { notifications, setNotifications, unreadCount, setUnreadCount } = useStore(useShallow((s) => ({ notifications: s.notifications, setNotifications: s.setNotifications, unreadCount: s.unreadCount, setUnreadCount: s.setUnreadCount })));
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -121,10 +122,12 @@ export function NotificationCenter() {
           setOpen(!open);
           if (!open) loadNotifications();
         }}
+        aria-label="Notifications"
+        aria-expanded={open}
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.5625rem] font-bold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -132,7 +135,7 @@ export function NotificationCenter() {
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[380px] rounded-lg border border-border bg-popover shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-2 w-[23.75rem] rounded-lg border border-border bg-popover shadow-lg z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3">
             <h3 className="text-sm font-semibold">Notifications</h3>
@@ -162,7 +165,7 @@ export function NotificationCenter() {
               <p className="text-sm text-muted-foreground">No notifications</p>
             </div>
           ) : (
-            <ScrollArea className="max-h-[400px]">
+            <ScrollArea className="max-h-[25rem]">
               <div className="divide-y divide-border">
                 {notifications.map((notification) => {
                   const { icon: Icon, className: iconClass } = getNotificationIcon(notification.type);
@@ -204,7 +207,7 @@ export function NotificationCenter() {
                             {notification.body}
                           </p>
                         )}
-                        <span className="text-[10px] text-muted-foreground mt-1 block">
+                        <span className="text-[0.625rem] text-muted-foreground mt-1 block">
                           {timeAgo(notification.created_at)}
                         </span>
                       </div>
@@ -219,6 +222,7 @@ export function NotificationCenter() {
                             e.stopPropagation();
                             handleDelete(notification.id);
                           }}
+                          aria-label="Delete notification"
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>

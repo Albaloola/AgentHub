@@ -22,7 +22,8 @@ import type { PolicyRule, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function PoliciesPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [policies, setPolicies] = useState<PolicyRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -180,16 +181,16 @@ export default function PoliciesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="font-medium">{policy.name}</span>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[0.625rem]">
                           {policy.type}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className={cn("text-[10px]", severityColor)}
+                          className={cn("text-[0.625rem]", severityColor)}
                         >
                           {policy.severity}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[0.625rem]">
                           {policy.scope}
                         </Badge>
                       </div>

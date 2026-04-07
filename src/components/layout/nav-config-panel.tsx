@@ -151,17 +151,17 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
     <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative z-10 w-[90vw] max-w-lg max-h-[80vh] rounded-2xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in"
+        className="relative z-10 w-[90vw] max-w-lg max-h-[80vh] rounded-2xl border border-foreground/[0.08] glass-strong overflow-hidden animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-foreground/[0.06]">
           <h2 className="text-base font-semibold">Configure Panel</h2>
           <div className="flex items-center gap-2">
             <Button size="sm" className="rounded-lg" onClick={handleSave}>
               Save
             </Button>
-            <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06]">
+            <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -170,9 +170,9 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
         {/* Content */}
         <div className="overflow-y-auto max-h-[65vh] p-4 space-y-4">
           {groups.map((group, gi) => (
-            <div key={group.id} className="rounded-xl border border-white/[0.06] overflow-hidden">
+            <div key={group.id} className="rounded-xl border border-foreground/[0.06] overflow-hidden">
               {/* Group header */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.02]">
+              <div className="flex items-center gap-2 px-4 py-3 bg-foreground/[0.02]">
                 <input
                   className="flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground/40"
                   value={group.label}
@@ -191,7 +191,7 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
               </div>
 
               {/* Items */}
-              <div className="divide-y divide-white/[0.03]">
+              <div className="divide-y divide-foreground/[0.03]">
                 {group.items.map((item, ii) => (
                   <div
                     key={item.href}
@@ -210,19 +210,19 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => moveItemUp(gi, ii)}
-                        className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.06]"
+                        className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-foreground hover:bg-foreground/[0.06]"
                       >
                         <ChevronUp className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => moveItemDown(gi, ii)}
-                        className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-foreground hover:bg-white/[0.06]"
+                        className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/30 hover:text-foreground hover:bg-foreground/[0.06]"
                       >
                         <ChevronDown className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => toggleItemVisibility(gi, ii)}
-                        className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06]"
+                        className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.06]"
                       >
                         {item.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </button>

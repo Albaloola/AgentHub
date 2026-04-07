@@ -20,6 +20,7 @@ import {
   DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import {
   getSharedMemory, createMemoryEntry, updateMemoryEntry,
   deleteMemoryEntry, getAgents,
@@ -47,7 +48,7 @@ function isExpired(entry: SharedMemoryEntry): boolean {
 }
 
 export default function MemoryPage() {
-  const { agents, setAgents, sharedMemory, setSharedMemory } = useStore();
+  const { agents, setAgents, sharedMemory, setSharedMemory } = useStore(useShallow((s) => ({ agents: s.agents, setAgents: s.setAgents, sharedMemory: s.sharedMemory, setSharedMemory: s.setSharedMemory })));
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<SharedMemoryEntry | null>(null);
@@ -171,7 +172,7 @@ export default function MemoryPage() {
           value={filterCategory}
           onValueChange={(v) => v && setFilterCategory(v)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[10rem]">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -268,20 +269,20 @@ export default function MemoryPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px]", getCategoryColor(entry.category))}
+                      className={cn("text-[0.625rem]", getCategoryColor(entry.category))}
                     >
                       {entry.category}
                     </Badge>
                     {expired && (
-                      <Badge variant="outline" className="text-[10px] border-rose-500/30 text-rose-600">
+                      <Badge variant="outline" className="text-[0.625rem] border-rose-500/30 text-rose-600">
                         expired
                       </Badge>
                     )}
                     {agentName && (
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                         <div
                           className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-full text-[7px] font-medium text-white",
+                            "flex h-4 w-4 items-center justify-center rounded-full text-[0.4375rem] font-medium text-white",
                             getAvatarColor(entry.source_agent_id!),
                           )}
                         >
@@ -290,14 +291,14 @@ export default function MemoryPage() {
                         {agentName}
                       </div>
                     )}
-                    <span className="text-[10px] text-muted-foreground ml-auto">
+                    <span className="text-[0.625rem] text-muted-foreground ml-auto">
                       {entry.access_count} accesses
                     </span>
                   </div>
 
                   {/* Confidence bar */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground">Confidence</span>
+                    <span className="text-[0.625rem] text-muted-foreground">Confidence</span>
                     <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className={cn(
@@ -311,7 +312,7 @@ export default function MemoryPage() {
                         style={{ width: `${Math.round(entry.confidence * 100)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-muted-foreground w-8 text-right">
+                    <span className="text-[0.625rem] text-muted-foreground w-8 text-right">
                       {Math.round(entry.confidence * 100)}%
                     </span>
                   </div>
@@ -463,7 +464,7 @@ function CreateEntryDialog({
             onChange={(e) => setConfidence(parseFloat(e.target.value))}
             className="w-full mt-1 accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+          <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-0.5">
             <span>0.0</span>
             <span>0.5</span>
             <span>1.0</span>
@@ -557,7 +558,7 @@ function EditEntryDialog({
             onChange={(e) => setConfidence(parseFloat(e.target.value))}
             className="w-full mt-1 accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+          <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-0.5">
             <span>0.0</span>
             <span>0.5</span>
             <span>1.0</span>

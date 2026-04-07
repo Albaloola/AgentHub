@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import {
   getArenaRounds, createArenaRound, voteArenaRound,
   deleteArenaRound, getArenaLeaderboard, getAgents,
@@ -35,7 +36,7 @@ interface LeaderboardEntry {
 }
 
 export default function ArenaPage() {
-  const { agents, setAgents, arenaRounds, setArenaRounds } = useStore();
+  const { agents, setAgents, arenaRounds, setArenaRounds } = useStore(useShallow((s) => ({ agents: s.agents, setAgents: s.setAgents, arenaRounds: s.arenaRounds, setArenaRounds: s.setArenaRounds })));
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -205,18 +206,18 @@ export default function ArenaPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {isPending ? (
-                              <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600">
+                              <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
                                 <Clock className="h-3 w-3 mr-0.5" />
                                 pending
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600">
+                              <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
                                 <CheckCircle2 className="h-3 w-3 mr-0.5" />
                                 completed
                               </Badge>
                             )}
                             {round.category && (
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-[0.625rem]">
                                 {round.category}
                               </Badge>
                             )}
@@ -250,7 +251,7 @@ export default function ArenaPage() {
                             >
                               <div
                                 className={cn(
-                                  "flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-medium text-white",
+                                  "flex h-6 w-6 items-center justify-center rounded-full text-[0.5625rem] font-medium text-white",
                                   getAvatarColor(agentId),
                                 )}
                               >
@@ -327,7 +328,7 @@ export default function ArenaPage() {
                             <div className="flex items-center gap-2">
                               <div
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-medium text-white",
+                                  "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
                                   getAvatarColor(entry.agent_id),
                                 )}
                               >
@@ -347,7 +348,7 @@ export default function ArenaPage() {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[120px]">
+                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[7.5rem]">
                                 <div
                                   className="h-full bg-emerald-500 rounded-full transition-all"
                                   style={{ width: `${Math.round(entry.win_rate * 100)}%` }}
@@ -472,7 +473,7 @@ function CreateRoundDialog({
                 >
                   <div
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-medium text-white",
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
                       getAvatarColor(agent.id),
                     )}
                   >
@@ -480,7 +481,7 @@ function CreateRoundDialog({
                   </div>
                   <span className="flex-1 text-sm">{agent.name}</span>
                   {isSelected && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-[0.625rem]">
                       selected
                     </Badge>
                   )}

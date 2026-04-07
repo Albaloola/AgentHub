@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/lib/store";
 import { getAgents, checkAgentHealth, getAnomalies } from "@/lib/api";
 import type { AgentWithStatus, AnomalyEvent } from "@/lib/types";
@@ -56,7 +57,8 @@ function parseFallbackChain(chain: string): string[] {
 }
 
 export default function FleetPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [anomalies, setAnomalies] = useState<AnomalyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -190,9 +192,7 @@ export default function FleetPage() {
       </Card>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <FleetSkeleton />
       ) : (
         <>
           {/* Agent Grid */}
@@ -212,7 +212,7 @@ export default function FleetPage() {
                         <span className="font-medium truncate">{agent.name}</span>
                         <div className={cn("h-2 w-2 rounded-full shrink-0", statusDot(agent.status))} />
                       </div>
-                      <Badge variant="outline" className="text-[10px] mt-0.5">
+                      <Badge variant="outline" className="text-[0.625rem] mt-0.5">
                         {agent.gateway_type}
                       </Badge>
                     </div>
@@ -279,11 +279,11 @@ export default function FleetPage() {
                               </span>
                               <Badge
                                 variant="outline"
-                                className={cn("text-[10px]", severityBadge(event.severity))}
+                                className={cn("text-[0.625rem]", severityBadge(event.severity))}
                               >
                                 {event.severity}
                               </Badge>
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-[0.625rem]">
                                 {event.type}
                               </Badge>
                             </div>
@@ -351,6 +351,40 @@ export default function FleetPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function FleetSkeleton() {
+  return (
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i} className="overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+              <div className="flex items-end gap-0.5 h-5">
+                <Skeleton className="w-1.5 h-2 rounded-full" />
+                <Skeleton className="w-1.5 h-3 rounded-full" />
+                <Skeleton className="w-1.5 h-4 rounded-full" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-18" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

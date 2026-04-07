@@ -22,7 +22,8 @@ import { toast } from "sonner";
 
 export default function GroupsPage() {
   const router = useRouter();
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [name, setName] = useState("");
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
   const [responseMode, setResponseMode] = useState<string>("discussion");
@@ -155,7 +156,7 @@ export default function GroupsPage() {
                   <div className="flex-1">
                     <div className="font-medium text-sm">{agent.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-[10px] px-1">
+                      <Badge variant="outline" className="text-[0.625rem] px-1">
                         {agent.gateway_type}
                       </Badge>
                     </div>

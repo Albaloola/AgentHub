@@ -112,7 +112,7 @@ function SliderControl({
       {/* Track */}
       <div
         ref={trackRef}
-        className="relative h-2 w-full rounded-full bg-white/[0.12] cursor-pointer"
+        className="relative h-2 w-full rounded-full bg-foreground/[0.12] cursor-pointer"
         onMouseDown={(e) => {
           updateValue(e.clientX)
           setDragging(true)
@@ -139,7 +139,7 @@ function SliderControl({
             >
               <div className={cn(
                 "w-[2px] -translate-x-1/2 rounded-full transition-all duration-150",
-                isAtMilestone ? "h-4 bg-white" : "h-3 bg-white/30",
+                isAtMilestone ? "h-4 bg-white" : "h-3 bg-foreground/30",
               )} />
             </div>
           )

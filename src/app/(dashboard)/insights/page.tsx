@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Brain, MessageSquareHeart, AlertTriangle, Loader2, Hash,
-  ThumbsUp, ThumbsDown, CheckCircle2, XCircle,
+  ThumbsUp, ThumbsDown, CheckCircle2, XCircle, DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,16 +11,18 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStore } from "@/lib/store";
-import { getTopicClusters, getFeedbackInsights, getAnomalies, resolveAnomaly, getAgents } from "@/lib/api";
+import { getTopicClusters, getFeedbackInsights, getAnomalies, resolveAnomaly, getAgents, getConversations } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
-import type { TopicCluster, FeedbackInsight, AnomalyEvent } from "@/lib/types";
+import type { TopicCluster, FeedbackInsight, AnomalyEvent, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function InsightsPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [topics, setTopics] = useState<TopicCluster[]>([]);
   const [feedback, setFeedback] = useState<FeedbackInsight[]>([]);
   const [anomalies, setAnomalies] = useState<AnomalyEvent[]>([]);
+  const [convos, setConvos] = useState<ConversationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,16 +32,18 @@ export default function InsightsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [t, f, an, ag] = await Promise.all([
+      const [t, f, an, ag, cv] = await Promise.all([
         getTopicClusters(),
         getFeedbackInsights(),
         getAnomalies(),
         getAgents(),
+        getConversations(),
       ]);
       setTopics(t);
       setFeedback(f);
       setAnomalies(an);
       setAgents(ag);
+      setConvos(cv);
     } catch {
       toast.error("Failed to load insights");
     } finally {
@@ -65,6 +69,20 @@ export default function InsightsPage() {
 
   const totalConversations = topics.reduce((s, t) => s + t.conversation_count, 0);
 
+  // Cost computations
+  const totalCost = convos.reduce((s, c) => s + (c.total_cost ?? 0), 0);
+  const agentCostMap = new Map<string, { name: string; totalCost: number; convCount: number }>();
+  for (const c of convos) {
+    for (const agent of c.agents) {
+      const entry = agentCostMap.get(agent.id) ?? { name: agent.name, totalCost: 0, convCount: 0 };
+      entry.totalCost += c.total_cost ?? 0;
+      entry.convCount += 1;
+      agentCostMap.set(agent.id, entry);
+    }
+  }
+  const agentCosts = Array.from(agentCostMap.values()).sort((a, b) => b.totalCost - a.totalCost);
+  const maxAgentCost = agentCosts.length > 0 ? agentCosts[0].totalCost : 1;
+
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
@@ -75,7 +93,7 @@ export default function InsightsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <Brain className="h-5 w-5 text-violet-500" />
@@ -105,6 +123,15 @@ export default function InsightsPage() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 p-4">
+            <DollarSign className="h-5 w-5 text-cyan-500" />
+            <div>
+              <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">Total Cost</div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {loading ? (
@@ -125,6 +152,10 @@ export default function InsightsPage() {
             <TabsTrigger value={2}>
               <AlertTriangle className="h-4 w-4 mr-1" />
               Anomalies
+            </TabsTrigger>
+            <TabsTrigger value={3}>
+              <DollarSign className="h-4 w-4 mr-1" />
+              Costs
             </TabsTrigger>
           </TabsList>
 
@@ -203,13 +234,13 @@ export default function InsightsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">{topic.name}</span>
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-[0.625rem]">
                                 {topic.conversation_count} conversations
                               </Badge>
                             </div>
                             <div className="flex flex-wrap gap-1 mb-2">
                               {keywords.map((kw, i) => (
-                                <Badge key={i} variant="secondary" className="text-[10px]">
+                                <Badge key={i} variant="secondary" className="text-[0.625rem]">
                                   <Hash className="h-3 w-3 mr-0.5" />
                                   {kw}
                                 </Badge>
@@ -264,7 +295,7 @@ export default function InsightsPage() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              "flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-medium text-white shrink-0",
+                              "flex h-9 w-9 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
                               getAvatarColor(fb.agent_id),
                             )}
                           >
@@ -274,7 +305,7 @@ export default function InsightsPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">{agentName}</span>
                               {fb.topic && (
-                                <Badge variant="outline" className="text-[10px]">
+                                <Badge variant="outline" className="text-[0.625rem]">
                                   {fb.topic}
                                 </Badge>
                               )}
@@ -350,7 +381,7 @@ export default function InsightsPage() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              "flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-medium text-white shrink-0",
+                              "flex h-9 w-9 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
                               getAvatarColor(anomaly.agent_id),
                             )}
                           >
@@ -359,17 +390,17 @@ export default function InsightsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="font-medium">{agentName}</span>
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-[0.625rem]">
                                 {anomaly.type}
                               </Badge>
                               <Badge
                                 variant="outline"
-                                className={cn("text-[10px]", severityColor)}
+                                className={cn("text-[0.625rem]", severityColor)}
                               >
                                 {anomaly.severity}
                               </Badge>
                               {anomaly.is_resolved && (
-                                <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600">
+                                <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
                                   resolved
                                 </Badge>
                               )}
@@ -395,11 +426,11 @@ export default function InsightsPage() {
                               </p>
                             )}
                             <div className="flex items-center justify-between mt-2">
-                              <span className="text-[11px] text-muted-foreground">
+                              <span className="text-[0.6875rem] text-muted-foreground">
                                 {timeAgo(anomaly.created_at)}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-[11px] text-muted-foreground">Resolved</span>
+                                <span className="text-[0.6875rem] text-muted-foreground">Resolved</span>
                                 <Switch
                                   checked={anomaly.is_resolved}
                                   onCheckedChange={() => {
@@ -417,6 +448,75 @@ export default function InsightsPage() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          {/* === Cost Tab === */}
+          <TabsContent value={3}>
+            <div className="space-y-3">
+              {/* Total cost overview */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <DollarSign className="h-5 w-5 text-cyan-500" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">Total Estimated Cost</div>
+                      <div className="text-2xl font-bold">${totalCost.toFixed(4)}</div>
+                    </div>
+                    <div className="ml-auto text-right">
+                      <div className="text-xs text-muted-foreground">Across</div>
+                      <div className="text-sm font-medium">{convos.length} conversations</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Per-agent cost breakdown */}
+              {agentCosts.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <DollarSign className="h-10 w-10 text-muted-foreground mb-3" />
+                    <h3 className="font-medium mb-1">No cost data yet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Cost breakdown will appear as conversations accumulate
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-xs text-muted-foreground mb-3">Per-Agent Cost Breakdown</div>
+                    <div className="space-y-3">
+                      {agentCosts.map((entry) => {
+                        const pct = maxAgentCost > 0 ? (entry.totalCost / maxAgentCost) * 100 : 0;
+                        const avgCost = entry.convCount > 0 ? entry.totalCost / entry.convCount : 0;
+                        return (
+                          <div key={entry.name}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium">{entry.name}</span>
+                              <span className="text-sm font-bold">${entry.totalCost.toFixed(4)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2.5 bg-foreground/[0.05] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-cyan-500 rounded-full transition-all"
+                                  style={{ width: `${Math.max(pct, 2)}%` }}
+                                />
+                              </div>
+                              <span className="text-[0.6875rem] text-muted-foreground w-28 text-right shrink-0">
+                                avg ${avgCost.toFixed(4)}/conv
+                              </span>
+                            </div>
+                            <div className="text-[0.625rem] text-muted-foreground mt-0.5">
+                              {entry.convCount} conversation{entry.convCount !== 1 ? "s" : ""}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       )}

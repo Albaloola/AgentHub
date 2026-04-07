@@ -140,7 +140,7 @@ export default function ApiKeysPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{apiKey.name}</span>
                       {perms.map((p) => (
-                        <Badge key={p} variant="outline" className="text-[10px]">
+                        <Badge key={p} variant="outline" className="text-[0.625rem]">
                           {p}
                         </Badge>
                       ))}
@@ -400,7 +400,7 @@ function CreateApiKeyDialog({
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[0.625rem] text-muted-foreground mt-1">
             agent:read - list and query agents &middot; agent:write - send messages &middot; webhook:create - manage webhooks
           </p>
         </div>

@@ -18,17 +18,29 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
 import { getTemplates, createTemplate, deleteTemplate, getAgents, createConversation } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import type { Template, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function TemplatesPage() {
   const router = useRouter();
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [templates, setTemplatesState] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
     loadData();
@@ -165,11 +177,11 @@ export default function TemplatesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{template.name}</span>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-[0.625rem]">
                         {template.response_mode}
                       </Badge>
                       {template.stop_on_completion && (
-                        <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600">
+                        <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
                           auto-stop
                         </Badge>
                       )}
@@ -190,7 +202,7 @@ export default function TemplatesPage() {
                     </Button>
                     <Button
                       variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(template.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeletingTemplate(template); }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -235,6 +247,31 @@ export default function TemplatesPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!deletingTemplate} onOpenChange={(open) => { if (!open) setDeletingTemplate(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingTemplate?.name}&quot;? This will permanently remove the template configuration. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingTemplate) {
+                  handleDelete(deletingTemplate.id);
+                  setDeletingTemplate(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -352,7 +389,7 @@ function CreateTemplateDialog({
               value={maxResponses}
               onChange={(e) => setMaxResponses(parseInt(e.target.value) || 0)}
             />
-            <p className="text-[10px] text-muted-foreground mt-0.5">0 = unlimited</p>
+            <p className="text-[0.625rem] text-muted-foreground mt-0.5">0 = unlimited</p>
           </div>
           <div className="flex items-center gap-2 pt-6">
             <Switch
@@ -381,7 +418,7 @@ function CreateTemplateDialog({
                 >
                   <div
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-medium text-white",
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
                       getAvatarColor(agent.id),
                     )}
                   >

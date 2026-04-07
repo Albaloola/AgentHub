@@ -112,17 +112,28 @@ export function EmptyChatState({
 
   return (
     <div className={cn(
-      "flex flex-col items-center justify-center min-h-[65vh] text-center px-4 transition-opacity duration-700",
+      "flex flex-col items-center justify-center min-h-[65vh] text-center px-4",
       mounted ? "opacity-100" : "opacity-0",
-    )}>
-      {/* Planet avatar with balanced orbital rings */}
-      <div className="relative mb-10" style={{ width: 200, height: 200 }}>
+    )}
+    style={{ transition: "opacity 0.7s ease-out" }}
+    >
+      {/* Planet avatar with balanced orbital rings - smooth slide-up entrance */}
+      <div
+        className="relative mb-10"
+        style={{
+          width: 200,
+          height: 200,
+          transition: "transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease-out",
+          transform: mounted ? "translateY(0)" : "translateY(40px)",
+          opacity: mounted ? 1 : 0,
+        }}
+      >
         {/* Ambient glow behind everything */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-b from-blue-500/12 via-violet-500/8 to-cyan-500/4 blur-3xl animate-[luminance-pulse_4s_ease-in-out_infinite]" />
 
         {/* Outer ring - spins clockwise, centered */}
         <div
-          className="absolute rounded-full border border-white/[0.06]"
+          className="absolute rounded-full border border-foreground/[0.06]"
           style={{
             top: "50%", left: "50%",
             width: 180, height: 180,
@@ -149,7 +160,7 @@ export function EmptyChatState({
 
         {/* Inner ring - spins counter-clockwise, smaller */}
         <div
-          className="absolute rounded-full border border-white/[0.04]"
+          className="absolute rounded-full border border-foreground/[0.04]"
           style={{
             top: "50%", left: "50%",
             width: 140, height: 140,
@@ -191,7 +202,7 @@ export function EmptyChatState({
             >
               {getInitials(agentName || "?")}
               {/* Surface sheen */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-5 bg-gradient-to-b from-white/15 to-transparent rounded-full blur-sm" />
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-5 bg-gradient-to-b from-foreground/15 to-transparent rounded-full blur-sm" />
             </div>
           ) : (
             <div className="flex h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 via-violet-500/15 to-cyan-500/10 items-center justify-center">
@@ -206,16 +217,16 @@ export function EmptyChatState({
         "transition-all duration-400 mb-10",
         greetingFade ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0",
       )}>
-        <h1 className="text-4xl font-light text-foreground/90 mb-1 tracking-tight">
+        <h1 className="text-fluid-3xl font-bold text-foreground/90 mb-1 tracking-tight">
           {GREETINGS[greetingIdx].line1.replace("{name}", firstName)}
         </h1>
-        <h2 className="text-4xl font-light text-foreground/40 tracking-tight">
+        <h2 className="text-fluid-3xl font-light text-foreground/40 tracking-tight">
           {GREETINGS[greetingIdx].line2.replace("{name}", firstName)}
         </h2>
       </div>
 
-      {/* Rotating suggestion cards - fixed height container, cards overlay */}
-      <div className="relative max-w-2xl w-full" style={{ height: 110 }}>
+      {/* Rotating suggestion cards - fluid width, scales with viewport */}
+      <div className="relative w-full" style={{ maxWidth: "clamp(500px, 60vw, 1000px)", minHeight: 140 }}>
         {Array.from({ length: TOTAL_SETS }).map((_, setIdx) => {
           const cards = ALL_SUGGESTIONS.slice(setIdx * 3, setIdx * 3 + 3);
           const isVisible = activeSet === setIdx && !transitioning;
@@ -223,7 +234,7 @@ export function EmptyChatState({
             <div
               key={setIdx}
               className={cn(
-                "absolute inset-0 flex gap-4 transition-all duration-500",
+                "absolute inset-0 grid grid-cols-3 gap-5 items-stretch transition-all duration-500",
                 isVisible
                   ? "opacity-100 translate-y-0 pointer-events-auto"
                   : "opacity-0 translate-y-4 pointer-events-none",
@@ -235,24 +246,25 @@ export function EmptyChatState({
                   <button
                     key={card.tag}
                     onClick={() => onSuggestionClick(card.prompt)}
-                    className="flex-1 flex flex-col items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all duration-300 hover:bg-white/[0.05] group"
+                    className="flex flex-col items-start gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 text-left transition-all duration-300 hover:bg-foreground/[0.05] group"
+                    style={{ minHeight: "clamp(100px, 10vw, 140px)" }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow = `0 0 12px ${card.tagColor}40, 0 0 30px ${card.tagColor}15`;
                       e.currentTarget.style.borderColor = `${card.tagColor}40`;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.boxShadow = "none";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.borderColor = "oklch(from var(--foreground) l c h / 0.06)";
                     }}
                   >
                     <span
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border shrink-0"
                       style={{ color: card.tagColor, borderColor: `${card.tagColor}40`, background: `${card.tagColor}10` }}
                     >
-                      <Icon className="h-3 w-3" />
+                      <Icon className="h-4 w-4" />
                       {card.tag}
                     </span>
-                    <p className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors leading-relaxed">
+                    <p className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors leading-relaxed line-clamp-3 overflow-hidden">
                       {card.desc}
                     </p>
                   </button>
@@ -267,7 +279,7 @@ export function EmptyChatState({
       <div className="flex items-center gap-2 mt-6 mb-8">
         <button
           onClick={() => switchSet((activeSet - 1 + TOTAL_SETS) % TOTAL_SETS)}
-          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.08] transition-all"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -277,13 +289,13 @@ export function EmptyChatState({
             onClick={() => switchSet(i)}
             className={cn(
               "rounded-full transition-all duration-300 cursor-pointer",
-              activeSet === i ? "w-5 h-2 bg-blue-400/60" : "w-2 h-2 bg-white/15 hover:bg-white/30",
+              activeSet === i ? "w-5 h-2 bg-blue-400/60" : "w-2 h-2 bg-foreground/15 hover:bg-foreground/30",
             )}
           />
         ))}
         <button
           onClick={() => switchSet((activeSet + 1) % TOTAL_SETS)}
-          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.08] transition-all"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

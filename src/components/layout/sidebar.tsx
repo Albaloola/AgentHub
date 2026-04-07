@@ -46,6 +46,10 @@ import {
   X,
   SlidersHorizontal,
   Pencil,
+  GripVertical,
+  Pin,
+  Download,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,6 +60,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import {
   getConversations,
   deleteConversation,
@@ -64,6 +69,9 @@ import {
   createFolder,
   deleteFolder,
   createConversation,
+  toggleConversationPin,
+  exportConversation,
+  moveConversationToFolder,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
 import { NavConfigPanel, loadNavConfig, saveNavConfig } from "./nav-config-panel";
@@ -185,7 +193,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { agents, conversations, setConversations, sidebarOpen, setSidebarOpen, setAgents, uiPrefs } =
-    useStore();
+    useStore(useShallow((s) => ({ agents: s.agents, conversations: s.conversations, setConversations: s.setConversations, sidebarOpen: s.sidebarOpen, setSidebarOpen: s.setSidebarOpen, setAgents: s.setAgents, uiPrefs: s.uiPrefs })));
   const [hoveredConv, setHoveredConv] = useState<string | null>(null);
   const [folders, setFolders] = useState<ConversationFolder[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
@@ -320,6 +328,214 @@ export function Sidebar() {
   const [configOpen, setConfigOpen] = useState(false);
   const [editChatsMode, setEditChatsMode] = useState(false);
 
+  // Context menu state
+  const [ctxMenu, setCtxMenu] = useState<{ convId: string; x: number; y: number } | null>(null);
+  const [ctxSubmenu, setCtxSubmenu] = useState(false); // "Move to folder" submenu open
+  const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
+
+  // Drag-and-drop reorder state
+  const [convOrder, setConvOrder] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("agenthub-conv-order");
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string; pos: "before" | "after" } | null>(null);
+  const [dropFolderId, setDropFolderId] = useState<string | null>(null);
+
+  // Close context menu on click outside or Escape
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node)) {
+        setCtxMenu(null);
+        setCtxSubmenu(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setCtxMenu(null); setCtxSubmenu(false); }
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [ctxMenu]);
+
+  // Persist conv order to localStorage
+  useEffect(() => {
+    if (convOrder.length > 0) {
+      localStorage.setItem("agenthub-conv-order", JSON.stringify(convOrder));
+    }
+  }, [convOrder]);
+
+  // Context menu actions
+  function handleCtxRename(convId: string) {
+    const conv = conversations.find((c) => c.id === convId);
+    setRenamingConvId(convId);
+    setRenameValue(conv?.name || "");
+    setCtxMenu(null);
+    setCtxSubmenu(false);
+  }
+
+  function handleRenameSubmit(convId: string) {
+    if (renameValue.trim()) {
+      setConversations(
+        conversations.map((c) => (c.id === convId ? { ...c, name: renameValue.trim() } : c)),
+      );
+    }
+    setRenamingConvId(null);
+    setRenameValue("");
+  }
+
+  async function handleCtxPin(convId: string) {
+    setCtxMenu(null);
+    setCtxSubmenu(false);
+    const conv = conversations.find((c) => c.id === convId);
+    if (!conv) return;
+    // Optimistic toggle
+    setConversations(
+      conversations.map((c) => (c.id === convId ? { ...c, is_pinned: !c.is_pinned } : c)),
+    );
+    try {
+      await toggleConversationPin(convId);
+    } catch {
+      // Revert on failure
+      setConversations(
+        conversations.map((c) => (c.id === convId ? { ...c, is_pinned: conv.is_pinned } : c)),
+      );
+      toast.error("Failed to toggle pin");
+    }
+  }
+
+  async function handleCtxExport(convId: string) {
+    setCtxMenu(null);
+    setCtxSubmenu(false);
+    try {
+      const data = await exportConversation(convId, "json");
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const conv = conversations.find((c) => c.id === convId);
+      a.download = `${(conv?.name || "chat").replace(/[^a-z0-9]/gi, "_")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Chat exported");
+    } catch {
+      toast.error("Failed to export chat");
+    }
+  }
+
+  async function handleCtxMoveToFolder(convId: string, folderId: string | null) {
+    setCtxMenu(null);
+    setCtxSubmenu(false);
+    try {
+      await moveConversationToFolder(convId, folderId);
+      // Refresh to pick up server-side folder_id change
+      const convs = await getConversations();
+      setConversations(convs);
+      toast.success(folderId ? "Moved to folder" : "Removed from folder");
+    } catch {
+      toast.error("Failed to move conversation");
+    }
+  }
+
+  function handleCtxDelete(convId: string) {
+    setCtxMenu(null);
+    setCtxSubmenu(false);
+    // Reuse existing delete handler with a synthetic event
+    handleDeleteConversation(convId, { preventDefault: () => {}, stopPropagation: () => {} } as React.MouseEvent);
+  }
+
+  // Drag-and-drop handlers
+  function onDragStart(convId: string) {
+    setDragId(convId);
+  }
+
+  function onDragOverConv(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) { setDropTarget(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const pos = e.clientY < midY ? "before" : "after";
+    setDropTarget({ id: targetId, pos });
+    setDropFolderId(null);
+  }
+
+  function onDragOverFolder(e: React.DragEvent, folderId: string) {
+    e.preventDefault();
+    if (!dragId) return;
+    setDropTarget(null);
+    setDropFolderId(folderId);
+  }
+
+  function onDropConv(e: React.DragEvent) {
+    e.preventDefault();
+    if (!dragId || !dropTarget) { cleanup(); return; }
+
+    // Build ordered list: start with current order, fill in missing
+    const allIds = conversations.map((c) => c.id);
+    let ordered = convOrder.filter((id) => allIds.includes(id));
+    for (const id of allIds) {
+      if (!ordered.includes(id)) ordered.push(id);
+    }
+
+    // Remove dragId from current position
+    ordered = ordered.filter((id) => id !== dragId);
+    // Find target index
+    let targetIdx = ordered.indexOf(dropTarget.id);
+    if (targetIdx === -1) targetIdx = ordered.length - 1;
+    if (dropTarget.pos === "after") targetIdx++;
+    ordered.splice(targetIdx, 0, dragId);
+
+    setConvOrder(ordered);
+    cleanup();
+  }
+
+  async function onDropFolder(e: React.DragEvent, folderId: string) {
+    e.preventDefault();
+    if (!dragId) { cleanup(); return; }
+    try {
+      await moveConversationToFolder(dragId, folderId);
+      const convs = await getConversations();
+      setConversations(convs);
+      toast.success("Moved to folder");
+    } catch {
+      toast.error("Failed to move to folder");
+    }
+    cleanup();
+  }
+
+  function cleanup() {
+    setDragId(null);
+    setDropTarget(null);
+    setDropFolderId(null);
+  }
+
+  // Apply ordering to unfiled conversations
+  function sortConversations(convs: ConversationWithDetails[]): ConversationWithDetails[] {
+    // Pinned first
+    const pinned = convs.filter((c) => c.is_pinned);
+    const unpinned = convs.filter((c) => !c.is_pinned);
+
+    const orderConvs = (list: ConversationWithDetails[]) => {
+      if (convOrder.length === 0) return list;
+      const orderMap = new Map(convOrder.map((id, i) => [id, i]));
+      return [...list].sort((a, b) => {
+        const ia = orderMap.get(a.id) ?? Infinity;
+        const ib = orderMap.get(b.id) ?? Infinity;
+        return ia - ib;
+      });
+    };
+
+    return [...orderConvs(pinned), ...orderConvs(unpinned)];
+  }
+
   // Configurable nav groups (persisted in localStorage)
   const [navGroups, setNavGroups] = useState<NavGroupConfig[]>(() => {
     const defaults: NavGroupConfig[] = NAV_CATEGORIES.map((cat) => ({
@@ -330,6 +546,129 @@ export function Sidebar() {
     }));
     return loadNavConfig(defaults);
   });
+
+  // --- Nav drag-and-drop reorder state ---
+  const [editNavMode, setEditNavMode] = useState(false);
+  const [dragNavItem, setDragNavItem] = useState<string | null>(null); // href of item being dragged
+  const [dragNavGroup, setDragNavGroup] = useState<string | null>(null); // group id being dragged
+  const [navDropTarget, setNavDropTarget] = useState<{ type: "item"; groupId: string; href: string; pos: "before" | "after" } | { type: "group"; groupId: string; pos: "before" | "after" } | null>(null);
+
+  // Icon lookup from static NAV_CATEGORIES
+  const navIconMap = useRef(new Map<string, LucideIcon>());
+  const navGroupIconMap = useRef(new Map<string, { icon: LucideIcon; neon: string; activeColor: string }>());
+  if (navIconMap.current.size === 0) {
+    for (const cat of NAV_CATEGORIES) {
+      navGroupIconMap.current.set(cat.label.toLowerCase(), { icon: cat.icon, neon: cat.neon, activeColor: cat.activeColor });
+      for (const item of cat.items) navIconMap.current.set(item.href, item.icon);
+    }
+  }
+
+  function getNavIcon(href: string): LucideIcon {
+    return navIconMap.current.get(href) || Activity;
+  }
+
+  function getGroupMeta(groupId: string) {
+    return navGroupIconMap.current.get(groupId) || { icon: Layers, neon: "neon-blue", activeColor: "text-neon-blue" };
+  }
+
+  function getGroupGlow(groupId: string): string {
+    const label = navGroups.find((g) => g.id === groupId)?.label || "";
+    return CATEGORY_GLOW[label] || "#3b82f6";
+  }
+
+  // Nav item DnD handlers
+  function onNavItemDragStart(e: React.DragEvent, href: string) {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", href);
+    setDragNavItem(href);
+    setDragNavGroup(null);
+  }
+
+  function onNavGroupDragStart(e: React.DragEvent, groupId: string) {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", groupId);
+    setDragNavGroup(groupId);
+    setDragNavItem(null);
+  }
+
+  function onNavItemDragOver(e: React.DragEvent, groupId: string, href: string) {
+    e.preventDefault();
+    if (!dragNavItem || dragNavItem === href) { setNavDropTarget(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    setNavDropTarget({ type: "item", groupId, href, pos });
+  }
+
+  function onNavGroupDragOver(e: React.DragEvent, groupId: string) {
+    e.preventDefault();
+    if (dragNavItem) {
+      // Dragging an item over a group header = drop into that group at end
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+      setNavDropTarget({ type: "group", groupId, pos });
+      return;
+    }
+    if (!dragNavGroup || dragNavGroup === groupId) { setNavDropTarget(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    setNavDropTarget({ type: "group", groupId, pos });
+  }
+
+  function onNavDrop(e: React.DragEvent) {
+    e.preventDefault();
+    if (!navDropTarget) { cleanupNavDrag(); return; }
+
+    let updated = navGroups.map((g) => ({ ...g, items: [...g.items] }));
+
+    if (dragNavItem && navDropTarget.type === "item") {
+      // Move item within or between groups
+      const target = navDropTarget as { type: "item"; groupId: string; href: string; pos: "before" | "after" };
+      // Remove item from source group
+      let movedItem: typeof updated[0]["items"][0] | null = null;
+      for (const g of updated) {
+        const idx = g.items.findIndex((i) => i.href === dragNavItem);
+        if (idx !== -1) { movedItem = g.items.splice(idx, 1)[0]; break; }
+      }
+      if (movedItem) {
+        const targetGroup = updated.find((g) => g.id === target.groupId);
+        if (targetGroup) {
+          const targetIdx = targetGroup.items.findIndex((i) => i.href === target.href);
+          const insertIdx = target.pos === "after" ? targetIdx + 1 : targetIdx;
+          targetGroup.items.splice(insertIdx, 0, movedItem);
+        }
+      }
+    } else if (dragNavItem && navDropTarget.type === "group") {
+      // Drop item onto group header = append to that group
+      let movedItem: typeof updated[0]["items"][0] | null = null;
+      for (const g of updated) {
+        const idx = g.items.findIndex((i) => i.href === dragNavItem);
+        if (idx !== -1) { movedItem = g.items.splice(idx, 1)[0]; break; }
+      }
+      if (movedItem) {
+        const targetGroup = updated.find((g) => g.id === navDropTarget.groupId);
+        if (targetGroup) targetGroup.items.push(movedItem);
+      }
+    } else if (dragNavGroup && navDropTarget.type === "group") {
+      // Reorder groups
+      const fromIdx = updated.findIndex((g) => g.id === dragNavGroup);
+      if (fromIdx !== -1) {
+        const [moved] = updated.splice(fromIdx, 1);
+        let toIdx = updated.findIndex((g) => g.id === navDropTarget.groupId);
+        if (navDropTarget.pos === "after") toIdx++;
+        updated.splice(toIdx, 0, moved);
+      }
+    }
+
+    setNavGroups(updated);
+    saveNavConfig(updated);
+    cleanupNavDrag();
+  }
+
+  function cleanupNavDrag() {
+    setDragNavItem(null);
+    setDragNavGroup(null);
+    setNavDropTarget(null);
+  }
 
   async function handleNewFolder() {
     try {
@@ -385,7 +724,7 @@ export function Sidebar() {
   }
 
   const convsByFolder: Record<string, ConversationWithDetails[]> = {};
-  const unfiledConvs: ConversationWithDetails[] = [];
+  const rawUnfiledConvs: ConversationWithDetails[] = [];
 
   for (const conv of conversations) {
     const folderId = (conv as ConversationWithDetails & { folder_id?: string | null })
@@ -394,9 +733,11 @@ export function Sidebar() {
       if (!convsByFolder[folderId]) convsByFolder[folderId] = [];
       convsByFolder[folderId].push(conv);
     } else {
-      unfiledConvs.push(conv);
+      rawUnfiledConvs.push(conv);
     }
   }
+
+  const unfiledConvs = sortConversations(rawUnfiledConvs);
 
   const hasFolders = folders.length > 0;
   const isPills = hydrated && uiPrefs.navStyle === "pills";
@@ -408,6 +749,7 @@ export function Sidebar() {
         size="icon"
         className="fixed top-3 left-3 z-50 md:hidden"
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
       >
         {sidebarOpen ? (
           <PanelLeftClose className="h-5 w-5" />
@@ -425,8 +767,10 @@ export function Sidebar() {
 
       <aside
         ref={sidebarRef}
+        role="complementary"
+        aria-label="Sidebar"
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-white/[0.04] bg-sidebar/95 backdrop-blur-xl overflow-visible",
+          "fixed left-0 top-0 z-40 flex h-full flex-col border-r border-foreground/[0.04] bg-sidebar/95 backdrop-blur-xl overflow-visible",
           "md:relative md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           !isResizingSidebar && "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
@@ -436,7 +780,7 @@ export function Sidebar() {
         {/* Logo + collapse toggle */}
         <div
           className={cn(
-            "flex items-center border-b border-white/[0.04] shrink-0",
+            "flex items-center border-b border-foreground/[0.04] shrink-0",
             collapsed ? "justify-center px-2 py-3" : "px-4 py-3 gap-2",
           )}
         >
@@ -448,8 +792,10 @@ export function Sidebar() {
               <span className="text-lg font-semibold whitespace-nowrap text-foreground">AgentHub</span>
               <button
                 onClick={handleCollapseChange}
-                className="ml-auto h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.08] transition-all duration-300"
+                className="ml-auto h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08] transition-all duration-300"
                 title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+                aria-expanded={!collapsed}
               >
                 <PanelLeftClose className="h-4.5 w-4.5" />
               </button>
@@ -460,14 +806,16 @@ export function Sidebar() {
 
         {/* Expand button when collapsed - big and clear, above nav icons */}
         {collapsed && (
-          <div className="shrink-0 flex justify-center py-3 border-b border-white/[0.04]">
+          <div className="shrink-0 flex justify-center py-3 border-b border-foreground/[0.04]">
             <Tooltip>
               <TooltipTrigger
                 render={
                   <button
                     type="button"
                     onClick={handleCollapseChange}
-                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/[0.06] text-foreground/70 hover:text-foreground hover:bg-white/[0.12] transition-all"
+                    aria-label="Expand sidebar"
+                    aria-expanded={false}
+                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground/70 hover:text-foreground hover:bg-foreground/[0.12] transition-all"
                   />
                 }
               >
@@ -485,10 +833,22 @@ export function Sidebar() {
 
         {/* Navigation header with configure button */}
         {!collapsed && (
-          <div className="flex items-center justify-end px-3 pt-2">
+          <div className="flex items-center justify-end gap-1 px-3 pt-2">
+            <button
+              onClick={() => setEditNavMode(!editNavMode)}
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all duration-300",
+                editNavMode
+                  ? "text-blue-400 bg-blue-500/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]",
+              )}
+            >
+              <GripVertical className="h-3 w-3" />
+              {editNavMode ? "Done" : "Reorder"}
+            </button>
             <button
               onClick={() => setConfigOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-all duration-300"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-all duration-300"
             >
               <SlidersHorizontal className="h-3 w-3" />
               Configure
@@ -497,8 +857,10 @@ export function Sidebar() {
         )}
 
         {/* Navigation (resizable height) */}
-        <div
+        <nav
           ref={navRef}
+          role="navigation"
+          aria-label="Main navigation"
           className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-1.5 py-1", collapsed && "flex-1")}
           style={collapsed ? undefined : { height: navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
@@ -517,7 +879,7 @@ export function Sidebar() {
                             "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200",
                             isActive
                               ? "bg-oklch(0.55_0.24_264_/0.15) text-foreground"
-                              : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+                              : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
                           )}
                         >
                           {isActive && (
@@ -537,189 +899,249 @@ export function Sidebar() {
               })}
             </div>
           ) : isPills ? (
-            <div className="space-y-2">
-              {NAV_CATEGORIES.map((category) => {
-                const isOpen = expandedCategories[category.label] ?? true;
-                const CategoryIcon = category.icon;
-                const hasActiveChild = category.items.some(
-                  (i) => pathname === i.href,
-                );
+            <div className="space-y-2" onDragOver={(e) => e.preventDefault()} onDrop={onNavDrop}>
+              {navGroups.map((group) => {
+                const isOpen = expandedCategories[group.label] ?? true;
+                const meta = getGroupMeta(group.id);
+                const CategoryIcon = meta.icon;
+                const glow = getGroupGlow(group.id);
+                const visibleItems = group.items.filter((i) => i.visible);
+                const hasActiveChild = visibleItems.some((i) => pathname === i.href);
+                const isGroupDropTarget = navDropTarget?.type === "group" && navDropTarget.groupId === group.id;
 
                 return (
-                  <div key={category.label}>
+                  <div key={group.id} className="relative">
+                    {isGroupDropTarget && navDropTarget.pos === "before" && (
+                      <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
+                    )}
                     <button
                       type="button"
-                      onClick={() => toggleCategory(category.label)}
+                      onClick={() => !editNavMode && toggleCategory(group.label)}
+                      draggable={editNavMode}
+                      onDragStart={(e) => onNavGroupDragStart(e, group.id)}
+                      onDragOver={(e) => onNavGroupDragOver(e, group.id)}
+                      onDragEnd={cleanupNavDrag}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-all duration-200",
                         hasActiveChild
                           ? "text-foreground"
                           : "text-muted-foreground hover:text-foreground",
+                        editNavMode && "cursor-grab active:cursor-grabbing",
                       )}
                     >
+                      {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
                       <CategoryIcon className="h-3 w-3 shrink-0" />
-                      <span className="flex-1 text-left">{category.label}</span>
-                      <ChevronDown
-                        className={cn(
-                          "h-3 w-3 transition-transform duration-200",
-                          !isOpen && "-rotate-90",
-                        )}
-                      />
+                      <span className="flex-1 text-left">{group.label}</span>
+                      {!editNavMode && (
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transition-transform duration-200",
+                            !isOpen && "-rotate-90",
+                          )}
+                        />
+                      )}
                     </button>
 
                     <div
                       className={cn(
                         "overflow-hidden transition-all duration-300",
-                        isOpen
-                          ? "max-h-[500px] opacity-100"
+                        (isOpen || editNavMode)
+                          ? "max-h-[31.25rem] opacity-100"
                           : "max-h-0 opacity-0",
                       )}
                     >
                       <div className="flex flex-wrap gap-1 py-1">
-                        {category.items.map((item) => {
+                        {visibleItems.map((item) => {
                           const isActive = pathname === item.href;
+                          const ItemIcon = getNavIcon(item.href);
+                          const isItemDropTarget = navDropTarget?.type === "item" && navDropTarget.href === item.href;
                           return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              onClick={() => setSidebarOpen(false)}
-                              className={cn(
-                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border",
-                                isActive
-                                  ? cn("border-current", category.activeColor)
-                                  : "border-transparent text-muted-foreground",
+                            <div key={item.href} className="relative">
+                              {isItemDropTarget && navDropTarget.pos === "before" && (
+                                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-blue-400 rounded-full z-10" />
                               )}
-                              style={{
-                                transition: "all 0.3s ease",
-                                ...(isActive ? {
-                                  boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}, 0 0 24px ${CATEGORY_GLOW[category.label]}40`,
-                                } : {}),
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isActive) {
-                                  const c = CATEGORY_GLOW[category.label];
-                                  e.currentTarget.style.boxShadow = `0 0 10px ${c}, 0 0 30px ${c}60`;
-                                  e.currentTarget.style.borderColor = `${c}80`;
-                                  e.currentTarget.style.background = `${c}15`;
-                                  e.currentTarget.style.color = c;
-                                  e.currentTarget.style.transform = "scale(1.05)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isActive) {
-                                  e.currentTarget.style.boxShadow = "none";
-                                  e.currentTarget.style.borderColor = "transparent";
-                                  e.currentTarget.style.background = "transparent";
-                                  e.currentTarget.style.color = "";
-                                  e.currentTarget.style.transform = "scale(1)";
-                                }
-                              }}
-                            >
-                              <item.icon className="relative h-3.5 w-3.5 shrink-0" />
-                              <span className="relative truncate">{item.label}</span>
-                            </Link>
+                              {isItemDropTarget && navDropTarget.pos === "after" && (
+                                <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-blue-400 rounded-full z-10" />
+                              )}
+                              <Link
+                                href={editNavMode ? "#" : item.href}
+                                onClick={(e) => { if (editNavMode) e.preventDefault(); else setSidebarOpen(false); }}
+                                draggable={editNavMode}
+                                onDragStart={(e) => onNavItemDragStart(e, item.href)}
+                                onDragOver={(e) => onNavItemDragOver(e, group.id, item.href)}
+                                onDragEnd={cleanupNavDrag}
+                                className={cn(
+                                  "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border",
+                                  isActive
+                                    ? cn("border-current", meta.activeColor)
+                                    : "border-transparent text-muted-foreground",
+                                  editNavMode && "cursor-grab active:cursor-grabbing",
+                                )}
+                                style={{
+                                  transition: "all 0.3s ease",
+                                  ...(isActive ? {
+                                    boxShadow: `0 0 8px ${glow}, 0 0 24px ${glow}40`,
+                                  } : {}),
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isActive && !editNavMode) {
+                                    e.currentTarget.style.boxShadow = `0 0 10px ${glow}, 0 0 30px ${glow}60`;
+                                    e.currentTarget.style.borderColor = `${glow}80`;
+                                    e.currentTarget.style.background = `${glow}15`;
+                                    e.currentTarget.style.color = glow;
+                                    e.currentTarget.style.transform = "scale(1.05)";
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isActive && !editNavMode) {
+                                    e.currentTarget.style.boxShadow = "none";
+                                    e.currentTarget.style.borderColor = "transparent";
+                                    e.currentTarget.style.background = "transparent";
+                                    e.currentTarget.style.color = "";
+                                    e.currentTarget.style.transform = "scale(1)";
+                                  }
+                                }}
+                              >
+                                {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                                <ItemIcon className="relative h-3.5 w-3.5 shrink-0" />
+                                <span className="relative truncate">{item.label}</span>
+                              </Link>
+                            </div>
                           );
                         })}
                       </div>
                     </div>
+                    {isGroupDropTarget && navDropTarget.pos === "after" && (
+                      <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
+                    )}
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="space-y-1">
-              {NAV_CATEGORIES.map((category) => {
-                const isOpen = expandedCategories[category.label] ?? true;
-                const CategoryIcon = category.icon;
-                const hasActiveChild = category.items.some(
-                  (i) => pathname === i.href,
-                );
+            <div className="space-y-1" onDragOver={(e) => e.preventDefault()} onDrop={onNavDrop}>
+              {navGroups.map((group) => {
+                const isOpen = expandedCategories[group.label] ?? true;
+                const meta = getGroupMeta(group.id);
+                const CategoryIcon = meta.icon;
+                const glow = getGroupGlow(group.id);
+                const visibleItems = group.items.filter((i) => i.visible);
+                const hasActiveChild = visibleItems.some((i) => pathname === i.href);
+                const isGroupDropTarget = navDropTarget?.type === "group" && navDropTarget.groupId === group.id;
 
                 return (
-                  <div key={category.label}>
+                  <div key={group.id} className="relative">
+                    {isGroupDropTarget && navDropTarget.pos === "before" && (
+                      <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
+                    )}
                     <button
                       type="button"
-                      onClick={() => toggleCategory(category.label)}
+                      onClick={() => !editNavMode && toggleCategory(group.label)}
+                      draggable={editNavMode}
+                      onDragStart={(e) => onNavGroupDragStart(e, group.id)}
+                      onDragOver={(e) => onNavGroupDragOver(e, group.id)}
+                      onDragEnd={cleanupNavDrag}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-200",
                         hasActiveChild
                           ? "text-foreground"
                           : "text-muted-foreground hover:text-foreground",
+                        editNavMode && "cursor-grab active:cursor-grabbing",
                       )}
                     >
+                      {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
                       <CategoryIcon className="h-3 w-3 shrink-0" />
-                      <span className="flex-1 text-left">{category.label}</span>
-                      <ChevronDown
-                        className={cn(
-                          "h-3 w-3 transition-transform duration-200",
-                          !isOpen && "-rotate-90",
-                        )}
-                      />
+                      <span className="flex-1 text-left">{group.label}</span>
+                      {!editNavMode && (
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transition-transform duration-200",
+                            !isOpen && "-rotate-90",
+                          )}
+                        />
+                      )}
                     </button>
 
                     <div
                       className={cn(
                         "overflow-hidden transition-all duration-300",
-                        isOpen
-                          ? "max-h-[500px] opacity-100"
+                        (isOpen || editNavMode)
+                          ? "max-h-[31.25rem] opacity-100"
                           : "max-h-0 opacity-0",
                       )}
                     >
                       <div className="space-y-0.5 py-0.5">
-                        {category.items.map((item) => {
+                        {visibleItems.map((item) => {
                           const isActive = pathname === item.href;
+                          const ItemIcon = getNavIcon(item.href);
+                          const isItemDropTarget = navDropTarget?.type === "item" && navDropTarget.href === item.href;
                           return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              onClick={() => setSidebarOpen(false)}
-                              className={cn(
-                                "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm",
-                                isActive
-                                  ? cn("text-foreground", category.activeColor)
-                                  : "text-muted-foreground",
+                            <div key={item.href} className="relative">
+                              {isItemDropTarget && navDropTarget.pos === "before" && (
+                                <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                               )}
-                              style={{
-                                transition: "all 0.3s ease",
-                                ...(isActive ? {
-                                  background: `${CATEGORY_GLOW[category.label]}15`,
-                                  boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}40, inset 0 0 12px ${CATEGORY_GLOW[category.label]}10`,
-                                } : {}),
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isActive) {
-                                  const c = CATEGORY_GLOW[category.label];
-                                  e.currentTarget.style.boxShadow = `0 0 10px ${c}50, inset 0 0 10px ${c}08`;
-                                  e.currentTarget.style.background = `${c}10`;
-                                  e.currentTarget.style.color = c;
-                                  e.currentTarget.style.transform = "scale(1.03)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isActive) {
-                                  e.currentTarget.style.boxShadow = "none";
-                                  e.currentTarget.style.background = "transparent";
-                                  e.currentTarget.style.color = "";
-                                  e.currentTarget.style.transform = "scale(1)";
-                                }
-                              }}
-                            >
-                              <item.icon className="h-4 w-4 shrink-0" />
-                              <span className="truncate">{item.label}</span>
-                              {isActive && (
-                                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-oklch(0.55_0.24_264) shadow-[0_0_6px_oklch(0.55_0.24_264/0.5)]" />
+                              <Link
+                                href={editNavMode ? "#" : item.href}
+                                onClick={(e) => { if (editNavMode) e.preventDefault(); else setSidebarOpen(false); }}
+                                draggable={editNavMode}
+                                onDragStart={(e) => onNavItemDragStart(e, item.href)}
+                                onDragOver={(e) => onNavItemDragOver(e, group.id, item.href)}
+                                onDragEnd={cleanupNavDrag}
+                                className={cn(
+                                  "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm",
+                                  isActive
+                                    ? cn("text-foreground", meta.activeColor)
+                                    : "text-muted-foreground",
+                                  editNavMode && "cursor-grab active:cursor-grabbing",
+                                )}
+                                style={{
+                                  transition: "all 0.3s ease",
+                                  ...(isActive ? {
+                                    background: `${glow}15`,
+                                    boxShadow: `0 0 8px ${glow}40, inset 0 0 12px ${glow}10`,
+                                  } : {}),
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isActive && !editNavMode) {
+                                    e.currentTarget.style.boxShadow = `0 0 10px ${glow}50, inset 0 0 10px ${glow}08`;
+                                    e.currentTarget.style.background = `${glow}10`;
+                                    e.currentTarget.style.color = glow;
+                                    e.currentTarget.style.transform = "scale(1.03)";
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isActive && !editNavMode) {
+                                    e.currentTarget.style.boxShadow = "none";
+                                    e.currentTarget.style.background = "transparent";
+                                    e.currentTarget.style.color = "";
+                                    e.currentTarget.style.transform = "scale(1)";
+                                  }
+                                }}
+                              >
+                                {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                                <ItemIcon className="h-4 w-4 shrink-0" />
+                                <span className="truncate">{item.label}</span>
+                                {isActive && !editNavMode && (
+                                  <div className="ml-auto h-1.5 w-1.5 rounded-full bg-oklch(0.55_0.24_264) shadow-[0_0_6px_oklch(0.55_0.24_264/0.5)]" />
+                                )}
+                              </Link>
+                              {isItemDropTarget && navDropTarget.pos === "after" && (
+                                <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                               )}
-                            </Link>
+                            </div>
                           );
                         })}
                       </div>
                     </div>
+                    {isGroupDropTarget && navDropTarget.pos === "after" && (
+                      <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
+                    )}
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </nav>
 
         {/* Draggable divider between nav and chats */}
         {!collapsed && (
@@ -732,7 +1154,7 @@ export function Sidebar() {
             <div className="absolute inset-x-0 -top-3 -bottom-3 z-10" />
             <div className={cn(
               "h-[2px] rounded-full transition-colors",
-              isResizingSplit ? "bg-blue-400/50" : "bg-white/[0.06] hover:bg-white/[0.2]",
+              isResizingSplit ? "bg-blue-400/50" : "bg-foreground/[0.06] hover:bg-foreground/[0.2]",
             )} />
           </div>
         )}
@@ -750,7 +1172,7 @@ export function Sidebar() {
                   "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all",
                   editChatsMode
                     ? "text-blue-400 bg-blue-500/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]",
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]",
                 )}
               >
                 <Pencil className="h-3 w-3" />
@@ -762,7 +1184,7 @@ export function Sidebar() {
             <div className="px-3 pb-3 flex flex-col gap-2">
               <button
                 onClick={() => setNewChatOpen(!newChatOpen)}
-                className="flex items-center gap-3 w-full rounded-xl border border-white/[0.08] px-4 py-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.15]"
+                className="flex items-center gap-3 w-full rounded-xl border border-foreground/[0.08] px-4 py-3 text-left transition-all hover:bg-foreground/[0.04] hover:border-foreground/[0.15]"
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.2)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
               >
@@ -771,7 +1193,7 @@ export function Sidebar() {
               </button>
               <button
                 onClick={handleNewFolder}
-                className="flex items-center gap-3 w-full rounded-xl border border-white/[0.08] px-4 py-3 text-left transition-all hover:bg-white/[0.04] hover:border-white/[0.15]"
+                className="flex items-center gap-3 w-full rounded-xl border border-foreground/[0.08] px-4 py-3 text-left transition-all hover:bg-foreground/[0.04] hover:border-foreground/[0.15]"
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(139,92,246,0.2)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
               >
@@ -782,10 +1204,10 @@ export function Sidebar() {
 
             {/* New chat agent picker dropdown */}
             {newChatOpen && (
-              <div className="mx-3 mb-3 rounded-xl border border-white/[0.08] glass-strong overflow-hidden animate-fade-in">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.04]">
+              <div className="mx-3 mb-3 rounded-xl border border-foreground/[0.08] glass-strong overflow-hidden animate-fade-in">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-foreground/[0.04]">
                   <span className="text-sm font-medium text-muted-foreground">Pick an agent</span>
-                  <button onClick={() => setNewChatOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06]">
+                  <button onClick={() => setNewChatOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -794,9 +1216,9 @@ export function Sidebar() {
                     <button
                       key={agent.id}
                       onClick={() => handleNewChat(agent.id)}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-white/[0.04] transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-foreground/[0.04] transition-colors"
                     >
-                      <div className={cn("flex h-5 w-5 items-center justify-center rounded-md text-[8px] font-medium text-white", getAvatarColor(agent.id))}>
+                      <div className={cn("flex h-5 w-5 items-center justify-center rounded-md text-[0.5rem] font-medium text-white", getAvatarColor(agent.id))}>
                         {getInitials(agent.name)}
                       </div>
                       <span>{agent.name}</span>
@@ -816,8 +1238,14 @@ export function Sidebar() {
                   return (
                     <div key={folder.id}>
                       <div
-                        className="group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all duration-200"
+                        className={cn(
+                          "group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-all duration-200",
+                          dropFolderId === folder.id && "ring-1 ring-blue-400/50 bg-blue-400/5",
+                        )}
                         onClick={() => toggleFolder(folder.id)}
+                        onDragOver={(e) => onDragOverFolder(e, folder.id)}
+                        onDragLeave={() => setDropFolderId(null)}
+                        onDrop={(e) => onDropFolder(e, folder.id)}
                       >
                         <FolderIcon className="h-4 w-4 shrink-0" />
                         <span className="flex-1 truncate text-sm font-medium">
@@ -841,7 +1269,7 @@ export function Sidebar() {
                         />
                       </div>
                       {isOpen && (
-                        <div className="ml-2 border-l border-white/[0.06] pl-1 space-y-0.5">
+                        <div className="ml-2 border-l border-foreground/[0.06] pl-1 space-y-0.5">
                           {folderConvs.length === 0 ? (
                             <p className="px-2 py-1 text-xs text-muted-foreground">
                               Empty
@@ -857,6 +1285,16 @@ export function Sidebar() {
                                 onDelete={handleDeleteConversation}
                                 onClick={() => setSidebarOpen(false)}
                                 onOpenAgent={() => setSidebarOpen(false)}
+                                onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ convId: conv.id, x: e.clientX, y: e.clientY }); setCtxSubmenu(false); }}
+                                editMode={editChatsMode}
+                                isRenaming={renamingConvId === conv.id}
+                                renameValue={renameValue}
+                                onRenameChange={setRenameValue}
+                                onRenameSubmit={() => handleRenameSubmit(conv.id)}
+                                onDragStart={() => onDragStart(conv.id)}
+                                onDragOver={(e) => onDragOverConv(e, conv.id)}
+                                onDrop={onDropConv}
+                                dropIndicator={dropTarget?.id === conv.id ? dropTarget.pos : null}
                               />
                             ))
                           )}
@@ -885,6 +1323,16 @@ export function Sidebar() {
                     onDelete={handleDeleteConversation}
                     onClick={() => setSidebarOpen(false)}
                     onOpenAgent={() => setSidebarOpen(false)}
+                    onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ convId: conv.id, x: e.clientX, y: e.clientY }); setCtxSubmenu(false); }}
+                    editMode={editChatsMode}
+                    isRenaming={renamingConvId === conv.id}
+                    renameValue={renameValue}
+                    onRenameChange={setRenameValue}
+                    onRenameSubmit={() => handleRenameSubmit(conv.id)}
+                    onDragStart={() => onDragStart(conv.id)}
+                    onDragOver={(e) => onDragOverConv(e, conv.id)}
+                    onDrop={onDropConv}
+                    dropIndicator={dropTarget?.id === conv.id ? dropTarget.pos : null}
                   />
                 ))}
 
@@ -914,7 +1362,7 @@ export function Sidebar() {
           >
             <div className={cn(
               "absolute top-0 bottom-0 left-1/2 -translate-x-1/2 transition-all",
-              isResizingSidebar ? "w-[3px] bg-blue-400/60" : "w-[1px] bg-transparent hover:w-[3px] hover:bg-white/30",
+              isResizingSidebar ? "w-[3px] bg-blue-400/60" : "w-[1px] bg-transparent hover:w-[3px] hover:bg-foreground/30",
             )} />
           </div>
         )}
@@ -929,6 +1377,75 @@ export function Sidebar() {
         >
           <PanelLeft className="h-5 w-5" />
         </Button>
+      )}
+      {/* Context menu */}
+      {ctxMenu && (
+        <div
+          ref={ctxMenuRef}
+          className="fixed z-[100] min-w-[180px] rounded-xl border border-foreground/[0.1] bg-popover/95 backdrop-blur-xl shadow-xl py-1 animate-fade-in"
+          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+        >
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/[0.06] transition-colors"
+            onClick={() => handleCtxRename(ctxMenu.convId)}
+          >
+            <Pencil className="h-3.5 w-3.5" /> Rename
+          </button>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/[0.06] transition-colors"
+            onClick={() => handleCtxPin(ctxMenu.convId)}
+          >
+            <Pin className="h-3.5 w-3.5" />
+            {conversations.find((c) => c.id === ctxMenu.convId)?.is_pinned ? "Unpin" : "Pin to top"}
+          </button>
+          <div
+            className="relative"
+            onMouseEnter={() => setCtxSubmenu(true)}
+            onMouseLeave={() => setCtxSubmenu(false)}
+          >
+            <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/[0.06] transition-colors">
+              <FolderOpen className="h-3.5 w-3.5" /> Move to folder
+              <ArrowRight className="h-3 w-3 ml-auto" />
+            </button>
+            {ctxSubmenu && (
+              <div className="absolute left-full top-0 ml-1 min-w-[10rem] rounded-xl border border-foreground/[0.1] bg-popover/95 backdrop-blur-xl shadow-xl py-1">
+                {folders.map((f) => (
+                  <button
+                    key={f.id}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/[0.06] transition-colors"
+                    onClick={() => handleCtxMoveToFolder(ctxMenu.convId, f.id)}
+                  >
+                    <FolderClosed className="h-3.5 w-3.5" /> {f.name}
+                  </button>
+                ))}
+                {folders.length === 0 && (
+                  <p className="px-3 py-2 text-xs text-muted-foreground">No folders yet</p>
+                )}
+                <div className="border-t border-foreground/[0.06] mt-1 pt-1">
+                  <button
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors"
+                    onClick={() => handleCtxMoveToFolder(ctxMenu.convId, null)}
+                  >
+                    Remove from folder
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/[0.06] transition-colors"
+            onClick={() => handleCtxExport(ctxMenu.convId)}
+          >
+            <Download className="h-3.5 w-3.5" /> Export chat
+          </button>
+          <div className="border-t border-foreground/[0.06] my-1" />
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+            onClick={() => handleCtxDelete(ctxMenu.convId)}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+        </div>
       )}
       <NavConfigPanel
         open={configOpen}
@@ -948,6 +1465,16 @@ function ConversationItem({
   onDelete,
   onClick,
   onOpenAgent,
+  onContextMenu,
+  editMode,
+  isRenaming,
+  renameValue,
+  onRenameChange,
+  onRenameSubmit,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  dropIndicator,
 }: {
   conv: ConversationWithDetails;
   isActive: boolean;
@@ -956,74 +1483,126 @@ function ConversationItem({
   onDelete: (id: string, e: React.MouseEvent) => void;
   onClick: () => void;
   onOpenAgent: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+  editMode: boolean;
+  isRenaming: boolean;
+  renameValue: string;
+  onRenameChange: (val: string) => void;
+  onRenameSubmit: () => void;
+  onDragStart: () => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  dropIndicator: "before" | "after" | null;
 }) {
   const agent = conv.agents[0];
 
   return (
-    <Link
-      href={`/chat/${conv.id}`}
-      onClick={onClick}
-      onMouseEnter={() => onHover(conv.id)}
-      onMouseLeave={() => onHover(null)}
-      className={cn(
-        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
-        isActive
-          ? "bg-white/[0.06] text-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]",
+    <div className="relative">
+      {dropIndicator === "before" && (
+        <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
       )}
-    >
-      {agent ? (
-        <div
-          className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-semibold text-white",
-            getAvatarColor(agent.id),
-          )}
-        >
-          {getInitials(agent.name)}
-        </div>
-      ) : (
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.05]">
-          {conv.type === "group" ? (
-            <Users className="h-4 w-4" />
-          ) : (
-            <MessageSquare className="h-4 w-4" />
-          )}
-        </div>
-      )}
+      <Link
+        href={`/chat/${conv.id}`}
+        onClick={onClick}
+        onMouseEnter={() => onHover(conv.id)}
+        onMouseLeave={() => onHover(null)}
+        onContextMenu={onContextMenu}
+        draggable={editMode}
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = "move";
+          onDragStart();
+        }}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onDragEnd={() => {}}
+        className={cn(
+          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200",
+          isActive
+            ? "bg-foreground/[0.06] text-foreground"
+            : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]",
+          editMode && "cursor-grab active:cursor-grabbing",
+        )}
+      >
+        {editMode && (
+          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+        )}
 
-      <div className="flex-1 min-w-0">
-        <div className="truncate text-sm font-medium">{conv.name}</div>
-        {conv.last_message && (
-          <div className="truncate text-xs text-muted-foreground">
-            {conv.last_message.content.slice(0, 35)}
+        {agent ? (
+          <div
+            className={cn(
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[0.625rem] font-semibold text-white",
+              getAvatarColor(agent.id),
+            )}
+          >
+            {getInitials(agent.name)}
+          </div>
+        ) : (
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05]">
+            {conv.type === "group" ? (
+              <Users className="h-4 w-4" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
           </div>
         )}
-      </div>
 
-      {agent && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenAgent();
-          }}
-          className="rounded-sm p-0.5 opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
-          title={`View ${agent.name} profile`}
-        >
-          <UserCircle className="h-3 w-3" />
-        </button>
-      )}
+        <div className="flex-1 min-w-0">
+          {isRenaming ? (
+            <input
+              autoFocus
+              value={renameValue}
+              onChange={(e) => onRenameChange(e.target.value)}
+              onBlur={onRenameSubmit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onRenameSubmit();
+                if (e.key === "Escape") onRenameSubmit();
+              }}
+              onClick={(e) => e.preventDefault()}
+              className="w-full bg-foreground/[0.06] border border-foreground/[0.12] rounded px-1.5 py-0.5 text-sm font-medium text-foreground outline-none focus:border-blue-400/50"
+            />
+          ) : (
+            <>
+              <div className="flex items-center gap-1 truncate text-sm font-medium">
+                {conv.is_pinned && <Pin className="h-3 w-3 shrink-0 text-amber-400" />}
+                <span className="truncate">{conv.name}</span>
+              </div>
+              {conv.last_message && (
+                <div className="truncate text-xs text-muted-foreground">
+                  {conv.last_message.content.slice(0, 35)}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-      {isHovered && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 rounded-lg opacity-60 hover:opacity-100 hover:text-red-400 hover:bg-red-500/10"
-          onClick={(e) => onDelete(conv.id, e)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {!editMode && agent && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenAgent();
+            }}
+            className="rounded-sm p-0.5 opacity-0 group-hover:opacity-100 hover:bg-foreground/10 transition-opacity"
+            title={`View ${agent.name} profile`}
+          >
+            <UserCircle className="h-3 w-3" />
+          </button>
+        )}
+
+        {!editMode && isHovered && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 rounded-lg opacity-60 hover:opacity-100 hover:text-red-400 hover:bg-red-500/10"
+            onClick={(e) => onDelete(conv.id, e)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </Link>
+      {dropIndicator === "after" && (
+        <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
       )}
-    </Link>
+    </div>
   );
 }

@@ -25,7 +25,8 @@ import type { ScheduledTask, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function ScheduledTasksPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [tasks, setTasks] = useState<(ScheduledTask & { agent_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -204,7 +205,7 @@ export default function ScheduledTasksPage() {
                   {/* Agent avatar */}
                   <div
                     className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-full text-[10px] font-medium text-white shrink-0",
+                      "flex h-9 w-9 items-center justify-center rounded-full text-[0.625rem] font-medium text-white shrink-0",
                       getAvatarColor(task.agent_id),
                     )}
                   >
@@ -218,7 +219,7 @@ export default function ScheduledTasksPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px]",
+                          "text-[0.625rem]",
                           task.is_active
                             ? "border-emerald-500/30 text-emerald-600"
                             : "border-muted-foreground/30 text-muted-foreground",
@@ -227,7 +228,7 @@ export default function ScheduledTasksPage() {
                         {task.is_active ? "active" : "paused"}
                       </Badge>
                       {task.last_status === "error" && (
-                        <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-600">
+                        <Badge variant="outline" className="text-[0.625rem] border-red-500/30 text-red-600">
                           error
                         </Badge>
                       )}
@@ -452,8 +453,8 @@ function CreateTaskDialog({
             className="font-mono"
           />
           <div className="mt-2 space-y-1">
-            <p className="text-[10px] text-muted-foreground font-medium">Common patterns:</p>
-            <div className="grid grid-cols-1 gap-0.5 text-[10px] text-muted-foreground">
+            <p className="text-[0.625rem] text-muted-foreground font-medium">Common patterns:</p>
+            <div className="grid grid-cols-1 gap-0.5 text-[0.625rem] text-muted-foreground">
               <span>
                 <code className="bg-muted px-1 rounded font-mono">0 9 * * *</code> — Daily at 9:00 AM
               </span>
@@ -471,7 +472,7 @@ function CreateTaskDialog({
               </span>
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[0.625rem] text-muted-foreground mt-1">
             Leave empty for manual-only tasks (triggered via Run Now).
           </p>
         </div>

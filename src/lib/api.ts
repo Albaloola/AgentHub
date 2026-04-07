@@ -32,6 +32,9 @@ import type {
   A2AAgentCard,
   PolicyRule,
   AgentVersion,
+  ReplaySnapshot,
+  ConversationPermissionWithUser,
+  PermissionLevel,
 } from "./types";
 
 const BASE = "";
@@ -535,6 +538,12 @@ export function deleteCheckpoint(conversationId: string, checkpointId: string): 
   return fetchJSON(`/api/conversations/${conversationId}/checkpoints/${checkpointId}`, { method: "DELETE" });
 }
 
+// === Replay ===
+
+export function getReplaySnapshots(conversationId: string): Promise<ReplaySnapshot[]> {
+  return fetchJSON(`/api/conversations/${conversationId}/replay`);
+}
+
 // === Smart Context ===
 
 export function compactConversation(conversationId: string): Promise<{ summary: string; removed_count: number }> {
@@ -702,6 +711,37 @@ export function updateFallbackChain(agentId: string, chain: string[]): Promise<u
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fallback_chain: JSON.stringify(chain) }),
   });
+}
+
+// === Response Cache ===
+
+export interface CacheStats {
+  total_entries: number;
+  total_hits: number;
+  total_tokens: number;
+  total_size_bytes: number;
+  expired_count: number;
+  hit_rate: number;
+}
+
+export interface CacheEntry {
+  id: string;
+  agent_id: string;
+  agent_name: string | null;
+  prompt_hash: string;
+  token_count: number;
+  hit_count: number;
+  response_preview: string;
+  created_at: string;
+  expires_at: string | null;
+}
+
+export function getCacheStats(): Promise<{ stats: CacheStats; entries: CacheEntry[] }> {
+  return fetchJSON("/api/cache");
+}
+
+export function clearCache(): Promise<{ message: string; deleted_count: number }> {
+  return fetchJSON("/api/cache", { method: "DELETE" });
 }
 
 // === Message Editing ===
@@ -921,6 +961,20 @@ export function updatePolicy(id: string, body: Partial<{ name: string; rule_json
 }
 export function deletePolicy(id: string): Promise<unknown> { return fetchJSON(`/api/policies/${id}`, { method: "DELETE" }); }
 
+// === Settings (key-value store) ===
+
+export function getSettings(): Promise<Record<string, string>> {
+  return fetchJSON("/api/settings");
+}
+
+export function updateSettings(settings: Record<string, string>): Promise<Record<string, string>> {
+  return fetchJSON("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+}
+
 // === Phase 8: Agent Versions ===
 export function getAgentVersions(agentId: string): Promise<AgentVersion[]> {
   return fetchJSON(`/api/agents/${agentId}/versions`);
@@ -930,4 +984,19 @@ export function createAgentVersion(agentId: string, version: string, trafficPct?
 }
 export function updateAgentVersionTraffic(agentId: string, versionId: string, trafficPct: number): Promise<unknown> {
   return fetchJSON(`/api/agents/${agentId}/versions/${versionId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ traffic_pct: trafficPct }) });
+}
+
+// === Conversation Permissions / Sharing ===
+export function getConversationPermissions(conversationId: string): Promise<ConversationPermissionWithUser[]> {
+  return fetchJSON(`/api/conversations/${conversationId}/permissions`);
+}
+export function addConversationPermission(conversationId: string, userId: string, permission: PermissionLevel): Promise<ConversationPermissionWithUser> {
+  return fetchJSON(`/api/conversations/${conversationId}/permissions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, permission }),
+  });
+}
+export function removeConversationPermission(conversationId: string, userId: string): Promise<unknown> {
+  return fetchJSON(`/api/conversations/${conversationId}/permissions?user_id=${encodeURIComponent(userId)}`, { method: "DELETE" });
 }

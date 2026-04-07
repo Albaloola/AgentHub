@@ -147,7 +147,7 @@ export function GlobalSearch() {
                 {result.conversation.agents[0] && (
                   <div
                     className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium text-white",
+                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
                       getAvatarColor(result.conversation.agents[0].id),
                     )}
                   >
@@ -155,7 +155,7 @@ export function GlobalSearch() {
                   </div>
                 )}
                 <span className="text-sm font-medium">{result.conversation.name}</span>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-[0.625rem]">
                   {result.messages.length} matches
                 </Badge>
               </button>
@@ -166,10 +166,10 @@ export function GlobalSearch() {
                 {result.messages.map((m) => (
                   <div key={m.msg.id} className="rounded-md bg-muted/50 px-3 py-2 text-xs">
                     <div className="flex items-center gap-1 mb-1">
-                      <Badge variant={m.msg.sender_agent_id ? "secondary" : "default"} className="text-[10px]">
+                      <Badge variant={m.msg.sender_agent_id ? "secondary" : "default"} className="text-[0.625rem]">
                         {m.msg.sender_agent_id ? "Agent" : "You"}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[0.625rem] text-muted-foreground">
                         {new Date(m.msg.created_at).toLocaleString()}
                       </span>
                     </div>

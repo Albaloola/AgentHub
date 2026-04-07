@@ -23,17 +23,29 @@ import {
   getWebhooks, createWebhook, updateWebhook, deleteWebhook,
   getWebhookEvents, getAgents,
 } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Webhook, WebhookEvent, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function WebhooksPage() {
-  const { agents, setAgents } = useStore();
+  const agents = useStore((s) => s.agents);
+  const setAgents = useStore((s) => s.setAgents);
   const [webhooks, setWebhooks] = useState<(Webhook & { agent_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [events, setEvents] = useState<Record<string, WebhookEvent[]>>({});
   const [eventsLoading, setEventsLoading] = useState<string | null>(null);
+  const [deletingWebhook, setDeletingWebhook] = useState<(Webhook & { agent_name?: string }) | null>(null);
 
   useEffect(() => {
     loadData();
@@ -199,8 +211,8 @@ export default function WebhooksPage() {
                         variant="outline"
                         className={
                           webhook.is_active
-                            ? "text-[10px] border-green-500/30 text-green-600"
-                            : "text-[10px] border-muted-foreground/30 text-muted-foreground"
+                            ? "text-[0.625rem] border-green-500/30 text-green-600"
+                            : "text-[0.625rem] border-muted-foreground/30 text-muted-foreground"
                         }
                       >
                         {webhook.is_active ? "active" : "paused"}
@@ -229,7 +241,7 @@ export default function WebhooksPage() {
                     </Button>
                     <Button
                       variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(webhook.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeletingWebhook(webhook); }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -309,27 +321,27 @@ export default function WebhooksPage() {
                                 variant="outline"
                                 className={
                                   ev.status === "success"
-                                    ? "text-[10px] border-green-500/30 text-green-600 shrink-0"
+                                    ? "text-[0.625rem] border-green-500/30 text-green-600 shrink-0"
                                     : ev.status === "error"
-                                      ? "text-[10px] border-red-500/30 text-red-600 shrink-0"
-                                      : "text-[10px] shrink-0"
+                                      ? "text-[0.625rem] border-red-500/30 text-red-600 shrink-0"
+                                      : "text-[0.625rem] shrink-0"
                                 }
                               >
                                 {ev.status}
                               </Badge>
                               <div className="flex-1 min-w-0">
                                 {ev.payload && (
-                                  <pre className="text-[10px] text-muted-foreground truncate max-w-full">
+                                  <pre className="text-[0.625rem] text-muted-foreground truncate max-w-full">
                                     {ev.payload.length > 120
                                       ? ev.payload.slice(0, 120) + "..."
                                       : ev.payload}
                                   </pre>
                                 )}
                                 {ev.error && (
-                                  <p className="text-[10px] text-red-500 mt-0.5">{ev.error}</p>
+                                  <p className="text-[0.625rem] text-red-500 mt-0.5">{ev.error}</p>
                                 )}
                               </div>
-                              <span className="text-[10px] text-muted-foreground shrink-0">
+                              <span className="text-[0.625rem] text-muted-foreground shrink-0">
                                 {new Date(ev.created_at).toLocaleString()}
                               </span>
                             </div>
@@ -344,6 +356,31 @@ export default function WebhooksPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!deletingWebhook} onOpenChange={(open) => { if (!open) setDeletingWebhook(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Webhook</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingWebhook?.name}&quot;? This will permanently remove the webhook and its event history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingWebhook) {
+                  handleDelete(deletingWebhook.id);
+                  setDeletingWebhook(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -436,7 +473,7 @@ function CreateWebhookDialog({
             value={bodyTransform}
             onChange={(e) => setBodyTransform(e.target.value)}
           />
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[0.625rem] text-muted-foreground mt-0.5">
             Extract a specific field from the incoming payload
           </p>
         </div>

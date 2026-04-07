@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Upload, X as XIcon } from "lucide-react";
+import { Upload, X as XIcon, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ interface AgentDialogProps {
     connection_url: string;
     connection_config: string;
     avatar_url: string;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogProps) {
@@ -45,6 +45,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
   const [configValues, setConfigValues] = useState<Record<string, string | number | boolean>>({});
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [adapters, setAdapters] = useState<AdapterMeta[]>([]);
 
@@ -87,23 +88,28 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
     }
   }, [gatewayType, adapters, agent]);
 
-  function handleSave() {
+  async function handleSave() {
     if (!name.trim() || !connectionUrl.trim()) return;
-    // Build connection_config from individual fields
-    const cleanConfig: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(configValues)) {
-      if (value !== "" && value !== undefined) {
-        cleanConfig[key] = value;
+    setSaving(true);
+    try {
+      // Build connection_config from individual fields
+      const cleanConfig: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(configValues)) {
+        if (value !== "" && value !== undefined) {
+          cleanConfig[key] = value;
+        }
       }
+      await onSave({
+        name,
+        gateway_type: gatewayType,
+        connection_url: connectionUrl,
+        connection_config: JSON.stringify(cleanConfig),
+        avatar_url: avatarUrl,
+      });
+      onOpenChange(false);
+    } finally {
+      setSaving(false);
     }
-    onSave({
-      name,
-      gateway_type: gatewayType,
-      connection_url: connectionUrl,
-      connection_config: JSON.stringify(cleanConfig),
-      avatar_url: avatarUrl,
-    });
-    onOpenChange(false);
   }
 
   function updateConfigValue(key: string, value: string | number | boolean) {
@@ -145,7 +151,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
               </SelectContent>
             </Select>
             {currentMeta && (
-              <p className="text-[11px] text-muted-foreground">{currentMeta.description}</p>
+              <p className="text-[0.6875rem] text-muted-foreground">{currentMeta.description}</p>
             )}
           </div>
 
@@ -179,7 +185,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                         onCheckedChange={(checked) => updateConfigValue(field.key, checked)}
                       />
                       {field.description && (
-                        <span className="text-[10px] text-muted-foreground">{field.description}</span>
+                        <span className="text-[0.625rem] text-muted-foreground">{field.description}</span>
                       )}
                     </div>
                   ) : field.type === "password" ? (
@@ -210,7 +216,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                     />
                   )}
                   {field.description && field.type !== "boolean" && (
-                    <p className="text-[10px] text-muted-foreground">{field.description}</p>
+                    <p className="text-[0.625rem] text-muted-foreground">{field.description}</p>
                   )}
                 </div>
               ))}
@@ -228,7 +234,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                   <img
                     src={avatarUrl}
                     alt="Avatar"
-                    className="h-12 w-12 rounded-xl object-cover border border-white/[0.1]"
+                    className="h-12 w-12 rounded-xl object-cover border border-foreground/[0.1]"
                   />
                   <button
                     type="button"
@@ -239,7 +245,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                   </button>
                 </div>
               ) : (
-                <div className="h-12 w-12 rounded-xl border border-dashed border-white/[0.15] flex items-center justify-center text-muted-foreground/40">
+                <div className="h-12 w-12 rounded-xl border border-dashed border-foreground/[0.15] flex items-center justify-center text-muted-foreground/40">
                   <Upload className="h-5 w-5" />
                 </div>
               )}
@@ -293,7 +299,8 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!name.trim() || !connectionUrl.trim()}>
+          <Button onClick={handleSave} disabled={saving || !name.trim() || !connectionUrl.trim()}>
+            {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
             {agent ? "Save Changes" : "Register Agent"}
           </Button>
         </DialogFooter>

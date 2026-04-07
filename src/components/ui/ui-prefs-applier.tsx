@@ -44,7 +44,7 @@ function loadFont(fontKey: string) {
 }
 
 export function UiPrefsApplier() {
-  const { uiPrefs } = useStore();
+  const uiPrefs = useStore((s) => s.uiPrefs);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -52,20 +52,30 @@ export function UiPrefsApplier() {
     // Density
     root.setAttribute("data-density", uiPrefs.density);
 
-    // Font size
-    root.style.fontSize = `${uiPrefs.fontSize}px`;
+    // Font size — acts as a multiplier on the fluid base (16px = 1.0x, default)
+    // The CSS :root has font-size: clamp(14px, 0.625rem + 0.4vw, 22px)
+    // We scale that by the user's preference: 16px=100%, 18px=112.5%, 14px=87.5%
+    const fontScale = uiPrefs.fontSize / 16;
+    root.style.fontSize = `calc(clamp(14px, 0.625rem + 0.4vw, 22px) * ${fontScale})`;
 
-    // Zoom - use CSS zoom (works in Chrome/Safari/Edge)
+    // Zoom - use CSS zoom property (Chrome/Safari/Edge/Firefox 126+)
     const zoom = uiPrefs.zoom ?? 100;
     if (zoom !== 100) {
-      root.style.zoom = `${zoom}%`;
-      // Firefox fallback: use transform scale
-      root.style.setProperty("-moz-transform", `scale(${zoom / 100})`);
-      root.style.setProperty("-moz-transform-origin", "0 0");
+      // CSS zoom accepts a number (1.25) or percentage string ("125%")
+      // Use the number form for widest support
+      root.style.setProperty("zoom", String(zoom / 100));
+      // Firefox < 126 fallback: use transform scale
+      const isFirefox = typeof navigator !== "undefined" && /Firefox/.test(navigator.userAgent);
+      if (isFirefox) {
+        root.style.transform = `scale(${zoom / 100})`;
+        root.style.transformOrigin = "0 0";
+        root.style.width = `${10000 / zoom}%`;
+      }
     } else {
-      root.style.zoom = "";
-      root.style.removeProperty("-moz-transform");
-      root.style.removeProperty("-moz-transform-origin");
+      root.style.removeProperty("zoom");
+      root.style.transform = "";
+      root.style.transformOrigin = "";
+      root.style.width = "";
     }
 
     // Font families - load from CDN if needed
@@ -97,7 +107,37 @@ export function UiPrefsApplier() {
     root.style.setProperty("--glass-glow-color", uiPrefs.glowColor);
     root.style.setProperty("--agent-glow-color", uiPrefs.agentGlowColor);
     root.style.setProperty("--glass-glow-spread", (uiPrefs.glowSpread ?? 20).toString());
+
+    // Theme
+    if (uiPrefs.theme === "dark") {
+      root.classList.add("dark");
+    } else if (uiPrefs.theme === "light") {
+      root.classList.remove("dark");
+    } else {
+      // System preference
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (prefersDark) {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    }
   }, [uiPrefs]);
+
+  // Listen for system theme changes when theme is set to "system"
+  useEffect(() => {
+    if (uiPrefs.theme !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [uiPrefs.theme]);
 
   return null;
 }
