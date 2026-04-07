@@ -165,8 +165,25 @@ export default function AgentsPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        {agents.map((agent) => (
-          <Card key={agent.id} className="relative">
+        {agents.map((agent) => {
+          const glowColor = agent.status === "online" ? "#10b981" : agent.status === "error" ? "#fb565b" : "#8b949e";
+          return (
+          <Card
+            key={agent.id}
+            className="relative group/card cursor-pointer"
+            style={{ transition: "all 0.3s ease" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = `0 0 15px ${glowColor}25, 0 0 40px ${glowColor}10`;
+              e.currentTarget.style.borderColor = `${glowColor}30`;
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "";
+              e.currentTarget.style.borderColor = "";
+              e.currentTarget.style.transform = "";
+            }}
+            onClick={() => router.push(`/agents/${agent.id}`)}
+          >
             <CardContent className="p-5 space-y-4">
               {/* Header */}
               <div className="flex items-start gap-3">
@@ -191,40 +208,42 @@ export default function AgentsPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{agent.name}</h3>
+                  <h3 className="font-semibold truncate text-foreground">{agent.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant="secondary" className="text-[10px]">
                       {GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground truncate">
+                    <span className="text-xs text-muted-foreground truncate">
                       {agent.connection_url}
                     </span>
                   </div>
                 </div>
 
-                <Switch
-                  checked={agent.is_active}
-                  onCheckedChange={() => handleToggleActive(agent)}
-                  aria-label="Toggle active"
-                />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Switch
+                    checked={agent.is_active}
+                    onCheckedChange={() => handleToggleActive(agent)}
+                    aria-label="Toggle active"
+                  />
+                </div>
               </div>
 
               {/* Status Info */}
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
                   <div
                     className={cn(
-                      "h-2 w-2 rounded-full",
+                      "h-2.5 w-2.5 rounded-full",
                       agent.status === "online"
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
                         : agent.status === "busy"
-                          ? "bg-yellow-500"
+                          ? "bg-yellow-500 shadow-[0_0_6px_rgba(234,179,8,0.5)]"
                           : agent.status === "error"
-                            ? "bg-red-500"
+                            ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
                             : "bg-gray-500",
                     )}
                   />
-                  {agent.status}
+                  <span className="font-medium">{agent.status}</span>
                 </div>
                 {agent.latency_ms !== undefined && <span>{agent.latency_ms}ms</span>}
                 {agent.last_seen && (
@@ -232,53 +251,62 @@ export default function AgentsPage() {
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
+              {/* Actions - each button glows on hover */}
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1"
+                  className="flex-1 transition-all duration-300"
                   onClick={() => handleStartChat(agent)}
                   disabled={!agent.is_active}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.4), 0 0 25px rgba(59,130,246,0.15)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.color = "#60a5fa"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                 >
                   Chat
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 transition-all duration-300"
                   onClick={() => handleHealthCheck(agent)}
                   disabled={checkingHealth.has(agent.id)}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(16,185,129,0.4), 0 0 20px rgba(16,185,129,0.15)"; e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)"; e.currentTarget.style.color = "#34d399"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                 >
                   {checkingHealth.has(agent.id) ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className="h-4 w-4" />
                   )}
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 transition-all duration-300"
                   onClick={() => {
                     setEditingAgent(agent);
                     setDialogOpen(true);
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(139,92,246,0.4), 0 0 20px rgba(139,92,246,0.15)"; e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)"; e.currentTarget.style.color = "#a78bfa"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  className="h-9 w-9 transition-all duration-300"
                   onClick={() => handleDelete(agent)}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(251,86,91,0.4), 0 0 20px rgba(251,86,91,0.15)"; e.currentTarget.style.borderColor = "rgba(251,86,91,0.4)"; e.currentTarget.style.color = "#fb7185"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
 
         {agents.length === 0 && !refreshing && (
           <Card className="col-span-full border-dashed">
