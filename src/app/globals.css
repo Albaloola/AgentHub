@@ -291,9 +291,9 @@
       0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--agent-glow-color, rgba(16,185,129,0.015));
   }
 
-  /* User message bubbles */
+  /* User message bubbles - matched to agent bubble intensity */
   .glass-bubble-user {
-    background: var(--accent-color-dim, rgba(26, 39, 68, 0.35));
+    background: rgba(16, 16, 16, 0.55);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--accent-color-glow, rgba(59,130,246,0.1));
