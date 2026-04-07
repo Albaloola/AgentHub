@@ -101,7 +101,6 @@ export default function HomePage() {
             icon={<Cpu className="h-4 w-4" />}
             accent="blue"
             className="md:col-span-2"
-            controls
             collapsible
             status={`${onlineCount} online`}
           >
@@ -190,7 +189,6 @@ export default function HomePage() {
             title="Recent Conversations"
             icon={<Clock className="h-4 w-4" />}
             accent="cyan"
-            controls
             collapsible
             status={`${conversations.length} total`}
           >
