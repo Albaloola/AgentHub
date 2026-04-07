@@ -44,6 +44,8 @@ import {
   FolderPlus,
   MessageSquarePlus,
   X,
+  SlidersHorizontal,
+  Pencil,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,8 @@ import {
   createConversation,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
+import { NavConfigPanel, loadNavConfig, saveNavConfig } from "./nav-config-panel";
+import type { NavGroupConfig } from "./nav-config-panel";
 import type { ConversationWithDetails, ConversationFolder } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -309,6 +313,19 @@ export function Sidebar() {
   }
 
   const [newChatOpen, setNewChatOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [editChatsMode, setEditChatsMode] = useState(false);
+
+  // Configurable nav groups (persisted in localStorage)
+  const [navGroups, setNavGroups] = useState<NavGroupConfig[]>(() => {
+    const defaults: NavGroupConfig[] = NAV_CATEGORIES.map((cat) => ({
+      id: cat.label.toLowerCase(),
+      label: cat.label,
+      items: cat.items.map((item) => ({ href: item.href, label: item.label, visible: true })),
+      collapsed: false,
+    }));
+    return loadNavConfig(defaults);
+  });
 
   async function handleNewFolder() {
     try {
@@ -429,9 +446,22 @@ export function Sidebar() {
           )}
         </div>
 
+        {/* Navigation header with configure button */}
+        {!collapsed && (
+          <div className="flex items-center justify-end px-3 pt-2">
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04] transition-all"
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              Configure
+            </button>
+          </div>
+        )}
+
         {/* Navigation (resizable height) */}
         <div
-          className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-2"
+          className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-1"
           style={{ height: collapsed ? "auto" : `${navHeightPercent}%`, flexShrink: 0 }}
         >
           {collapsed ? (
@@ -642,14 +672,16 @@ export function Sidebar() {
         {/* Draggable divider between nav and chats */}
         {!collapsed && (
           <div
-            className="relative mx-2 group cursor-row-resize"
-            onMouseDown={() => setIsResizingSplit(true)}
+            className="relative mx-2 shrink-0"
+            style={{ cursor: "row-resize" }}
+            onMouseDown={(e) => { e.preventDefault(); setIsResizingSplit(true); }}
           >
+            {/* Wider invisible hit area */}
+            <div className="absolute inset-x-0 -top-3 -bottom-3 z-10" />
             <div className={cn(
-              "h-px transition-colors",
-              isResizingSplit ? "bg-blue-400/50" : "bg-white/[0.06] group-hover:bg-white/[0.15]",
+              "h-[2px] rounded-full transition-colors",
+              isResizingSplit ? "bg-blue-400/50" : "bg-white/[0.06] hover:bg-white/[0.2]",
             )} />
-            <div className="absolute inset-x-0 -top-2 -bottom-2" />
           </div>
         )}
 
@@ -660,6 +692,18 @@ export function Sidebar() {
               <span className="text-base font-semibold text-muted-foreground/80">
                 Chats
               </span>
+              <button
+                onClick={() => setEditChatsMode(!editChatsMode)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all",
+                  editChatsMode
+                    ? "text-blue-400 bg-blue-500/10"
+                    : "text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04]",
+                )}
+              >
+                <Pencil className="h-3 w-3" />
+                {editChatsMode ? "Done" : "Edit"}
+              </button>
             </div>
 
             {/* Action buttons - big, clear, separated */}
@@ -835,15 +879,16 @@ export function Sidebar() {
           )}
         </div>
 
-        {/* Right edge resize handle */}
+        {/* Right edge resize handle - wider hit area */}
         {!collapsed && (
           <div
-            className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize group z-50"
-            onMouseDown={() => setIsResizingSidebar(true)}
+            className="absolute right-0 top-0 bottom-0 w-3 z-50"
+            style={{ cursor: "col-resize" }}
+            onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }}
           >
             <div className={cn(
-              "absolute right-0 top-0 bottom-0 w-px transition-colors",
-              isResizingSidebar ? "bg-blue-400/60" : "bg-transparent group-hover:bg-white/[0.15]",
+              "absolute right-0 top-0 bottom-0 w-[2px] transition-colors",
+              isResizingSidebar ? "bg-blue-400/60" : "bg-transparent hover:bg-white/20",
             )} />
           </div>
         )}
@@ -859,6 +904,12 @@ export function Sidebar() {
           <PanelLeft className="h-5 w-5" />
         </Button>
       )}
+      <NavConfigPanel
+        open={configOpen}
+        onClose={() => setConfigOpen(false)}
+        groups={navGroups}
+        onSave={setNavGroups}
+      />
     </TooltipProvider>
   );
 }
