@@ -104,7 +104,7 @@ export default function HomePage() {
             collapsible
             status={`${onlineCount} online`}
           >
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto scrollbar-hidden">
               {agents.filter((a) => a.is_active).map((agent) => (
                 <div
                   key={agent.id}
