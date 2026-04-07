@@ -36,6 +36,7 @@ export default function AgentsPage() {
   const [editingAgent, setEditingAgent] = useState<Agent | undefined>();
   const [checkingHealth, setCheckingHealth] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
   useEffect(() => {
     loadAgents();
@@ -167,22 +168,33 @@ export default function AgentsPage() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {agents.map((agent) => {
           const glowColor = agent.status === "online" ? "#10b981" : agent.status === "error" ? "#fb565b" : "#8b949e";
+          const isExpanded = expandedAgent === agent.id;
           return (
           <Card
             key={agent.id}
-            className="relative group/card cursor-pointer"
-            style={{ transition: "all 0.3s ease" }}
+            className="relative group/card cursor-pointer overflow-hidden"
+            style={{
+              transition: "all 0.3s ease",
+              ...(isExpanded ? {
+                boxShadow: `0 0 20px ${glowColor}90, 0 0 50px ${glowColor}40, 0 0 80px ${glowColor}15`,
+                borderColor: `${glowColor}70`,
+              } : {}),
+            }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = `0 0 15px ${glowColor}25, 0 0 40px ${glowColor}10`;
-              e.currentTarget.style.borderColor = `${glowColor}30`;
-              e.currentTarget.style.transform = "translateY(-2px)";
+              if (!isExpanded) {
+                e.currentTarget.style.boxShadow = `0 0 18px ${glowColor}80, 0 0 45px ${glowColor}35, 0 0 70px ${glowColor}12`;
+                e.currentTarget.style.borderColor = `${glowColor}60`;
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "";
-              e.currentTarget.style.borderColor = "";
-              e.currentTarget.style.transform = "";
+              if (!isExpanded) {
+                e.currentTarget.style.boxShadow = "";
+                e.currentTarget.style.borderColor = "";
+                e.currentTarget.style.transform = "";
+              }
             }}
-            onClick={() => router.push(`/agents/${agent.id}`)}
+            onClick={() => setExpandedAgent(isExpanded ? null : agent.id)}
           >
             <CardContent className="p-5 space-y-4">
               {/* Header */}
@@ -259,8 +271,8 @@ export default function AgentsPage() {
                   className="flex-1 transition-all duration-300"
                   onClick={() => handleStartChat(agent)}
                   disabled={!agent.is_active}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.4), 0 0 25px rgba(59,130,246,0.15)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.color = "#60a5fa"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(59,130,246,0.6), 0 0 30px rgba(59,130,246,0.25)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)"; e.currentTarget.style.color = "#60a5fa"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; e.currentTarget.style.transform = ""; }}
                 >
                   Chat
                 </Button>
@@ -270,8 +282,8 @@ export default function AgentsPage() {
                   className="h-9 w-9 transition-all duration-300"
                   onClick={() => handleHealthCheck(agent)}
                   disabled={checkingHealth.has(agent.id)}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(16,185,129,0.4), 0 0 20px rgba(16,185,129,0.15)"; e.currentTarget.style.borderColor = "rgba(16,185,129,0.4)"; e.currentTarget.style.color = "#34d399"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(16,185,129,0.6), 0 0 30px rgba(16,185,129,0.25)"; e.currentTarget.style.borderColor = "rgba(16,185,129,0.5)"; e.currentTarget.style.color = "#34d399"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; e.currentTarget.style.transform = ""; }}
                 >
                   {checkingHealth.has(agent.id) ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -287,8 +299,8 @@ export default function AgentsPage() {
                     setEditingAgent(agent);
                     setDialogOpen(true);
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(139,92,246,0.4), 0 0 20px rgba(139,92,246,0.15)"; e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)"; e.currentTarget.style.color = "#a78bfa"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(139,92,246,0.6), 0 0 30px rgba(139,92,246,0.25)"; e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)"; e.currentTarget.style.color = "#a78bfa"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; e.currentTarget.style.transform = ""; }}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -297,11 +309,74 @@ export default function AgentsPage() {
                   size="icon"
                   className="h-9 w-9 transition-all duration-300"
                   onClick={() => handleDelete(agent)}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(251,86,91,0.4), 0 0 20px rgba(251,86,91,0.15)"; e.currentTarget.style.borderColor = "rgba(251,86,91,0.4)"; e.currentTarget.style.color = "#fb7185"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(251,86,91,0.6), 0 0 30px rgba(251,86,91,0.25)"; e.currentTarget.style.borderColor = "rgba(251,86,91,0.5)"; e.currentTarget.style.color = "#fb7185"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; e.currentTarget.style.transform = ""; }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+              </div>
+
+              {/* Expandable detail panel */}
+              <div
+                className={cn(
+                  "overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  isExpanded ? "max-h-[400px] opacity-100 mt-2" : "max-h-0 opacity-0",
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="border-t border-white/[0.06] pt-4 space-y-3">
+                  <h4 className="text-sm font-semibold text-foreground">Agent Details</h4>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Gateway</span>
+                      <p className="font-medium text-foreground">{GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Status</span>
+                      <p className="font-medium text-foreground capitalize">{agent.status}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Messages</span>
+                      <p className="font-medium text-foreground">{agent.total_messages}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Tokens</span>
+                      <p className="font-medium text-foreground">{agent.total_tokens}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Avg Response</span>
+                      <p className="font-medium text-foreground">{agent.avg_response_time_ms}ms</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Errors</span>
+                      <p className="font-medium text-foreground">{agent.error_count}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 transition-all duration-300"
+                      onClick={() => { setEditingAgent(agent); setDialogOpen(true); }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(139,92,246,0.5), 0 0 25px rgba(139,92,246,0.2)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; }}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit Agent Settings
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/agents/${agent.id}`)}
+                      className="transition-all duration-300"
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(59,130,246,0.5), 0 0 25px rgba(59,130,246,0.2)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; }}
+                    >
+                      Full Profile
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
