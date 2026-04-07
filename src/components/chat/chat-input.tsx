@@ -227,7 +227,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled }: C
             ) : (
               <Button
                 size="icon"
-                className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 shadow-lg shadow-blue-500/20 transition-all duration-200 hover:shadow-blue-500/30 hover:scale-105"
+                className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 hover:from-blue-600 hover:to-violet-700 neon-action transition-all duration-200 hover:scale-105"
                 onClick={handleSend}
                 disabled={!content.trim() || disabled}
               >

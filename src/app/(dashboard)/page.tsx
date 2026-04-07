@@ -55,7 +55,7 @@ export default function HomePage() {
   }).length;
 
   return (
-    <div className="starfield min-h-full">
+    <div className="min-h-full">
       <div className="relative z-10 p-6 space-y-6">
         {/* Mission control header */}
         <div className="flex items-center justify-between">
@@ -74,11 +74,11 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-xl glass gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/agents")}>
+            <Button variant="outline" size="sm" className="rounded-xl glass neon-action gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/agents")}>
               <Plus className="h-3.5 w-3.5" />
               New Agent
             </Button>
-            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 gap-1.5 transition-all duration-200 hover-lift animate-[luminance-pulse_3s_ease-in-out_infinite]" onClick={() => router.push("/groups")}>
+            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 neon-action gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/groups")}>
               <Users className="h-3.5 w-3.5" />
               Group Chat
             </Button>

@@ -288,7 +288,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         />
 
         {/* Messages with starfield background */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto starfield" id="chat-scroll">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto" id="chat-scroll">
           <div className="relative z-10 mx-auto max-w-4xl space-y-3 p-6">
             {/* Empty state with ambient animation */}
             {messages.length === 0 && !isStreaming && (

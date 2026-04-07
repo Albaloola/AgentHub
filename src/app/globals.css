@@ -252,32 +252,36 @@
     animation: pulse-glow 3s ease-in-out infinite;
   }
 
-  /* Glassmorphism (used sparingly) */
+  /* Glassmorphism - transparent so starfield shows through */
   .glass {
-    background: rgba(16, 16, 16, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid #3d3a39;
+    background: rgba(16, 16, 16, 0.6);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid rgba(61, 58, 57, 0.5);
   }
 
   .glass-strong {
-    background: rgba(8, 8, 9, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid #3d3a39;
+    background: rgba(8, 8, 9, 0.7);
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    border: 1px solid rgba(61, 58, 57, 0.4);
   }
 
-  /* Chat bubbles */
+  /* Chat bubbles - semi-transparent */
   .glass-bubble {
-    background: #101010;
-    border: 1px solid #3d3a39;
-    box-shadow: rgba(92, 88, 85, 0.1) 0px 0px 10px;
+    background: rgba(16, 16, 16, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(61, 58, 57, 0.4);
+    box-shadow: rgba(92, 88, 85, 0.08) 0px 0px 12px;
   }
 
   .glass-bubble-user {
-    background: var(--accent-color-dim, #1a2744);
-    border: 1px solid var(--accent-color-glow, rgba(59,130,246,0.25));
-    box-shadow: rgba(59, 130, 246, 0.08) 0px 0px 12px;
+    background: var(--accent-color-dim, rgba(26, 39, 68, 0.6));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--accent-color-glow, rgba(59,130,246,0.2));
+    box-shadow: rgba(59, 130, 246, 0.1) 0px 0px 16px;
   }
 
   /* Starfield background for chat */
@@ -396,6 +400,24 @@
   /* Ambient pulse */
   .ambient-pulse {
     animation: ambient-breathe 6s ease-in-out infinite;
+  }
+
+  /* Neon glow for floating buttons and action items */
+  .neon-action {
+    box-shadow: 0 0 8px var(--accent-color-glow, rgba(59,130,246,0.2)),
+                0 0 20px var(--accent-color-glow, rgba(59,130,246,0.08));
+    transition: box-shadow 0.3s ease;
+  }
+  .neon-action:hover {
+    box-shadow: 0 0 12px var(--accent-color-glow, rgba(59,130,246,0.35)),
+                0 0 30px var(--accent-color-glow, rgba(59,130,246,0.15));
+  }
+
+  /* Neon border glow for cards and panels */
+  .neon-border-glow {
+    border-color: var(--accent-color-glow, rgba(59,130,246,0.25));
+    box-shadow: 0 0 10px var(--accent-color-glow, rgba(59,130,246,0.08)),
+                inset 0 0 10px var(--accent-color-glow, rgba(59,130,246,0.03));
   }
 }
 
