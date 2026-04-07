@@ -46,9 +46,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-white/[0.06]"
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200"
               onClick={() => setSettingsOpen(true)}
               title="Settings (Ctrl+,)"
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(139,92,246,0.5), 0 0 20px rgba(139,92,246,0.2)"; e.currentTarget.style.background = "rgba(139,92,246,0.1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
             >
               <Settings className="h-4 w-4" />
             </Button>

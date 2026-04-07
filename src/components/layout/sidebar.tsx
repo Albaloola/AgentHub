@@ -72,12 +72,16 @@ interface NavCategory {
   label: string;
   icon: LucideIcon;
   items: NavItem[];
+  neon: string; // neon color class for hover glow
+  activeColor: string; // color for active state text
 }
 
 const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Core",
     icon: Layout,
+    neon: "neon-blue",
+    activeColor: "text-neon-blue",
     items: [
       { href: "/", label: "Dashboard", icon: Activity },
       { href: "/search", label: "Search", icon: Search },
@@ -88,6 +92,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Build",
     icon: Hammer,
+    neon: "neon-violet",
+    activeColor: "text-neon-violet",
     items: [
       { href: "/personas", label: "Personas", icon: UserCircle2 },
       { href: "/templates", label: "Templates", icon: FileText },
@@ -98,6 +104,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Intelligence",
     icon: Brain,
+    neon: "neon-cyan",
+    activeColor: "text-neon-cyan",
     items: [
       { href: "/arena", label: "Arena", icon: Swords },
       { href: "/memory", label: "Memory", icon: Brain },
@@ -108,6 +116,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Automation",
     icon: Zap,
+    neon: "neon-amber",
+    activeColor: "text-neon-amber",
     items: [
       { href: "/webhooks", label: "Webhooks", icon: Webhook },
       { href: "/integrations", label: "Integrations", icon: Plug },
@@ -117,6 +127,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Operations",
     icon: Activity,
+    neon: "neon-emerald",
+    activeColor: "text-neon-emerald",
     items: [
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
       { href: "/fleet", label: "Fleet", icon: Network },
@@ -127,6 +139,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "Security",
     icon: Shield,
+    neon: "neon-rose",
+    activeColor: "text-neon-rose",
     items: [
       { href: "/guardrails", label: "Guardrails", icon: Shield },
       { href: "/policies", label: "Policies", icon: Lock },
@@ -137,6 +151,8 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     label: "System",
     icon: Settings,
+    neon: "neon-blue",
+    activeColor: "text-neon-blue",
     items: [
       { href: "/admin", label: "Admin", icon: Layers },
     ],
@@ -144,6 +160,17 @@ const NAV_CATEGORIES: NavCategory[] = [
 ];
 
 const ALL_NAV_ITEMS = NAV_CATEGORIES.flatMap((c) => c.items);
+
+// Glow colors per category for neon lighting
+const CATEGORY_GLOW: Record<string, string> = {
+  Core: "#3b82f6",        // blue
+  Build: "#8b5cf6",       // violet
+  Intelligence: "#06b6d4", // cyan
+  Automation: "#f59e0b",  // amber
+  Operations: "#10b981",  // emerald
+  Security: "#fb565b",    // rose
+  System: "#3b82f6",      // blue
+};
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -406,15 +433,30 @@ export function Sidebar() {
                               href={item.href}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-300 border-2",
+                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-300 border neon-interactive",
                                 isActive
-                                  ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.2) text-foreground shadow-[0_0_16px_oklch(0.55_0.24_264_/0.2)]"
-                                  : "border-transparent text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.05]",
+                                  ? cn("border-current", category.activeColor)
+                                  : "border-transparent text-muted-foreground/70 hover:text-foreground",
                               )}
+                              style={isActive ? {
+                                boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}, 0 0 24px ${CATEGORY_GLOW[category.label]}40`,
+                              } : undefined}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  const c = CATEGORY_GLOW[category.label];
+                                  e.currentTarget.style.boxShadow = `0 0 10px ${c}, 0 0 30px ${c}60`;
+                                  e.currentTarget.style.borderColor = `${c}80`;
+                                  e.currentTarget.style.background = `${c}15`;
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.boxShadow = "none";
+                                  e.currentTarget.style.borderColor = "transparent";
+                                  e.currentTarget.style.background = "transparent";
+                                }
+                              }}
                             >
-                              {isActive && (
-                                <div className="absolute inset-0 rounded-full bg-oklch(0.55_0.24_264_/0.06) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
-                              )}
                               <item.icon className="relative h-3.5 w-3.5 shrink-0" />
                               <span className="relative truncate">{item.label}</span>
                             </Link>
@@ -474,11 +516,28 @@ export function Sidebar() {
                               href={item.href}
                               onClick={() => setSidebarOpen(false)}
                               className={cn(
-                                "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
+                                "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-300",
                                 isActive
-                                  ? "bg-oklch(0.55_0.24_264_/0.1) text-foreground"
-                                  : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.04]",
+                                  ? cn("text-foreground", category.activeColor)
+                                  : "text-muted-foreground/70 hover:text-foreground",
                               )}
+                              style={isActive ? {
+                                background: `${CATEGORY_GLOW[category.label]}15`,
+                                boxShadow: `0 0 8px ${CATEGORY_GLOW[category.label]}40, inset 0 0 12px ${CATEGORY_GLOW[category.label]}10`,
+                              } : undefined}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  const c = CATEGORY_GLOW[category.label];
+                                  e.currentTarget.style.boxShadow = `0 0 10px ${c}50, inset 0 0 10px ${c}08`;
+                                  e.currentTarget.style.background = `${c}10`;
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.boxShadow = "none";
+                                  e.currentTarget.style.background = "transparent";
+                                }
+                              }}
                             >
                               <item.icon className="h-4 w-4 shrink-0" />
                               <span className="truncate">{item.label}</span>

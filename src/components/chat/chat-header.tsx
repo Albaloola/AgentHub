@@ -108,7 +108,7 @@ export function ChatHeader({
           <Button
             variant="destructive"
             size="sm"
-            className="gap-1 rounded-lg neon-glow-sm"
+            className="gap-1 rounded-lg neon-rose"
             onClick={onStop}
           >
             <Square className="h-3.5 w-3.5" />
@@ -144,7 +144,9 @@ export function ChatHeader({
           variant={toolPanelOpen ? "secondary" : "outline"}
           size="sm"
           onClick={onToggleToolPanel}
-          className="gap-1 rounded-lg"
+          className={cn("gap-1 rounded-lg transition-all duration-200", toolPanelOpen && "neon-amber")}
+          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15)"; }}
+          onMouseLeave={(e) => { if (!toolPanelOpen) e.currentTarget.style.boxShadow = "none"; }}
         >
           <Wrench className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Tools</span>

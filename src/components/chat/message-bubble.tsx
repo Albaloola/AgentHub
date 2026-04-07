@@ -233,18 +233,18 @@ export function MessageBubble({
         {showActions && hovered && !editing && !isStreaming && (
           <div className="flex items-center gap-0.5 px-1 animate-fade-in" style={{ animationDuration: "150ms" }}>
             {isUser && (
-              <ActionBtn icon={Pencil} onClick={() => { setEditContent(message.content); setEditing(true); }} title="Edit" />
+              <ActionBtn icon={Pencil} onClick={() => { setEditContent(message.content); setEditing(true); }} title="Edit" glowColor="#3b82f6" />
             )}
             {!isUser && (
               <>
-                <ActionBtn icon={ThumbsUp} onClick={() => handleVote("up")} title="Good" active={votes.up > 0} activeColor="text-emerald-400" />
-                <ActionBtn icon={ThumbsDown} onClick={() => handleVote("down")} title="Bad" active={votes.down > 0} activeColor="text-red-400" />
+                <ActionBtn icon={ThumbsUp} onClick={() => handleVote("up")} title="Good" active={votes.up > 0} activeColor="text-emerald-400" glowColor="#10b981" />
+                <ActionBtn icon={ThumbsDown} onClick={() => handleVote("down")} title="Bad" active={votes.down > 0} activeColor="text-red-400" glowColor="#fb565b" />
                 {onRegenerate && (
-                  <ActionBtn icon={RefreshCw} onClick={() => onRegenerate(message.id, message.sender_agent_id ?? undefined)} title="Regenerate" />
+                  <ActionBtn icon={RefreshCw} onClick={() => onRegenerate(message.id, message.sender_agent_id ?? undefined)} title="Regenerate" glowColor="#8b5cf6" />
                 )}
               </>
             )}
-            <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={message.is_pinned} activeColor="text-amber-400" />
+            <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={!!message.is_pinned} activeColor="text-amber-400" glowColor="#f59e0b" />
             <CopyBtn text={message.content} />
             {message.token_count > 0 && (
               <span className="text-[10px] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
@@ -256,16 +256,32 @@ export function MessageBubble({
   );
 }
 
-function ActionBtn({ icon: Icon, onClick, title, active, activeColor }: {
+function ActionBtn({ icon: Icon, onClick, title, active, activeColor, glowColor }: {
   icon: React.ComponentType<{ className?: string }>;
   onClick: () => void;
   title: string;
   active?: boolean;
   activeColor?: string;
+  glowColor?: string;
 }) {
+  const glow = glowColor ?? (activeColor?.includes("emerald") ? "#10b981" : activeColor?.includes("red") ? "#fb565b" : activeColor?.includes("amber") ? "#f59e0b" : "#3b82f6");
   return (
-    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg hover:bg-white/5" onClick={onClick} title={title}>
-      <Icon className={cn("h-3 w-3", active && activeColor ? `${activeColor} fill-current` : "text-muted-foreground/60")} />
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn("h-7 w-7 rounded-lg transition-all duration-200", active && activeColor)}
+      onClick={onClick}
+      title={title}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = `0 0 8px ${glow}60, 0 0 20px ${glow}25`;
+        e.currentTarget.style.background = `${glow}15`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.background = "transparent";
+      }}
+    >
+      <Icon className={cn("h-3.5 w-3.5", active && activeColor ? `${activeColor} fill-current` : "text-muted-foreground/60")} />
     </Button>
   );
 }
@@ -273,8 +289,16 @@ function ActionBtn({ icon: Icon, onClick, title, active, activeColor }: {
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg hover:bg-white/5" onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }} title="Copy">
-      {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3 text-muted-foreground/60" />}
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 rounded-lg transition-all duration-200"
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      title="Copy"
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(6,182,212,0.5), 0 0 20px rgba(6,182,212,0.2)"; e.currentTarget.style.background = "rgba(6,182,212,0.1)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground/60" />}
     </Button>
   );
 }
