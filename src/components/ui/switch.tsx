@@ -29,15 +29,17 @@ function Switch({
       )}
       {...props}
     >
-      {/* Trail - starts transparent on the left, merges into the thumb */}
+      {/* Trail - attached to the thumb, fading away behind it */}
       <div className={cn(
-        "absolute inset-y-1 rounded-full transition-opacity duration-400",
+        "absolute rounded-full transition-all duration-300",
         "group-data-[checked]/switch:opacity-100 group-data-[unchecked]/switch:opacity-0",
       )}
         style={{
-          left: isDefault ? 4 : 3,
-          right: isDefault ? 4 : 3,
-          background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.25) 70%, rgba(255,255,255,0.6) 100%)",
+          top: isDefault ? 5 : 3,
+          bottom: isDefault ? 5 : 3,
+          left: isDefault ? 3 : 2,
+          right: isDefault ? 3 : 2,
+          background: "linear-gradient(to left, rgba(255,255,255,0.7), rgba(255,255,255,0.2) 50%, transparent 100%)",
         }}
       />
 
