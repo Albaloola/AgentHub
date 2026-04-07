@@ -56,7 +56,7 @@
   --accent-sat: 91%;
   --accent-color: hsl(var(--accent-hue), var(--accent-sat), 55%);
   --accent-color-dim: hsl(var(--accent-hue), var(--accent-sat), 20%);
-  --accent-color-glow: hsl(var(--accent-hue), var(--accent-sat), 45%);
+  --accent-color-glow: hsla(var(--accent-hue), var(--accent-sat), 45%, 0.3);
 
   /* Surface system (VoltAgent-inspired warm darks) */
   --background: #050507;         /* Abyss Black */
