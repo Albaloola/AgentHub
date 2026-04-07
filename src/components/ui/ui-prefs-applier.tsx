@@ -36,6 +36,7 @@ export function UiPrefsApplier() {
 
     // Glass glow settings
     document.documentElement.style.setProperty("--glass-glow-color", uiPrefs.glowColor);
+    document.documentElement.style.setProperty("--agent-glow-color", uiPrefs.agentGlowColor);
     document.documentElement.style.setProperty("--glass-glow-spread", uiPrefs.glowSpread.toString());
   }, [uiPrefs]);
 

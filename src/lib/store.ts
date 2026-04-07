@@ -197,6 +197,7 @@ interface AppState {
     notificationsEnabled: boolean;
     soundEffects: boolean;
     glowColor: string;
+    agentGlowColor: string;
     glowIntensity: number;
     glowSpread: number;
   };
@@ -223,9 +224,10 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   autoScroll: true,
   notificationsEnabled: true,
   soundEffects: false,
-  glowColor: "rgba(59,130,246,0.08)",
+  glowColor: "rgba(59,130,246,0.05)",
+  agentGlowColor: "rgba(16,185,129,0.05)",
   glowIntensity: 0.5,
-  glowSpread: 30,
+  glowSpread: 20,
 };
 
 function loadUiPrefs(): AppState["uiPrefs"] {

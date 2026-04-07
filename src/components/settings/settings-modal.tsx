@@ -383,23 +383,25 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
 
       <Separator />
 
+      <Separator />
+
       <SectionTitle icon={Sparkles} title="Glass Glow" />
 
       <div className="space-y-4">
-        {/* Glow color picker */}
+        {/* UI panel glow color */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Glow Color</span>
+            <span className="text-xs text-muted-foreground">Panel Glow</span>
           </div>
           <div className="flex gap-2 flex-wrap">
             {[
-              { label: "Blue", value: "rgba(59,130,246,0.08)" },
-              { label: "Violet", value: "rgba(139,92,246,0.08)" },
-              { label: "Cyan", value: "rgba(6,182,212,0.08)" },
-              { label: "Emerald", value: "rgba(16,185,129,0.08)" },
-              { label: "Amber", value: "rgba(245,158,11,0.08)" },
-              { label: "Rose", value: "rgba(251,86,91,0.08)" },
-              { label: "White", value: "rgba(242,242,242,0.05)" },
+              { label: "Blue", value: "rgba(59,130,246,0.05)" },
+              { label: "Violet", value: "rgba(139,92,246,0.05)" },
+              { label: "Cyan", value: "rgba(6,182,212,0.05)" },
+              { label: "Emerald", value: "rgba(16,185,129,0.05)" },
+              { label: "Amber", value: "rgba(245,158,11,0.05)" },
+              { label: "Rose", value: "rgba(251,86,91,0.05)" },
+              { label: "White", value: "rgba(242,242,242,0.03)" },
             ].map((c) => (
               <button
                 key={c.label}
@@ -407,6 +409,37 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[10px] border transition-all",
                   prefs.glowColor === c.value
+                    ? "border-white/20 bg-white/10"
+                    : "border-white/[0.06] hover:border-white/[0.12]"
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Agent response glow color */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Agent Bubble Glow</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { label: "Emerald", value: "rgba(16,185,129,0.05)" },
+              { label: "Cyan", value: "rgba(6,182,212,0.05)" },
+              { label: "Violet", value: "rgba(139,92,246,0.05)" },
+              { label: "Blue", value: "rgba(59,130,246,0.05)" },
+              { label: "Amber", value: "rgba(245,158,11,0.05)" },
+              { label: "Rose", value: "rgba(251,86,91,0.05)" },
+              { label: "White", value: "rgba(242,242,242,0.03)" },
+            ].map((c) => (
+              <button
+                key={c.label}
+                onClick={() => setPref("agentGlowColor", c.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[10px] border transition-all",
+                  prefs.agentGlowColor === c.value
                     ? "border-white/20 bg-white/10"
                     : "border-white/[0.06] hover:border-white/[0.12]"
                 )}
@@ -426,7 +459,7 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           <input
             type="range"
             min={0}
-            max={80}
+            max={60}
             value={prefs.glowSpread}
             onChange={(e) => setPref("glowSpread", parseInt(e.target.value))}
             className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-blue-500"
