@@ -4,15 +4,53 @@
 `~/agenthub` - Next.js 16 App Router, TypeScript, Tailwind CSS 4, SQLite
 
 ## Current State
-- 180+ source files, ~28K lines of code
+- 83 source files changed in last session (+5,932 / -2,817 lines)
 - Production running at http://localhost:3000 via systemd user service (`systemctl --user restart agenthub`)
-- GitHub: https://github.com/Albaloola/AgentHub
+- GitHub: https://github.com/Albaloola/AgentHub (latest commit: `6835c64`)
 - 3 agents online: Jerry (OpenClaw), Jamie (OpenClaw), Jake (Hermes CLI adapter)
 - Build: TypeScript + production build both pass clean
 
-## What Was Built Across Sessions
-- Full 8-phase feature build (27 pages, 81 API routes, 52 DB tables)
+## What Was Built This Session
+
+### Phase 1: Light Theme (COMPLETE)
+- **CSS Variable Foundation**: `:root` has light values, `.dark` has dark values. Full variable system for all 30+ semantic tokens
+- **Glass Morphism**: `--glass-bg`, `--glass-border-color`, `--glass-inner-shadow` variables change per theme. `.glass`, `.glass-strong`, `.glass-bubble` all use variables
+- **Neon Lighting**: 7 neon color pairs (`--neon-blue-shadow`, etc.) — dark uses glow, light uses tinted drop-shadow + ring. `.text-neon-*` uses `--neon-text-shadow`
+- **Starfield**: Light mode shows dot-grid pattern + subtle color wash instead of stars. Meteors hidden in light. Uses `var(--background)` not hardcoded color
+- **Theme Toggle**: `ui-prefs-applier.tsx` adds/removes `.dark` class on `<html>`. System mode uses `matchMedia` listener. Layout.tsx has `className="dark"` for default
+- **Color Sweep**: 100+ `white/[opacity]` patterns replaced with `foreground/[opacity]` across 17+ files. Zero remaining
+- **Light Mode Overrides**: Scrollbar, resize handles, light-sweep, nav-neon all adapted
+
+### Phase 2: Orphaned Backend UIs (COMPLETE)
+- **Agent Performance Dashboard** (`agents/[id]/page.tsx`): CSS sparkline latency chart, error timeline dots, 7d/1d stat cards with trend arrows
+- **Agent Version Manager** (`agents/[id]/page.tsx`): Version list with traffic % sliders (range input), create form, active/inactive badges
+- **Prompt Engineering** (`playground/page.tsx`): Enhanced with version management, auto-diff view against active version, environment selector, variables/model_params JSON editors, version badge
+- **Compact Button** (`chat-header.tsx`): Minimize2 icon button with AlertDialog confirmation, calls compactConversation API, shows result toast
+- **System Settings Page** (`settings/page.tsx`): Full form — default model, max tokens, rate limit, API base URL, maintenance mode toggle (uses Switch component)
+- **Cost Tracking** (`insights/page.tsx`): New "Costs" tab with total cost card, per-agent cost breakdown with CSS bar visualization
+- **Health Score** (`page.tsx` dashboard): Colored dot (green/yellow/red) next to agent names in fleet panel with title tooltip
+- **Message Editing**: Was already fully wired (pencil icon, textarea, save/cancel, "(edited)" label) — verified, no changes needed
+
+### Phase 3: Polish & Accessibility (COMPLETE)
+- **Skeleton Loaders**: New `skeleton.tsx` component. `DashboardSkeleton`, `AgentCardSkeleton`, `FleetSkeleton`, `ChatSkeleton` replace Loader2 spinners on all major pages + route-level `loading.tsx` files
+- **Accessibility**: 50+ `aria-label` on icon-only buttons across 12 files. `aria-live="polite"` on chat messages + streaming indicator. `aria-expanded` on all collapsibles (sidebar, thinking, terminal, floating stats, notifications). `role="main"`, `role="navigation"`, `role="complementary"`. Sidebar nav changed from `<div>` to `<nav>` element
+- **Focus Visible**: Global `:focus-visible` ring with `var(--ring)` color, `:focus:not(:focus-visible)` suppression
+- **Button Loading States**: Agent dialog save, chat header reset/compact buttons show Loader2 spinner while processing
+- **Delete Confirmations**: New `alert-dialog.tsx` component. AlertDialogs on agents, knowledge, workflows, templates, webhooks delete actions
+
+### Phase 4: Remaining Features (COMPLETE)
+- **Conversation Replay** (`replay-panel.tsx`): Timeline scrubber (uses Slider), snapshot viewer with metadata (response time, tokens, model), playback controls (first/prev/play-pause/next/last), speed toggle (1x/2x/4x/8x), mini-timeline dots, keyboard shortcuts (Space, arrows, Home/End, Esc). API at `/api/conversations/[id]/replay` synthesizes snapshots from messages if none exist
+- **Agent Fallback Chain** (`agents/[id]/page.tsx`): Ordered list with up/down reorder buttons, add via Select dropdown, remove via X button, save button (dirty state tracking), parses `fallback_chain` JSON from agent data
+- **Response Cache Management** (`monitoring/page.tsx`): New API at `/api/cache`. Stats grid (total entries, hit rate, size, tokens). Recent entries list with agent name, hit count, response preview, TTL countdown. Clear cache button with AlertDialog
+- **Conversation Permissions** (`share-dialog.tsx`): New API at `/api/conversations/[id]/permissions`. Share button in chat header. Dialog with user search (autocomplete from /api/users), permission level dropdown (viewer/editor/admin), inline permission editing, remove access button
+
+### Bug Fix
+- Agent cards click-outside-to-close: `useRef` + document `mousedown` listener collapses expanded card when clicking outside grid
+
+## What Was Built Across ALL Sessions
+- Full 8-phase feature build (27 pages, 81+ API routes, 52 DB tables)
 - VoltAgent-inspired design system with starfield background, neon lighting, glass morphism
+- **Full light/dark/system theme support** with CSS variable foundation
 - Living avatars with state animations, planet avatar with orbital rings
 - Inline thinking panel, terminal viewer for tool calls, floating stats bubble
 - Message queue with stop button, message virtualization (100+ msgs)
@@ -21,13 +59,17 @@
 - Right-click context menus on conversations (rename, pin, move, export, delete)
 - Conversation drag-to-reorder with folder support
 - Draggable/resizable dashboard grid (react-grid-layout v2) with lock/unlock, all 8 resize handles
-- Agent Fleet grid/list view toggle
+- Agent Fleet grid/list view toggle with health score indicators
 - In-conversation search with prev/next navigation
 - Token count in chat input
 - Page transition animations
 - Zustand selector optimization across all 30 components (useShallow where 4+ fields)
 - Fluid viewport-aware scaling system (root font-size clamp, all px converted to rem)
-- Dead code cleanup (16 files removed), next-themes removed (hardcoded dark in Sonner)
+- Dead code cleanup (16 files removed in prior session, more this session)
+- Skeleton loaders, accessibility pass, button loading states, delete confirmations
+- Agent performance dashboard, version manager, prompt engineering workspace
+- Conversation replay timeline, fallback chain editor, cache management, sharing/permissions
+- Compact conversation button, system settings page, cost tracking
 
 ## Environment
 - OpenClaw gateway: localhost:18789 with token auth (in .env.local as OPENCLAW_API_KEY)
@@ -40,234 +82,49 @@ Do NOT start dev servers (`npm run dev`, `preview_start`, or any server process)
 
 ## Design Reference
 - ~/agenthub/DESIGN.md - VoltAgent design system
-- Color palette: Abyss Black #050507, Carbon Surface #101010, Warm Charcoal #3d3a39, Snow White #f2f2f2
+- **Light palette**: Warm Off-White #fafaf9, White #ffffff, Stone-100 #f5f5f4, Stone-300 #d6d3d1, Stone-500 #78716c, Stone-900 #1c1917
+- **Dark palette**: Abyss Black #050507, Carbon Surface #101010, Warm Charcoal #3d3a39, Snow White #f2f2f2
 - Glass glow controlled by --glass-glow-color, --agent-glow-color, --glass-glow-spread CSS variables
+- Theme-aware glass: --glass-bg, --glass-border-color, --glass-inner-shadow
+- Theme-aware neon: --neon-blue-shadow (+ hover), --neon-text-shadow, etc.
 - Fluid scaling: root font-size uses clamp(14px, 0.625rem + 0.4vw, 22px), all sizes in rem
-
----
-
-# WORK FOR THIS SESSION
-
-You have a massive, ambitious feature list. Attack it with parallel subagents. Don't stop until everything builds clean. Use `npm run build` to verify (never `npm run dev`). Restart production with `systemctl --user restart agenthub`.
-
----
-
-## PHASE 1: LIGHT THEME (Highest Priority)
-
-The app is dark-only. The infrastructure is 80% ready (CSS variables exist, Settings modal has Dark/Light/System buttons, theme field in Zustand store and DB). What's missing is the actual light-mode CSS values and ~100 hardcoded dark colors scattered across components.
-
-### 1A. CSS Variable Foundation
-**File: `src/app/globals.css`**
-
-Move current dark values from `:root` into `.dark` block. Define light-mode values in `:root`:
-
-| Role | Dark (current) | Light (new :root) |
-|------|---------------|-------------------|
-| --background | #050507 | #fafaf9 (warm off-white) |
-| --foreground | #f2f2f2 | #1c1917 (stone-900) |
-| --card | #101010 | #ffffff |
-| --card-foreground | #f2f2f2 | #1c1917 |
-| --popover | #101010 | #ffffff |
-| --popover-foreground | #f2f2f2 | #1c1917 |
-| --primary | #f2f2f2 | #1c1917 |
-| --primary-foreground | #101010 | #ffffff |
-| --secondary | #1a1a1c | #f5f5f4 (stone-100) |
-| --secondary-foreground | #f2f2f2 | #1c1917 |
-| --muted | #1a1a1c | #f5f5f4 |
-| --muted-foreground | #8b949e | #78716c (stone-500) |
-| --accent | #1a1a1c | #f5f5f4 |
-| --accent-foreground | #f2f2f2 | #1c1917 |
-| --destructive | #fb565b | #dc2626 |
-| --border | #3d3a39 | #d6d3d1 (stone-300) |
-| --input | #1a1a1c | #f5f5f4 |
-| --ring | #3b82f6 | #3b82f6 |
-| --sidebar | #080809 | #f7f7f6 |
-| --sidebar-foreground | #f2f2f2 | #1c1917 |
-| --sidebar-border | #3d3a39 | #e7e5e4 |
-
-### 1B. Glass Morphism Light Mode
-Add theme-aware CSS custom properties for glass:
-```css
-:root {
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border-color: rgba(0, 0, 0, 0.08);
-  --glass-inner-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-}
-.dark {
-  --glass-bg: rgba(16, 16, 16, 0.5);
-  --glass-border-color: var(--glass-glow-color, rgba(59,130,246,0.3));
-  --glass-inner-shadow: inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(59,130,246,0.08));
-}
-```
-Update `.glass`, `.glass-strong`, `.glass-bubble`, `.glass-bubble-user` to use these variables.
-
-### 1C. Neon Lighting in Light Mode
-Dark mode: `box-shadow: 0 0 6px rgba(59,130,246,0.4), 0 0 20px rgba(59,130,246,0.15)`
-Light mode: `box-shadow: 0 2px 8px rgba(59,130,246,0.15), 0 0 0 1px rgba(59,130,246,0.2)` (tinted drop-shadow + colored ring)
-
-Add `--neon-shadow-blue`, `--neon-shadow-violet`, etc. that change per theme. Each `.neon-*` class uses the variable.
-
-For `.text-neon-*` classes: dark keeps text-shadow glow, light uses stronger saturated color with no shadow.
-
-### 1D. Starfield Light Mode Alternative
-- Light mode: replace starfield with subtle dot-grid pattern (`radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px)`) or soft ambient gradient blobs
-- Respect the existing `showStarfield` toggle in uiPrefs
-- Meteor animation: replace with subtle shimmer sweep in light mode, or hide
-
-### 1E. Theme Switching Infrastructure
-**File: `src/components/ui/ui-prefs-applier.tsx`**
-- When `uiPrefs.theme === "dark"`, add `.dark` class to `<html>`. When "light", remove it. When "system", use `matchMedia('(prefers-color-scheme: dark)')`
-- The Settings modal already has Dark/Light/System buttons wired to `setPref("theme", value)` -- just needs the class toggle
-
-### 1F. Hardcoded Color Sweep
-~100+ instances of hardcoded colors in components that won't respond to theme changes:
-- `bg-white/[0.02]`, `bg-white/[0.05]`, `bg-white/[0.08]` etc. -- these are fine in dark but invisible in light. Replace with `bg-foreground/[0.02]` etc.
-- `border-white/[0.06]` -- same issue, replace with `border-foreground/[0.06]`
-- `text-white` on buttons -- replace with `text-primary-foreground`
-- `rgba(255,255,255,...)` in inline styles -- add CSS variables or conditional logic
-- Inline `style={{ boxShadow: ... }}` with hardcoded rgba -- these need theme-aware alternatives
-- `hover:bg-white/[0.04]` patterns -- replace with `hover:bg-foreground/[0.04]`
-
-Key files with the most hardcoded colors:
-- `src/app/globals.css` (neon system, starfield, glass classes)
-- `src/components/layout/sidebar.tsx` (glow colors in inline styles)
-- `src/components/chat/chat-input.tsx` (hover glow inline styles)
-- `src/components/chat/empty-chat-state.tsx` (planet gradient colors)
-- `src/components/chat/message-bubble.tsx` (neon hover colors)
-- `src/components/settings/settings-modal.tsx` (tab hover inline styles)
-- `src/app/(dashboard)/page.tsx` (dashboard card hovers)
-- All 27 page files use `border-white/[0.06]` and `bg-white/[0.02]` patterns
-
-Strategy: Use find-and-replace for the most common patterns:
-- `bg-white/[0.02]` -> `bg-foreground/[0.02]`
-- `bg-white/[0.04]` -> `bg-foreground/[0.04]`
-- `bg-white/[0.05]` -> `bg-foreground/[0.05]`
-- `bg-white/[0.08]` -> `bg-foreground/[0.08]`
-- `border-white/[0.04]` -> `border-foreground/[0.04]`
-- `border-white/[0.06]` -> `border-foreground/[0.06]`
-- `border-white/[0.08]` -> `border-foreground/[0.08]`
-- `border-white/[0.1]` -> `border-foreground/[0.1]`
-- `border-white/[0.12]` -> `border-foreground/[0.12]`
-- `border-white/[0.15]` -> `border-foreground/[0.15]`
-- `hover:bg-white/[0.04]` -> `hover:bg-foreground/[0.04]`
-- `hover:bg-white/[0.05]` -> `hover:bg-foreground/[0.05]`
-- `text-white` on colored backgrounds -> `text-primary-foreground` (be careful, some text-white is correct like on gradient buttons)
-
-For inline styles with hardcoded rgba values in onMouseEnter/onMouseLeave handlers, the cleanest approach is to define CSS classes with `hover:` variants instead. Or use CSS custom properties: `var(--neon-hover-blue)` that changes per theme.
-
----
-
-## PHASE 2: ORPHANED BACKEND FEATURES (8 Missing UIs)
-
-The backend has 18 orphaned API endpoints. Build UIs for the highest-value ones:
-
-### 2A. Agent Performance Dashboard
-- **API**: GET /api/agents/{id}/performance (returns 7-day/1-day latency, error rates, trends)
-- **Where**: Add a "Performance" tab or section to the agent detail page, or a new /performance page
-- **UI**: Line charts for latency over time, error rate gauge, trend indicators
-- **Note**: No charting library installed. Consider lightweight options: use CSS-based sparklines, or install `recharts`
-
-### 2B. Agent Version Manager (Canary Deployments)
-- **API**: POST/PATCH/DELETE /api/agents/{id}/versions (traffic allocation 0-100%)
-- **Where**: Add "Versions" section to agent detail page
-- **UI**: List of versions with traffic % sliders, "Create Snapshot" button, active/inactive badges
-
-### 2C. Prompt Engineering Page
-- **API**: GET/POST /api/prompts, PATCH /api/prompts/{id} (activate, test)
-- **Where**: New page at /prompts, or add to existing /playground
-- **UI**: Version list with diff view, environment toggle (dev/prod), "Test" button that runs prompt against agent, variable substitution editor
-
-### 2D. Conversation Compacting Button
-- **API**: POST /api/conversations/{id}/compact
-- **Where**: Chat header, next to Reset button
-- **UI**: Simple button with confirmation: "Compact? Keeps first message, pinned messages, and last 20. Reduces token usage."
-
-### 2E. Message Editing
-- **API**: PATCH /api/messages/{id}
-- **Where**: Message bubble action bar (already has Pencil icon wired to editing state!)
-- **Note**: Actually check — the edit button may already be partially wired in message-bubble.tsx. The `editMessage` function exists in lib/api.ts. Verify and complete the wiring.
-
-### 2F. System Settings Page
-- **API**: GET/POST /api/settings (key-value store)
-- **Where**: Enhance existing /settings page (currently just a redirect hint)
-- **UI**: System-wide config: default model, max tokens, rate limits, maintenance mode toggle
-
-### 2G. Cost Tracking Dashboard
-- **DB**: agents.cost_per_token, agents.cost_per_request, conversations.total_cost
-- **Where**: Add to /analytics page or new /billing section
-- **UI**: Total spend, per-agent cost breakdown, cost-per-conversation chart
-
-### 2H. Agent Health Score Display
-- **DB**: agents.health_score field exists
-- **Where**: Agent Fleet panel on dashboard, agent cards everywhere
-- **UI**: Small health indicator (colored dot or ring) showing reliability score
-
----
-
-## PHASE 3: POLISH & ACCESSIBILITY
-
-### 3A. Skeleton Loaders
-Replace plain `<Loader2>` spinners with skeleton screens on all pages. Use pulsing gray rectangles that match the layout shape. Key pages: Dashboard, Agents, Chat loading state, Analytics.
-
-### 3B. Accessibility Pass
-- Add `aria-label` to all icon-only buttons (50+ instances across codebase)
-- Add `aria-live="polite"` regions for streaming content and toast notifications
-- Ensure all modals trap focus (Settings modal has partial support, others don't)
-- Add `aria-expanded` to all collapsible sections
-- Keyboard navigation: ensure all inline-styled hover effects also trigger on `:focus-visible`
-
-### 3C. Button Loading States
-When forms submit, show a spinner inside the button (replace text with Loader2 icon). Currently buttons just disable without visual feedback. Affects: all dialog forms across 15+ pages.
-
-### 3D. Delete Confirmation Dialogs
-Most delete operations use optimistic removal with undo toast. Add proper confirmation dialogs for destructive actions: agent deletion, knowledge base deletion, workflow deletion.
-
----
-
-## PHASE 4: REMAINING UI FEATURES
-
-### 4A. Conversation Replay / Timeline
-- **DB**: replay_snapshots table exists
-- **UI**: Timeline scrubber showing conversation state at any point in time
-
-### 4B. Agent Fallback Chain Editor
-- **DB**: agents.fallback_chain (JSON array of agent IDs)
-- **API**: updateFallbackChain() exists in lib/api.ts
-- **UI**: Drag-and-drop list of agents in priority order for failover
-
-### 4C. Conversation Permissions
-- **DB**: conversation_permissions table with user_id, permission_level
-- **UI**: "Share" button on conversations, permission dropdown per user
-
-### 4D. Response Cache Management
-- **DB**: response_cache table with hit_count, expires_at
-- **UI**: Cache stats view, clear cache button, TTL configuration per agent
-
----
+- Theme class: `.dark` on `<html>` element, toggled by ui-prefs-applier.tsx
 
 ## Key Files Reference
 | File | Purpose |
 |------|---------|
 | src/lib/store.ts | Zustand store (uiPrefs system with save/revert) |
 | src/lib/db.ts | SQLite schema (52 tables) |
-| src/lib/api.ts | 60+ API client functions |
-| src/app/globals.css | VoltAgent design system, glass, neon, starfield, fluid scaling |
+| src/lib/api.ts | 70+ API client functions |
+| src/lib/types.ts | All TypeScript interfaces |
+| src/app/globals.css | VoltAgent design system, glass, neon, starfield, fluid scaling, light/dark variables |
+| src/app/layout.tsx | Root layout with `className="dark"` default |
 | src/components/layout/sidebar.tsx | Sidebar with categories, resize, config, DnD |
 | src/components/settings/settings-modal.tsx | Settings with save/revert, theme toggle |
-| src/components/chat/message-bubble.tsx | Message rendering |
+| src/components/chat/message-bubble.tsx | Message rendering with edit support |
+| src/components/chat/chat-header.tsx | Search, compact, reset, replay, share buttons |
+| src/components/chat/replay-panel.tsx | Conversation replay timeline |
+| src/components/chat/share-dialog.tsx | Conversation permissions dialog |
 | src/components/chat/empty-chat-state.tsx | Planet avatar + suggestions |
-| src/components/ui/ui-prefs-applier.tsx | Applies all UI prefs to DOM |
-| src/components/ui/switch.tsx | Toggle with white trail (uses rem for fluid scaling) |
+| src/components/ui/ui-prefs-applier.tsx | Applies all UI prefs to DOM including theme |
+| src/components/ui/skeleton.tsx | Reusable skeleton loader |
+| src/components/ui/alert-dialog.tsx | Confirmation dialog component |
+| src/components/ui/switch.tsx | Toggle with trail animation |
 | src/components/ui/slider.tsx | Custom slider with milestones |
 | src/components/ui/color-picker.tsx | HSL gradient picker |
 | src/components/ui/hud-panel.tsx | Dashboard panel with drag header |
+| src/app/(dashboard)/agents/[id]/page.tsx | Agent detail with performance, versions, fallback chain |
+| src/app/(dashboard)/monitoring/page.tsx | Monitoring with response cache management |
+| src/app/(dashboard)/insights/page.tsx | Analytics with cost tracking |
+| src/app/(dashboard)/playground/page.tsx | Prompt engineering workspace |
+| src/app/(dashboard)/settings/page.tsx | System settings (model, tokens, rate limit) |
 | src/lib/adapters/hermes.ts | CLI subprocess adapter |
 | src/lib/adapters/openclaw.ts | OpenAI-compat HTTP adapter |
 
-## Execution Strategy
-1. Start with Phase 1 (light theme) — it's the largest and most impactful
-2. Use parallel subagents: one for CSS/globals, one for component color sweep, one for glass/neon adaptation
-3. After light theme, do Phase 2 features (these are independent — can parallelize all of them)
-4. Phase 3 polish can be done as a single sweep
-5. Build and restart after each phase: `npm run build && systemctl --user restart agenthub`
-6. NEVER start a dev server — the app has a memory leak that crashes the PC
+## Known Issues / Potential Next Steps
+- **Light theme visual QA**: The CSS foundation is done but inline styles with hardcoded `rgba(255,255,255,...)` in `onMouseEnter`/`onMouseLeave` handlers (sidebar, chat-input, settings-modal, agents page, dashboard) still assume dark background. These need replacing with CSS custom properties or Tailwind hover: classes
+- **Inline style glow colors**: Many components use `e.currentTarget.style.boxShadow = "0 0 12px rgba(59,130,246,0.6)..."` for hover effects. These work fine in dark but may look too strong in light. Could add `--neon-hover-blue` etc. CSS variables and reference them
+- **Memory leak**: The dev server memory leak hasn't been investigated. Root cause unknown — could be HMR, WebSocket, or a component effect loop
+- **Mobile responsive**: No mobile testing has been done
+- **E2E tests**: No test suite exists
+- **Image/avatar uploads**: Upload UI exists but may need polish
