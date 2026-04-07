@@ -204,8 +204,8 @@ export function Sidebar() {
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
 
-  // Resizable nav/chats split (% of sidebar height for nav)
-  const [navHeightPercent, setNavHeightPercent] = useState(55);
+  // Resizable nav/chats split (pixels from top of content zone)
+  const [navHeight, setNavHeight] = useState<number | null>(null);
   const [isResizingSplit, setIsResizingSplit] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const contentZoneRef = useRef<HTMLDivElement>(null);
@@ -240,8 +240,8 @@ export function Sidebar() {
       if (!zone) return;
       const rect = zone.getBoundingClientRect();
       const y = e.clientY - rect.top;
-      const pct = Math.max(20, Math.min(80, (y / rect.height) * 100));
-      setNavHeightPercent(pct);
+      const clamped = Math.max(100, Math.min(rect.height - 100, y));
+      setNavHeight(clamped);
     };
     const handleUp = () => setIsResizingSplit(false);
     document.addEventListener("mousemove", handleMove);
@@ -469,7 +469,7 @@ export function Sidebar() {
         {/* Navigation (resizable height) */}
         <div
           className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-1"
-          style={{ height: collapsed ? "auto" : `${navHeightPercent}%`, flexShrink: 0 }}
+          style={{ height: collapsed ? "auto" : navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (
             <div className="flex flex-col items-center gap-1">
@@ -888,20 +888,21 @@ export function Sidebar() {
           )}
         </div>
 
-        {/* Right edge resize handle - wider hit area */}
-        {!collapsed && (
-          <div
-            className="absolute right-0 top-0 bottom-0 w-3 z-50"
-            style={{ cursor: "col-resize" }}
-            onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }}
-          >
-            <div className={cn(
-              "absolute right-0 top-0 bottom-0 w-[2px] transition-colors",
-              isResizingSidebar ? "bg-blue-400/60" : "bg-transparent hover:bg-white/20",
-            )} />
-          </div>
-        )}
       </aside>
+
+      {/* Right edge resize handle - relative positioned next to sidebar */}
+      {!collapsed && (
+        <div
+          className="relative z-50 shrink-0"
+          style={{ width: 6, marginLeft: -3, cursor: "col-resize" }}
+          onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }}
+        >
+          <div className={cn(
+            "absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] transition-colors",
+            isResizingSidebar ? "bg-blue-400/60" : "bg-transparent hover:bg-white/20",
+          )} />
+        </div>
+      )}
 
       {!sidebarOpen && (
         <Button
