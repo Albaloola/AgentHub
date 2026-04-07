@@ -209,6 +209,7 @@ export function Sidebar() {
   const [isResizingSplit, setIsResizingSplit] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const contentZoneRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Sidebar width drag handler
   useEffect(() => {
@@ -236,12 +237,11 @@ export function Sidebar() {
   useEffect(() => {
     if (!isResizingSplit) return;
     const handleMove = (e: MouseEvent) => {
-      const zone = contentZoneRef.current;
-      if (!zone) return;
-      const rect = zone.getBoundingClientRect();
-      const y = e.clientY - rect.top;
-      const clamped = Math.max(100, Math.min(rect.height - 100, y));
-      setNavHeight(clamped);
+      const nav = navRef.current;
+      if (!nav) return;
+      const navTop = nav.getBoundingClientRect().top;
+      const newHeight = Math.max(80, Math.min(600, e.clientY - navTop));
+      setNavHeight(newHeight);
     };
     const handleUp = () => setIsResizingSplit(false);
     document.addEventListener("mousemove", handleMove);
@@ -468,6 +468,7 @@ export function Sidebar() {
 
         {/* Navigation (resizable height) */}
         <div
+          ref={navRef}
           className="min-h-0 overflow-y-auto scrollbar-thin px-1.5 py-1"
           style={{ height: collapsed ? "auto" : navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
