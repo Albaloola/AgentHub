@@ -433,10 +433,10 @@ export function Sidebar() {
         )}
         style={{ width: collapsed ? 52 : sidebarWidth }}
       >
-        {/* Logo */}
+        {/* Logo + collapse toggle */}
         <div
           className={cn(
-            "flex items-center border-b border-white/[0.04]",
+            "flex items-center border-b border-white/[0.04] shrink-0",
             collapsed ? "justify-center px-2 py-3" : "px-4 py-3 gap-2",
           )}
         >
@@ -446,7 +446,32 @@ export function Sidebar() {
           {!collapsed && (
             <>
               <span className="text-lg font-semibold whitespace-nowrap bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">AgentHub</span>
+              <button
+                onClick={handleCollapseChange}
+                className="ml-auto h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] transition-all"
+                title="Collapse sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
             </>
+          )}
+          {collapsed && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    onClick={handleCollapseChange}
+                    className="absolute top-14 left-1/2 -translate-x-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.06] transition-all"
+                  />
+                }
+              >
+                <PanelLeft className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Expand sidebar
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
@@ -858,36 +883,8 @@ export function Sidebar() {
 
         </div>{/* end content zone */}
 
-        {/* Bottom bar: collapse toggle + settings */}
-        <div className="border-t border-white/[0.04] p-1.5 space-y-0.5 shrink-0">
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    type="button"
-                    onClick={handleCollapseChange}
-                    className="flex h-9 w-full items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.05] transition-all duration-200"
-                  />
-                }
-              >
-                <PanelLeft className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                Expand sidebar
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              type="button"
-              onClick={handleCollapseChange}
-              className="hidden md:flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.04] transition-all duration-200"
-            >
-              <PanelLeftClose className="h-4 w-4 shrink-0" />
-              <span>Collapse</span>
-            </button>
-          )}
-        </div>
+        {/* Bottom spacer */}
+        <div className="shrink-0 h-2" />
 
         {/* Right edge resize handle - inside aside, extends beyond */}
         {!collapsed && (
