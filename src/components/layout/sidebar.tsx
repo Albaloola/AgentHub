@@ -208,12 +208,15 @@ export function Sidebar() {
   const [navHeightPercent, setNavHeightPercent] = useState(55);
   const [isResizingSplit, setIsResizingSplit] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const contentZoneRef = useRef<HTMLDivElement>(null);
 
   // Sidebar width drag handler
   useEffect(() => {
     if (!isResizingSidebar) return;
     const handleMove = (e: MouseEvent) => {
-      const newWidth = Math.max(200, Math.min(450, e.clientX));
+      if (!sidebarRef.current) return;
+      const rect = sidebarRef.current.getBoundingClientRect();
+      const newWidth = Math.max(200, Math.min(450, e.clientX - rect.left));
       setSidebarWidth(newWidth);
     };
     const handleUp = () => setIsResizingSidebar(false);
@@ -233,8 +236,9 @@ export function Sidebar() {
   useEffect(() => {
     if (!isResizingSplit) return;
     const handleMove = (e: MouseEvent) => {
-      if (!sidebarRef.current) return;
-      const rect = sidebarRef.current.getBoundingClientRect();
+      const zone = contentZoneRef.current;
+      if (!zone) return;
+      const rect = zone.getBoundingClientRect();
       const y = e.clientY - rect.top;
       const pct = Math.max(20, Math.min(80, (y / rect.height) * 100));
       setNavHeightPercent(pct);
@@ -445,6 +449,9 @@ export function Sidebar() {
             </>
           )}
         </div>
+
+        {/* Content zone (nav + chats) - ref for split resize calculation */}
+        <div ref={contentZoneRef} className="flex-1 flex flex-col min-h-0">
 
         {/* Navigation header with configure button */}
         {!collapsed && (
@@ -847,6 +854,8 @@ export function Sidebar() {
             </div>
           </>
         )}
+
+        </div>{/* end content zone */}
 
         {/* Bottom bar: collapse toggle + settings */}
         <div className="border-t border-white/[0.04] p-1.5 space-y-0.5">
