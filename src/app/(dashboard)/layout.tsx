@@ -9,7 +9,7 @@ import { CommandPalette } from "@/components/search/command-palette";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { useKeyboardShortcuts, ShortcutsHelp } from "@/components/shortcuts/keyboard-shortcuts";
 import { SettingsModal } from "@/components/settings/settings-modal";
-import { ThemeLoader } from "@/components/theme/theme-loader";
+// ThemeLoader removed - uiPrefs (localStorage) now handles all theme state
 import { useStore } from "@/lib/store";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -63,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} shortcuts={shortcuts} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <ThemeLoader />
+      {/* Theme applied by UiPrefsApplier in root layout */}
     </div>
   );
 }

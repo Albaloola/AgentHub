@@ -194,11 +194,7 @@ export default function AgentsPage() {
                   <h3 className="font-semibold truncate">{agent.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant="secondary" className="text-[10px]">
-                      {GATEWAY_LABELS[agent.gateway_type] && agent.gateway_type !== "openai-compat" && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {GATEWAY_LABELS[agent.gateway_type]}
-                      </Badge>
-                    )}
+                      {GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}
                     </Badge>
                     <span className="text-[10px] text-muted-foreground truncate">
                       {agent.connection_url}
