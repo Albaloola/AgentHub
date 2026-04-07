@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X, Monitor, Moon, Sun, Type, Layout, Palette, MessageSquare,
   Settings2, Sparkles, Zap, RotateCcw, ChevronRight, Check,
@@ -49,18 +49,50 @@ interface SettingsModalProps {
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<string>("layout");
   const { uiPrefs, setUiPref, resetUiPrefs } = useStore();
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap and escape key
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      // Focus trap
+      if (e.key === "Tab" && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    // Focus first element
+    setTimeout(() => {
+      const first = modalRef.current?.querySelector<HTMLElement>("button");
+      first?.focus();
+    }, 100);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Settings">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-[90vw] max-w-3xl max-h-[85vh] rounded-2xl border border-white/[0.08] glass-strong animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)] overflow-hidden">
+      <div ref={modalRef} className="relative z-10 w-[90vw] max-w-3xl max-h-[85vh] rounded-2xl border border-white/[0.08] glass-strong animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)] overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_12px_oklch(0.55_0.24_264/0.3)]">

@@ -60,6 +60,7 @@ import {
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
 import type { ConversationWithDetails, ConversationFolder } from "@/lib/types";
+import { toast } from "sonner";
 
 interface NavItem {
   href: string;
@@ -190,16 +191,37 @@ export function Sidebar() {
     }
   }
 
-  async function handleDeleteConversation(id: string, e: React.MouseEvent) {
+  function handleDeleteConversation(id: string, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    try {
-      await deleteConversation(id);
-      setConversations(conversations.filter((c) => c.id !== id));
-      if (pathname === `/chat/${id}`) router.push("/");
-    } catch (err) {
-      console.error("Failed to delete conversation:", err);
-    }
+    // Optimistic removal with undo
+    const removed = conversations.find((c) => c.id === id);
+    setConversations(conversations.filter((c) => c.id !== id));
+    if (pathname === `/chat/${id}`) router.push("/");
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        await deleteConversation(id);
+      } catch {
+        // Restore if API fails
+        if (removed) setConversations([...conversations]);
+        toast.error("Failed to delete conversation");
+      }
+    }, 5000);
+
+    toast("Conversation deleted", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          cancelled = true;
+          clearTimeout(timer);
+          if (removed) setConversations([...conversations]);
+        },
+      },
+      duration: 5000,
+    });
   }
 
   async function handleNewFolder() {
