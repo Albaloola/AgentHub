@@ -51,37 +51,35 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<string>("layout");
   const { uiPrefs, setUiPref, commitUiPrefs, revertUiPrefs, resetUiPrefs, hasUnsavedPrefs } = useStore();
   const modalRef = useRef<HTMLDivElement>(null);
-  const revertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Auto-revert after 10 seconds if unsaved
-  useEffect(() => {
-    if (hasUnsavedPrefs) {
-      if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
-      revertTimerRef.current = setTimeout(() => {
-        revertUiPrefs();
-      }, 10000);
-    } else {
-      if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
-    }
-    return () => { if (revertTimerRef.current) clearTimeout(revertTimerRef.current); };
-  }, [hasUnsavedPrefs, revertUiPrefs]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   function handleSave() {
     commitUiPrefs();
-    if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
   }
 
   function handleClose() {
-    if (hasUnsavedPrefs) revertUiPrefs();
-    if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+    if (hasUnsavedPrefs) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  }
+
+  function handleDiscardAndClose() {
+    revertUiPrefs();
+    setShowExitConfirm(false);
     onClose();
+  }
+
+  function handleKeepEditing() {
+    setShowExitConfirm(false);
   }
 
   // Focus trap and escape key
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") { handleClose(); return; }
       // Focus trap
       if (e.key === "Tab" && modalRef.current) {
         const focusable = modalRef.current.querySelectorAll<HTMLElement>(
@@ -129,26 +127,49 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               <p className="text-xs text-muted-foreground">Customize your AgentHub experience</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg hover:bg-white/[0.06]"
-            onClick={handleClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {hasUnsavedPrefs && (
+              <Button
+                size="sm"
+                className="h-8 text-sm rounded-lg bg-blue-500 hover:bg-blue-600 animate-fade-in transition-all duration-300"
+                onClick={handleSave}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(59,130,246,0.5), 0 0 25px rgba(59,130,246,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; }}
+              >
+                Save
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:bg-white/[0.06]"
+              onClick={handleClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Save/revert bar - visible when there are unsaved changes */}
-        {hasUnsavedPrefs && (
-          <div className="flex items-center justify-between px-5 py-2.5 border-b border-amber-500/20 bg-amber-500/5 animate-fade-in">
-            <span className="text-sm text-amber-400 font-medium">Unsaved changes (reverts in 10s)</span>
+        {/* Exit confirmation floating popup */}
+        {showExitConfirm && (
+          <div className="absolute top-16 right-4 z-50 w-72 rounded-xl border border-white/[0.12] glass-strong p-4 space-y-3 animate-fade-in shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+            <p className="text-sm text-foreground font-medium">You have unsaved changes</p>
+            <p className="text-xs text-muted-foreground">Your changes will be lost if you close without saving.</p>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="h-7 text-xs rounded-lg" onClick={() => revertUiPrefs()}>
-                Revert
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 h-8 text-xs rounded-lg"
+                onClick={handleDiscardAndClose}
+              >
+                Discard & Close
               </Button>
-              <Button size="sm" className="h-7 text-xs rounded-lg bg-blue-500 hover:bg-blue-600" onClick={handleSave}>
-                Save Changes
+              <Button
+                size="sm"
+                className="flex-1 h-8 text-xs rounded-lg bg-blue-500 hover:bg-blue-600"
+                onClick={handleKeepEditing}
+              >
+                Keep Editing
               </Button>
             </div>
           </div>
