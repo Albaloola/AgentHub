@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Code2, Lightbulb, Search, FileText, Rocket, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
@@ -75,17 +75,27 @@ export function EmptyChatState({
     return () => clearInterval(interval);
   }, []);
 
-  // Rotate suggestions smoothly every 6 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // Auto-rotate suggestions with resettable timer
+  const autoRotateRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const defaultDelay = 6000;
+  const userInteractDelay = 10000;
+
+  const startAutoRotate = useCallback((delay: number) => {
+    if (autoRotateRef.current) clearTimeout(autoRotateRef.current);
+    autoRotateRef.current = setTimeout(() => {
       setTransitioning(true);
       setTimeout(() => {
         setActiveSet((prev) => (prev + 1) % TOTAL_SETS);
         setTransitioning(false);
+        startAutoRotate(defaultDelay);
       }, 400);
-    }, 5000);
-    return () => clearInterval(interval);
+    }, delay);
   }, []);
+
+  useEffect(() => {
+    startAutoRotate(defaultDelay);
+    return () => { if (autoRotateRef.current) clearTimeout(autoRotateRef.current); };
+  }, [startAutoRotate]);
 
   const firstName = agentName?.split("(")[0]?.trim() || "there";
 
@@ -96,6 +106,8 @@ export function EmptyChatState({
       setActiveSet(idx);
       setTransitioning(false);
     }, 300);
+    // Reset timer to longer delay after user interaction
+    startAutoRotate(userInteractDelay);
   }
 
   return (
