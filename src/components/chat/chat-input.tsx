@@ -135,6 +135,13 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
+      {/* Commands dropdown - floats above the input */}
+      <CommandsMenu
+        onSelect={(cmd) => { setContent(cmd); textareaRef.current?.focus(); }}
+        triggerValue={commandTrigger}
+        disabled={isStreaming}
+      />
+
       <div className={cn(
         "glass-strong rounded-2xl transition-all duration-300 overflow-hidden",
         expanded ? "min-h-[300px]" : "",
@@ -175,11 +182,7 @@ export function ChatInput({ onSend, onCancel, isStreaming, agents, disabled, con
               </DropdownMenu>
             )}
 
-            <CommandsMenu
-              onSelect={(cmd) => { setContent(cmd + " "); textareaRef.current?.focus(); }}
-              triggerValue={commandTrigger}
-              disabled={isStreaming}
-            />
+            {/* CommandsMenu moved to container level */}
 
             <input
               ref={fileInputRef}

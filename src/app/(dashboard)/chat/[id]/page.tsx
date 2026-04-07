@@ -14,6 +14,7 @@ import { ArtifactsPanel } from "@/components/chat/artifacts-panel";
 import { useStore } from "@/lib/store";
 import { getMessages, getConversations, streamChat } from "@/lib/api";
 import type { ConversationWithDetails, MessageWithToolCalls, ToolCall } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { v4 as uuid } from "uuid";
 
@@ -302,10 +303,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           }}
         />
 
-        {/* Messages with starfield background */}
+        {/* Messages area */}
         <div
           ref={scrollRef}
-          className="flex-1 min-h-0 overflow-y-auto chat-font"
+          className={cn(
+            "flex-1 min-h-0 overflow-y-auto chat-font",
+            messages.length === 0 && !isStreaming && "flex flex-col justify-center",
+          )}
           id="chat-scroll"
           style={chatFont ? { fontFamily: `'${chatFont.replace("-", " ")}', var(--font-chat)` } : undefined}
         >
@@ -366,16 +370,20 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
 
-        {/* Input */}
-        <ChatInput
-          onSend={handleSend}
-          onCancel={handleCancel}
-          isStreaming={isStreaming}
-          agents={conversation?.type === "group" ? conversation.agents : undefined}
-          conversationId={id}
-          chatFont={chatFont}
-          onFontChange={handleChatFontChange}
-        />
+        {/* Input - inside the centered area when empty, at bottom when chatting */}
+        <div className={cn(
+          messages.length === 0 && !isStreaming ? "px-6 pb-8 max-w-4xl mx-auto w-full" : "",
+        )}>
+          <ChatInput
+            onSend={handleSend}
+            onCancel={handleCancel}
+            isStreaming={isStreaming}
+            agents={conversation?.type === "group" ? conversation.agents : undefined}
+            conversationId={id}
+            chatFont={chatFont}
+            onFontChange={handleChatFontChange}
+          />
+        </div>
       </div>
 
       {/* Floating stats panel */}
