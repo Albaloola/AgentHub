@@ -891,17 +891,19 @@ export function Sidebar() {
 
       </aside>
 
-      {/* Right edge resize handle - relative positioned next to sidebar */}
+      {/* Right edge resize handle */}
       {!collapsed && (
         <div
-          className="relative z-50 shrink-0"
-          style={{ width: 6, marginLeft: -3, cursor: "col-resize" }}
+          className="self-stretch shrink-0"
+          style={{ width: 8, marginLeft: -4, cursor: "col-resize", zIndex: 50 }}
           onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }}
         >
-          <div className={cn(
-            "absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] transition-colors",
-            isResizingSidebar ? "bg-blue-400/60" : "bg-transparent hover:bg-white/20",
-          )} />
+          <div
+            className={cn(
+              "h-full mx-auto transition-colors",
+              isResizingSidebar ? "w-[3px] bg-blue-400/60" : "w-[2px] bg-transparent hover:bg-white/30",
+            )}
+          />
         </div>
       )}
 
