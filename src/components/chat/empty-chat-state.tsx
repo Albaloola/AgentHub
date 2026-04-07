@@ -30,6 +30,22 @@ const ALL_SUGGESTIONS = [
 
 const TOTAL_SETS = 5;
 
+// Default greetings - sassy, funny, varied. Agents can update these.
+const GREETINGS = [
+  { line1: "Hey! I'm {name}", line2: "What can I help with?" },
+  { line1: "Hey! I'm {name}", line2: "Let's get something done." },
+  { line1: "{name} here!", line2: "What's on your mind?" },
+  { line1: "It's {name}.", line2: "Hit me with your best shot." },
+  { line1: "Yo! {name} reporting.", line2: "What are we cooking today?" },
+  { line1: "{name} at your service.", line2: "Don't be shy, ask away." },
+  { line1: "Hey! I'm {name}", line2: "I was just thinking about you." },
+  { line1: "{name} online.", line2: "Ready when you are, boss." },
+  { line1: "Oh hey, it's you!", line2: "I'm {name}. What's up?" },
+  { line1: "Welcome back!", line2: "{name} missed you. Not really. Maybe." },
+  { line1: "{name} here.", line2: "Let's make something awesome." },
+  { line1: "Hey! I'm {name}", line2: "Ask me literally anything." },
+];
+
 export function EmptyChatState({
   agentName,
   agentId,
@@ -42,8 +58,22 @@ export function EmptyChatState({
   const [mounted, setMounted] = useState(false);
   const [activeSet, setActiveSet] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
+  const [greetingIdx, setGreetingIdx] = useState(() => Math.floor(Math.random() * GREETINGS.length));
+  const [greetingFade, setGreetingFade] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Rotate greeting every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreetingFade(true);
+      setTimeout(() => {
+        setGreetingIdx((prev) => (prev + 1) % GREETINGS.length);
+        setGreetingFade(false);
+      }, 400);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Rotate suggestions smoothly every 6 seconds
   useEffect(() => {
@@ -159,13 +189,18 @@ export function EmptyChatState({
         </div>
       </div>
 
-      {/* Greeting */}
-      <h1 className="text-4xl font-light text-foreground/90 mb-1 tracking-tight">
-        Hey! {firstName}
-      </h1>
-      <h2 className="text-4xl font-light text-foreground/40 mb-10 tracking-tight">
-        What can I help with?
-      </h2>
+      {/* Rotating greeting */}
+      <div className={cn(
+        "transition-all duration-400 mb-10",
+        greetingFade ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0",
+      )}>
+        <h1 className="text-4xl font-light text-foreground/90 mb-1 tracking-tight">
+          {GREETINGS[greetingIdx].line1.replace("{name}", firstName)}
+        </h1>
+        <h2 className="text-4xl font-light text-foreground/40 tracking-tight">
+          {GREETINGS[greetingIdx].line2.replace("{name}", firstName)}
+        </h2>
+      </div>
 
       {/* Rotating suggestion cards - fixed height container, cards overlay */}
       <div className="relative max-w-2xl w-full" style={{ height: 110 }}>
