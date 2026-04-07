@@ -206,7 +206,6 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Layout; title: strin
 }
 
 function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
-  const [zoomPreview, setZoomPreview] = useState(prefs.fontSize);
   const [fontPreview, setFontPreview] = useState(prefs.fontSize);
 
   const FONT_FAMILIES: Record<string, string> = {
@@ -249,31 +248,6 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
             </div>
           </button>
         ))}
-      </div>
-
-      <Separator />
-
-      <SectionTitle icon={Type} title="Zoom" />
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Smaller</span>
-          <span className="text-xs font-mono text-foreground/80">{zoomPreview}%</span>
-          <span className="text-xs text-muted-foreground">Larger</span>
-        </div>
-        <Slider
-          min={70}
-          max={150}
-          step={5}
-          value={[zoomPreview]}
-          onValueChange={(v) => setZoomPreview(Array.isArray(v) ? v[0] : v)}
-          onValueCommitted={(v) => setPref("fontSize", Math.round((Array.isArray(v) ? v[0] : v) * 0.16))}
-        />
-        <div
-          className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-200"
-          style={{ fontSize: `${zoomPreview * 0.16}px` }}
-        >
-          <span className="text-foreground/70">Preview text at {zoomPreview}% zoom</span>
-        </div>
       </div>
 
       <Separator />
