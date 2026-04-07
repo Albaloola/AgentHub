@@ -469,8 +469,8 @@ export function Sidebar() {
         {/* Navigation (resizable height) */}
         <div
           ref={navRef}
-          className="min-h-0 overflow-y-auto scrollbar-hidden px-1.5 py-1"
-          style={{ height: collapsed ? "auto" : navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
+          className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-1.5 py-1", collapsed && "flex-1")}
+          style={collapsed ? undefined : { height: navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (
             <div className="flex flex-col items-center gap-1">
@@ -859,7 +859,7 @@ export function Sidebar() {
         </div>{/* end content zone */}
 
         {/* Bottom bar: collapse toggle + settings */}
-        <div className="border-t border-white/[0.04] p-1.5 space-y-0.5">
+        <div className="border-t border-white/[0.04] p-1.5 space-y-0.5 shrink-0">
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
