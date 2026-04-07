@@ -117,17 +117,12 @@ export function ChatHeader({
         )}
 
         <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogTrigger>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1 rounded-lg"
-              disabled={isStreaming}
-            >
+          <DialogTrigger render={
+            <Button variant="outline" size="sm" className="gap-1 rounded-lg" disabled={isStreaming}>
               <RotateCcw className="h-3.5 w-3.5" />
               <span className="hidden sm:inline text-xs">Reset</span>
             </Button>
-          </DialogTrigger>
+          } />
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Reset Conversation Context</DialogTitle>

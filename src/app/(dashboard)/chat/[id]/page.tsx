@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, MessageSquare } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyChatState } from "@/components/chat/empty-chat-state";
+import { Loader2 } from "lucide-react";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatHeader } from "@/components/chat/chat-header";
@@ -23,11 +23,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const {
     messages, setMessages, appendMessage, updateLastAssistantMessage,
     appendToolCall, updateToolCall,
-    conversations, setConversations,
+    setConversations,
     isStreaming, setIsStreaming, streamingAgentId, setStreamingAgentId,
     toolPanelOpen, setToolPanelOpen,
-    thinkingContent, thinkingComplete, setThinkingContent,
-    subagents, addSubagent, updateSubagent, clearSubagents,
+    setThinkingContent,
+    addSubagent, updateSubagent, clearSubagents,
   } = useStore();
 
   const [conversation, setConversation] = useState<ConversationWithDetails | null>(null);
@@ -292,18 +292,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <div className="relative z-10 mx-auto max-w-4xl space-y-3 p-6">
             {/* Empty state with ambient animation */}
             {messages.length === 0 && !isStreaming && (
-              <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-                <div className="relative mb-6">
-                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 flex items-center justify-center neon-glow ambient-pulse">
-                    <MessageSquare className="h-8 w-8 text-blue-400/60" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-400/80 neon-glow-sm" style={{ animation: "orbit 3s linear infinite" }} />
-                </div>
-                <h2 className="text-lg font-medium text-foreground/70 neon-text mb-2">Start a conversation</h2>
-                <p className="text-sm text-muted-foreground/50 max-w-sm">
-                  Send a message to {conversation?.agents?.[0]?.name ?? "the agent"} and watch the stars align
-                </p>
-              </div>
+              <EmptyChatState
+                agentName={conversation?.agents?.[0]?.name}
+                onSuggestionClick={(prompt) => sendMessage(prompt)}
+              />
             )}
 
             {messages.map((msg, i) => (

@@ -18,10 +18,11 @@ import type { AgentWithStatus } from "@/lib/types";
 export default function HomePage() {
   const router = useRouter();
   const { agents, setAgents, conversations, setConversations, updateAgentStatus } = useStore();
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
     loadData();
+    setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -61,9 +62,15 @@ export default function HomePage() {
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Mission Control</h1>
             <p className="text-sm text-muted-foreground/60 mt-0.5">
-              {time.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-              {" "}
-              <span className="tabular-nums">{time.toLocaleTimeString()}</span>
+              {time ? (
+                <>
+                  {time.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                  {" "}
+                  <span className="tabular-nums">{time.toLocaleTimeString()}</span>
+                </>
+              ) : (
+                <span className="tabular-nums">--:--:--</span>
+              )}
             </p>
           </div>
           <div className="flex gap-2">
@@ -215,6 +222,30 @@ export default function HomePage() {
             </div>
           </HudPanel>
         )}
+
+        {/* About AgentHub */}
+        <HudPanel
+          title="About AgentHub"
+          accent="violet"
+          collapsible
+        >
+          <div className="p-6 max-w-3xl space-y-4">
+            <p className="text-base text-muted-foreground/70 leading-relaxed">
+              <strong className="text-foreground font-semibold">AgentHub</strong> is a multi-agent dashboard for connecting to, chatting with, and orchestrating autonomous AI agents through their independent gateways. It serves as a pure presentation and routing layer — it doesn't run models, manage API keys, or handle inference directly.
+            </p>
+            <p className="text-base text-muted-foreground/60 leading-relaxed">
+              The vision is to create a unified command center where you can manage your entire fleet of AI agents — from individual assistants to complex multi-agent workflows — all from one beautiful, living interface. Every interaction is designed to feel intentional, every animation purposeful.
+            </p>
+            <div className="flex items-center gap-2 pt-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+              <span className="text-xs text-muted-foreground/40">v0.1.0</span>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+            </div>
+            <p className="text-sm text-muted-foreground/50 text-center italic">
+              Wishing you the best in your AI journey. May your agents be ever helpful. ✦
+            </p>
+          </div>
+        </HudPanel>
       </div>
     </div>
   );

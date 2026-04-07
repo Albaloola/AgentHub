@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  BarChart3, TrendingUp, Zap, MessageSquare, Clock, AlertTriangle,
-  RefreshCw, Bot, ArrowUp, ArrowDown, Minus, Loader2,
+  BarChart3, Zap, MessageSquare, Clock, AlertTriangle,
+  RefreshCw, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

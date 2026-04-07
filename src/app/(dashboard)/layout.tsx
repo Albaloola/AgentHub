@@ -13,7 +13,6 @@ import { ThemeLoader } from "@/components/theme/theme-loader";
 import { useStore } from "@/lib/store";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { sidebarOpen } = useStore();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { helpOpen, setHelpOpen, shortcuts } = useKeyboardShortcuts();

@@ -84,6 +84,14 @@ function initSchema(db: Database.Database) {
       total_messages INTEGER DEFAULT 0,
       total_tokens INTEGER DEFAULT 0,
       error_count INTEGER DEFAULT 0,
+      capability_weights TEXT DEFAULT '{}',
+      cost_per_token REAL DEFAULT 0,
+      cost_per_request REAL DEFAULT 0,
+      fallback_chain TEXT DEFAULT '[]',
+      timeout_multiplier REAL DEFAULT 3.0,
+      adaptive_timeout_enabled INTEGER DEFAULT 1,
+      behavior_modes TEXT DEFAULT '{}',
+      health_score INTEGER DEFAULT 100,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -98,6 +106,14 @@ function initSchema(db: Database.Database) {
       summary TEXT,
       max_responses_per_turn INTEGER DEFAULT 0,
       stop_on_completion INTEGER DEFAULT 0,
+      estimated_token_count INTEGER DEFAULT 0,
+      auto_compact_enabled INTEGER DEFAULT 0,
+      compact_threshold INTEGER DEFAULT 0,
+      is_autonomous INTEGER DEFAULT 0,
+      total_cost REAL DEFAULT 0,
+      behavior_mode TEXT DEFAULT 'default',
+      folder_id TEXT,
+      ghost_user_ids TEXT DEFAULT '[]',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL,
@@ -125,6 +141,14 @@ function initSchema(db: Database.Database) {
       token_count INTEGER DEFAULT 0,
       parent_message_id TEXT,
       branch_point TEXT,
+      is_pinned INTEGER DEFAULT 0,
+      is_summary INTEGER DEFAULT 0,
+      is_handoff INTEGER DEFAULT 0,
+      is_edited INTEGER DEFAULT 0,
+      original_message_id TEXT,
+      handoff_from_agent_id TEXT,
+      handoff_to_agent_id TEXT,
+      handoff_context TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
       FOREIGN KEY (sender_agent_id) REFERENCES agents(id) ON DELETE SET NULL,
@@ -739,12 +763,13 @@ function seed(db: Database.Database) {
     INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    openclawJerryId, "Jerry", null, "openai-compat",
+    openclawJerryId, "Jerry", null, "openclaw",
     "http://localhost:18789",
     JSON.stringify({
       api_key: process.env.OPENCLAW_API_KEY || "",
       model: "openclaw/jaimy",
       chat_endpoint: "/v1/chat/completions",
+      request_format: "openai",
     }),
     1,
   );
@@ -754,12 +779,29 @@ function seed(db: Database.Database) {
     INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    openclawJamieId, "Jamie", null, "openai-compat",
+    openclawJamieId, "Jamie", null, "openclaw",
     "http://localhost:18789",
     JSON.stringify({
       api_key: process.env.OPENCLAW_API_KEY || "",
       model: "openclaw/jamie",
       chat_endpoint: "/v1/chat/completions",
+      request_format: "openai",
+    }),
+    1,
+  );
+
+  // Hermes gateway: default agent gateway
+  const hermesId = uuid();
+  db.prepare(`
+    INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    hermesId, "Hermes", null, "hermes",
+    "http://localhost:8080",
+    JSON.stringify({
+      chat_endpoint: "/api/chat",
+      health_endpoint: "/api/health",
+      timeout_ms: 30000,
     }),
     1,
   );

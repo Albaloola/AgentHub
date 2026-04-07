@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Plus, Trash2, Loader2, Users, ScrollText, Settings2,
-  Shield, Download, Upload, Database, Bot, MessageSquare,
+  Shield, Download, Upload, Database, Bot,
   ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

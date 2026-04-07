@@ -1,7 +1,6 @@
 // Import all adapters to trigger their self-registration
 import "./hermes";
 import "./openclaw";
-import "./openai-compat";
 import "./websocket-adapter";
 import "./mock";
 

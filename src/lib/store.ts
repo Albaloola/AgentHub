@@ -163,6 +163,67 @@ interface AppState {
   // Editing
   editingMessageId: string | null;
   setEditingMessageId: (id: string | null) => void;
+
+  // UI Preferences (persisted)
+  uiPrefs: {
+    density: "compact" | "comfortable" | "spacious";
+    fontSize: number;
+    fontFamily: string;
+    sidebarCollapsed: boolean;
+    ambientBackground: boolean;
+    animationsEnabled: boolean;
+    showStarfield: boolean;
+    showMeteors: boolean;
+    showAmbientGlow: boolean;
+    navStyle: "pills" | "list";
+    theme: string;
+    accentColor: string;
+    showTimestamps: boolean;
+    showAvatars: boolean;
+    markdownEnabled: boolean;
+    autoScroll: boolean;
+    notificationsEnabled: boolean;
+    soundEffects: boolean;
+  };
+  setUiPref: <K extends keyof AppState["uiPrefs"]>(key: K, value: AppState["uiPrefs"][K]) => void;
+  resetUiPrefs: () => void;
+}
+
+const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
+  density: "spacious",
+  fontSize: 16,
+  fontFamily: "geist",
+  sidebarCollapsed: false,
+  ambientBackground: true,
+  animationsEnabled: true,
+  showStarfield: true,
+  showMeteors: true,
+  showAmbientGlow: true,
+  navStyle: "pills",
+  theme: "dark",
+  accentColor: "blue-violet",
+  showTimestamps: true,
+  showAvatars: true,
+  markdownEnabled: true,
+  autoScroll: true,
+  notificationsEnabled: true,
+  soundEffects: false,
+};
+
+function loadUiPrefs(): AppState["uiPrefs"] {
+  try {
+    const stored = localStorage.getItem("agenthub-ui-prefs-v2");
+    if (stored) {
+      return { ...DEFAULT_UI_PREFS, ...JSON.parse(stored) };
+    }
+  } catch {}
+  return { ...DEFAULT_UI_PREFS };
+}
+
+function saveUiPrefs(prefs: AppState["uiPrefs"]) {
+  try {
+    localStorage.setItem("agenthub-ui-prefs-v2", JSON.stringify(prefs));
+  } catch {}
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -355,4 +416,17 @@ export const useStore = create<AppState>((set) => ({
   // Editing
   editingMessageId: null,
   setEditingMessageId: (id) => set({ editingMessageId: id }),
+
+  // UI Preferences
+  uiPrefs: loadUiPrefs(),
+  setUiPref: (key, value) =>
+    set((state) => {
+      const next = { ...state.uiPrefs, [key]: value };
+      saveUiPrefs(next);
+      return { uiPrefs: next };
+    }),
+  resetUiPrefs: () => {
+    saveUiPrefs(DEFAULT_UI_PREFS);
+    set({ uiPrefs: { ...DEFAULT_UI_PREFS } });
+  },
 }));

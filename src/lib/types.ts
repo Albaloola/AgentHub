@@ -639,7 +639,6 @@ export type GatewayType = string;
 export const GATEWAY_LABELS: Record<string, string> = {
   hermes: "Hermes",
   openclaw: "OpenClaw",
-  "openai-compat": "OpenAI Compatible",
   websocket: "WebSocket",
   mock: "Mock",
 };

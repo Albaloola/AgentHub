@@ -1,332 +1,489 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  Settings, Palette, Type, Layout, Keyboard, X, Save,
-  Loader2, Check, RotateCcw, Monitor,
+  X, Monitor, Moon, Sun, Type, Layout, Palette, MessageSquare,
+  Settings2, Sparkles, Zap, RotateCcw, ChevronRight, Check,
+  Sidebar, Eye, Bell, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { getTheme, updateTheme } from "@/lib/api";
-import type { ThemePreference } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+
+type UiPrefs = ReturnType<typeof useStore.getState>["uiPrefs"];
+type SetUiPref = ReturnType<typeof useStore.getState>["setUiPref"];
+
+const TABS = [
+  { id: "layout", label: "Layout", icon: Layout },
+  { id: "theme", label: "Theme", icon: Palette },
+  { id: "chat", label: "Chat", icon: MessageSquare },
+  { id: "animations", label: "Effects", icon: Sparkles },
+  { id: "sidebar", label: "Sidebar", icon: Sidebar },
+  { id: "general", label: "General", icon: Settings2 },
+] as const;
+
+const DENSITY_OPTIONS = [
+  { value: "compact" as const, label: "Compact", desc: "Maximum information density" },
+  { value: "comfortable" as const, label: "Comfortable", desc: "Balanced spacing" },
+  { value: "spacious" as const, label: "Spacious", desc: "Relaxed, airy layout" },
+];
 
 const ACCENT_COLORS = [
-  { value: "#3b82f6", label: "Blue" },
-  { value: "#8b5cf6", label: "Violet" },
-  { value: "#10b981", label: "Emerald" },
-  { value: "#f59e0b", label: "Amber" },
-  { value: "#ef4444", label: "Rose" },
-  { value: "#06b6d4", label: "Cyan" },
-  { value: "#ec4899", label: "Pink" },
-  { value: "#f97316", label: "Orange" },
+  { value: "blue-violet", label: "Blue Violet", swatch: "from-blue-500 to-violet-600" },
+  { value: "cyan-blue", label: "Cyan Blue", swatch: "from-cyan-500 to-blue-600" },
+  { value: "emerald-teal", label: "Emerald", swatch: "from-emerald-500 to-teal-600" },
+  { value: "amber-orange", label: "Amber", swatch: "from-amber-500 to-orange-600" },
+  { value: "rose-pink", label: "Rose", swatch: "from-rose-500 to-pink-600" },
+  { value: "indigo-purple", label: "Indigo", swatch: "from-indigo-500 to-purple-600" },
 ];
 
-const PRESETS = [
-  { name: "Default Dark", theme: "dark", accent: "#3b82f6", radius: "md" },
-  { name: "Midnight", theme: "dark", accent: "#8b5cf6", radius: "lg" },
-  { name: "Ocean", theme: "dark", accent: "#06b6d4", radius: "md" },
-  { name: "Sunset", theme: "dark", accent: "#f97316", radius: "sm" },
-  { name: "Terminal", theme: "dark", accent: "#10b981", radius: "none" },
-  { name: "Light", theme: "light", accent: "#3b82f6", radius: "md" },
-];
+interface SettingsModalProps {
+  open: boolean;
+  onClose: () => void;
+}
 
-type Tab = "appearance" | "layout" | "advanced";
-
-export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [prefs, setPrefs] = useState<ThemePreference | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("appearance");
-
-  useEffect(() => {
-    if (open) loadTheme();
-  }, [open]);
-
-  useEffect(() => {
-    if (prefs && !loading) applyThemeToDOM(prefs);
-  }, [prefs?.accent_color, prefs?.density, prefs?.border_radius, prefs?.font_family]);
-
-  async function loadTheme() {
-    setLoading(true);
-    try {
-      const t = await getTheme();
-      setPrefs(t);
-    } catch {
-      setPrefs({ id: "default", theme: "dark", accent_color: "#3b82f6", font_family: "system-ui", density: "comfortable", border_radius: "md", custom_css: "", created_at: "" });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSave() {
-    if (!prefs) return;
-    setSaving(true);
-    try {
-      await updateTheme(prefs);
-      applyThemeToDOM(prefs);
-      toast.success("Settings saved");
-    } catch {
-      toast.error("Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function update(partial: Partial<ThemePreference>) {
-    if (!prefs) return;
-    setPrefs({ ...prefs, ...partial });
-  }
-
-  function applyPreset(p: typeof PRESETS[0]) {
-    update({ theme: p.theme, accent_color: p.accent, border_radius: p.radius });
-  }
-
-  function applyThemeToDOM(p: ThemePreference) {
-    const root = document.documentElement;
-    root.style.setProperty("--accent-color", p.accent_color);
-    const r = parseInt(p.accent_color.slice(1, 3), 16) / 255;
-    const g = parseInt(p.accent_color.slice(3, 5), 16) / 255;
-    const b = parseInt(p.accent_color.slice(5, 7), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    const l = (max + min) / 2;
-    let h = 0, s = 0;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-      else if (max === g) h = ((b - r) / d + 2) * 60;
-      else h = ((r - g) / d + 4) * 60;
-    }
-    root.style.setProperty("--accent-hue", Math.round(h).toString());
-    root.style.setProperty("--accent-sat", `${Math.round(s * 100)}%`);
-    root.style.setProperty("--accent-color-dim", `hsl(${Math.round(h)}, ${Math.round(s * 100)}%, 25%)`);
-    root.style.setProperty("--accent-color-glow", `hsl(${Math.round(h)}, ${Math.round(s * 100)}%, 50%)`);
-    root.setAttribute("data-density", p.density);
-    const radiusMap: Record<string, string> = { none: "0px", sm: "0.375rem", md: "0.625rem", lg: "0.875rem", xl: "1.25rem" };
-    root.style.setProperty("--radius", radiusMap[p.border_radius] ?? "0.625rem");
-    if (p.font_family !== "system-ui") {
-      root.style.setProperty("--font-geist-sans", `${p.font_family}, system-ui, sans-serif`);
-    } else {
-      root.style.removeProperty("--font-geist-sans");
-    }
-    let styleEl = document.getElementById("agenthub-custom-css");
-    if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "agenthub-custom-css"; document.head.appendChild(styleEl); }
-    styleEl.textContent = p.custom_css;
-  }
+export function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState<string>("layout");
+  const { uiPrefs, setUiPref, resetUiPrefs } = useStore();
 
   if (!open) return null;
 
-  const tabs: { id: Tab; label: string; icon: typeof Palette }[] = [
-    { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "layout", label: "Layout", icon: Layout },
-    { id: "advanced", label: "Advanced", icon: Monitor },
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div
-        className="w-full max-w-lg max-h-[80vh] rounded-2xl border border-border/30 bg-card shadow-2xl overflow-hidden animate-fade-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border/30">
-          <div className="flex items-center gap-2">
-            <Settings className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold">Settings</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" className="h-7 text-xs rounded-lg" onClick={handleSave} disabled={saving || loading}>
-              {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
-              Save
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]"
+        onClick={onClose}
+      />
 
-        {/* Tabs */}
-        <div className="flex border-b border-border/30">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2",
-                activeTab === tab.id
-                  ? "border-blue-500 text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
-              )}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <tab.icon className="h-3.5 w-3.5" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="overflow-y-auto max-h-[60vh] p-5 space-y-5">
-          {loading || !prefs ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      {/* Modal */}
+      <div className="relative z-10 w-[90vw] max-w-3xl max-h-[85vh] rounded-2xl border border-white/[0.08] glass-strong animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)] overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_12px_oklch(0.55_0.24_264/0.3)]">
+              <Settings2 className="h-5 w-5 text-white" />
             </div>
-          ) : activeTab === "appearance" ? (
-            <>
-              {/* Presets */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Theme Presets</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {PRESETS.map((p) => (
-                    <button
-                      key={p.name}
-                      className={cn(
-                        "flex items-center gap-2 rounded-xl border border-border/30 p-2.5 text-xs transition-all hover:bg-accent/20",
-                        prefs.accent_color === p.accent && "border-blue-500/50 bg-accent/10",
-                      )}
-                      onClick={() => applyPreset(p)}
-                    >
-                      <div className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: p.accent }} />
-                      <span>{p.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div>
+              <h2 className="text-lg font-semibold">Settings</h2>
+              <p className="text-xs text-muted-foreground/60">Customize your AgentHub experience</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg hover:bg-white/[0.06]"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-              {/* Accent color */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Accent Color</Label>
-                <div className="flex gap-2 items-center">
-                  {ACCENT_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      className={cn(
-                        "h-7 w-7 rounded-full border-2 transition-all hover:scale-110",
-                        prefs.accent_color === c.value ? "border-white scale-110" : "border-transparent",
-                      )}
-                      style={{ backgroundColor: c.value }}
-                      onClick={() => update({ accent_color: c.value })}
-                      title={c.label}
-                    />
-                  ))}
-                  <Input
-                    type="color"
-                    className="h-7 w-7 p-0 border-0 cursor-pointer rounded-full"
-                    value={prefs.accent_color}
-                    onChange={(e) => update({ accent_color: e.target.value })}
-                  />
-                </div>
-              </div>
+        <div className="flex h-[calc(85vh-80px)]">
+          <div className="w-44 shrink-0 border-r border-white/[0.06] p-3 space-y-1">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 rounded-xl bg-oklch(0.55_0.24_264_/0.08) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
+                  )}
+                  <Icon className={cn("h-4 w-4 shrink-0 relative z-10", isActive && "text-oklch(0.55_0.24_264)")} />
+                  <span className="relative z-10 font-medium">{tab.label}</span>
+                  {isActive && (
+                    <ChevronRight className="h-3 w-3 ml-auto relative z-10 text-oklch(0.55_0.24_264)" />
+                  )}
+                </button>
+              );
+            })}
 
-              {/* Font */}
-              <div>
-                <Label className="text-xs font-medium mb-1.5 block">Font Family</Label>
-                <Select value={prefs.font_family} onValueChange={(v) => v && update({ font_family: v })}>
-                  <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="system-ui">System Default</SelectItem>
-                    <SelectItem value="Inter">Inter</SelectItem>
-                    <SelectItem value="JetBrains Mono">JetBrains Mono</SelectItem>
-                    <SelectItem value="Fira Code">Fira Code</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          ) : activeTab === "layout" ? (
-            <>
-              {/* Density */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">UI Density</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["compact", "comfortable", "spacious"] as const).map((d) => (
-                    <button
-                      key={d}
-                      className={cn(
-                        "rounded-xl border border-border/30 p-3 text-xs transition-all hover:bg-accent/20 capitalize",
-                        prefs.density === d && "border-blue-500/50 bg-accent/10",
-                      )}
-                      onClick={() => update({ density: d })}
-                    >
-                      <div className="font-medium mb-1">{d}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {d === "compact" ? "Smaller text, tighter spacing" :
-                         d === "comfortable" ? "Default spacing and size" :
-                         "Larger text, more breathing room"}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <Separator className="my-2" />
 
-              {/* Border radius */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Corner Roundness</Label>
-                <div className="flex gap-2">
-                  {[
-                    { value: "none", label: "Sharp", preview: "rounded-none" },
-                    { value: "sm", label: "Subtle", preview: "rounded-sm" },
-                    { value: "md", label: "Medium", preview: "rounded-md" },
-                    { value: "lg", label: "Round", preview: "rounded-lg" },
-                    { value: "xl", label: "Pill", preview: "rounded-xl" },
-                  ].map((r) => (
-                    <button
-                      key={r.value}
-                      className={cn(
-                        "flex-1 flex flex-col items-center gap-1.5 p-2 border border-border/30 rounded-xl text-[10px] transition-all hover:bg-accent/20",
-                        prefs.border_radius === r.value && "border-blue-500/50 bg-accent/10",
-                      )}
-                      onClick={() => update({ border_radius: r.value })}
-                    >
-                      <div className={cn("h-6 w-10 border-2 border-muted-foreground/30", r.preview)} />
-                      <span>{r.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Custom CSS */}
-              <div>
-                <Label className="text-xs font-medium mb-1.5 block">Custom CSS</Label>
-                <Textarea
-                  className="font-mono text-xs min-h-[100px] rounded-xl"
-                  placeholder="/* Override any style */"
-                  value={prefs.custom_css}
-                  onChange={(e) => update({ custom_css: e.target.value })}
-                />
-              </div>
+            <button
+              onClick={() => { resetUiPrefs(); }}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:text-red-400 transition-all duration-200 hover:bg-white/[0.03]"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>Reset All</span>
+            </button>
+          </div>
 
-              <Separator />
-
-              {/* Keyboard shortcuts info */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Keyboard Shortcuts</Label>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span>Open settings</span><kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border border-border/30">Ctrl+,</kbd></div>
-                  <div className="flex justify-between"><span>Command palette</span><kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border border-border/30">Ctrl+K</kbd></div>
-                  <div className="flex justify-between"><span>Shortcut help</span><kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border border-border/30">?</kbd></div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Reset */}
-              <Button variant="outline" size="sm" className="rounded-lg" onClick={() => applyPreset(PRESETS[0])}>
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                Reset to Defaults
-              </Button>
-            </>
-          )}
+          <ScrollArea className="flex-1">
+            <div className="p-6 space-y-6">
+              {activeTab === "layout" && <LayoutTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "theme" && <ThemeTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "chat" && <ChatTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "animations" && <EffectsTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "sidebar" && <SidebarTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "general" && <GeneralTab prefs={uiPrefs} setPref={setUiPref} />}
+            </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
+  );
+}
+
+function SettingRow({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium">{label}</div>
+        {desc && <div className="text-xs text-muted-foreground/60 mt-0.5">{desc}</div>}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+function SectionTitle({ icon: Icon, title }: { icon: typeof Layout; title: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">{title}</h3>
+    </div>
+  );
+}
+
+function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  const [zoomPreview, setZoomPreview] = useState(prefs.fontSize);
+  const [fontPreview, setFontPreview] = useState(prefs.fontSize);
+
+  const FONT_FAMILIES: Record<string, string> = {
+    geist: "var(--font-geist-sans)",
+    inter: "Inter, system-ui, sans-serif",
+    "plus-jakarta": "Plus Jakarta Sans, system-ui, sans-serif",
+    "ibm-plex": "IBM Plex Sans, system-ui, sans-serif",
+    "sf-pro": "SF Pro Display, system-ui, sans-serif",
+    "jetbrains-mono": "JetBrains Mono, monospace",
+  };
+
+  const currentFontFamily = FONT_FAMILIES[prefs.fontFamily] || FONT_FAMILIES.geist;
+
+  return (
+    <>
+      <SectionTitle icon={Layout} title="Density" />
+      <div className="grid gap-2">
+        {DENSITY_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setPref("density", opt.value)}
+            className={cn(
+              "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all duration-200",
+              prefs.density === opt.value
+                ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
+                : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"
+            )}
+          >
+            <div className={cn(
+              "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all",
+              prefs.density === opt.value
+                ? "border-oklch(0.55_0.24_264) bg-oklch(0.55_0.24_264)"
+                : "border-white/[0.15]"
+            )}>
+              {prefs.density === opt.value && <Check className="h-3 w-3 text-white" />}
+            </div>
+            <div>
+              <div className="text-sm font-medium">{opt.label}</div>
+              <div className="text-[11px] text-muted-foreground/60">{opt.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <Separator />
+
+      <SectionTitle icon={Type} title="Zoom" />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground/60">Smaller</span>
+          <span className="text-xs font-mono text-foreground/80">{zoomPreview}%</span>
+          <span className="text-xs text-muted-foreground/60">Larger</span>
+        </div>
+        <Slider
+          min={70}
+          max={150}
+          step={5}
+          value={[zoomPreview]}
+          onValueChange={(v) => setZoomPreview(Array.isArray(v) ? v[0] : v)}
+          onValueCommitted={(v) => setPref("fontSize", Math.round((Array.isArray(v) ? v[0] : v) * 0.16))}
+        />
+        <div
+          className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-200"
+          style={{ fontSize: `${zoomPreview * 0.16}px` }}
+        >
+          <span className="text-muted-foreground/70">Preview text at {zoomPreview}% zoom</span>
+        </div>
+      </div>
+
+      <Separator />
+
+      <SectionTitle icon={Type} title="Font Size" />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground/60">12px</span>
+          <span className="text-xs font-mono text-foreground/80">{fontPreview}px</span>
+          <span className="text-xs text-muted-foreground/60">24px</span>
+        </div>
+        <Slider
+          min={12}
+          max={24}
+          step={1}
+          value={[fontPreview]}
+          onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
+          onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
+        />
+        <div
+          className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-200"
+          style={{ fontFamily: currentFontFamily, fontSize: `${fontPreview}px` }}
+        >
+          <span className="text-muted-foreground/70">The quick brown fox jumps over the lazy dog</span>
+        </div>
+      </div>
+
+      <Separator />
+
+      <SectionTitle icon={Type} title="Font Family" />
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { value: "geist", label: "Geist Sans", style: { fontFamily: "var(--font-geist-sans)" } },
+          { value: "inter", label: "Inter", style: { fontFamily: "Inter, system-ui, sans-serif" } },
+          { value: "plus-jakarta", label: "Plus Jakarta", style: { fontFamily: "Plus Jakarta Sans, system-ui, sans-serif" } },
+          { value: "ibm-plex", label: "IBM Plex Sans", style: { fontFamily: "IBM Plex Sans, system-ui, sans-serif" } },
+          { value: "sf-pro", label: "SF Pro", style: { fontFamily: "SF Pro Display, system-ui, sans-serif" } },
+          { value: "jetbrains-mono", label: "JetBrains Mono", style: { fontFamily: "JetBrains Mono, monospace" } },
+        ].map((font) => (
+          <button
+            key={font.value}
+            onClick={() => setPref("fontFamily", font.value)}
+            className={cn(
+              "flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all duration-200",
+              prefs.fontFamily === font.value
+                ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
+                : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all",
+                prefs.fontFamily === font.value
+                  ? "border-oklch(0.55_0.24_264) bg-oklch(0.55_0.24_264)"
+                  : "border-white/[0.15]"
+              )}>
+                {prefs.fontFamily === font.value && <Check className="h-2.5 w-2.5 text-white" />}
+              </div>
+              <span className="text-xs font-medium">{font.label}</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground/50 truncate" style={font.style}>
+              The quick brown fox
+            </span>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  return (
+    <>
+      <SectionTitle icon={Palette} title="Appearance" />
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { value: "dark", label: "Dark", icon: Moon },
+          { value: "light", label: "Light", icon: Sun },
+          { value: "system", label: "System", icon: Monitor },
+        ].map((theme) => {
+          const Icon = theme.icon;
+          return (
+              <button
+                key={theme.value}
+                onClick={() => setPref("theme", theme.value)}
+                className={cn(
+                  "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200",
+                  prefs.theme === theme.value
+                    ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
+                    : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"
+                )}
+              >
+              <Icon className={cn("h-5 w-5", prefs.theme === theme.value && "text-oklch(0.55_0.24_264)")} />
+              <span className="text-xs font-medium">{theme.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <Separator />
+
+      <SectionTitle icon={Palette} title="Accent Color" />
+      <div className="grid grid-cols-3 gap-2">
+        {ACCENT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                onClick={() => setPref("accentColor", color.value)}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl border-2 p-3 transition-all duration-200",
+                  prefs.accentColor === color.value
+                    ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
+                    : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"
+                )}
+              >
+            <div className={cn("h-4 w-4 rounded-full bg-gradient-to-br", color.swatch)} />
+            <span className="text-xs font-medium">{color.label}</span>
+            {prefs.accentColor === color.value && (
+              <Check className="h-3 w-3 ml-auto text-oklch(0.55_0.24_264)" />
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ChatTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  return (
+    <>
+      <SectionTitle icon={MessageSquare} title="Chat Display" />
+      <SettingRow label="Show timestamps" desc="Display time next to each message">
+        <Switch checked={prefs.showTimestamps} onCheckedChange={(v) => setPref("showTimestamps", v)} />
+      </SettingRow>
+      <SettingRow label="Show avatars" desc="Display agent avatars in chat">
+        <Switch checked={prefs.showAvatars} onCheckedChange={(v) => setPref("showAvatars", v)} />
+      </SettingRow>
+      <SettingRow label="Markdown rendering" desc="Render markdown in messages">
+        <Switch checked={prefs.markdownEnabled} onCheckedChange={(v) => setPref("markdownEnabled", v)} />
+      </SettingRow>
+      <SettingRow label="Auto-scroll to bottom" desc="Automatically scroll to newest messages">
+        <Switch checked={prefs.autoScroll} onCheckedChange={(v) => setPref("autoScroll", v)} />
+      </SettingRow>
+    </>
+  );
+}
+
+function EffectsTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  return (
+    <>
+      <SectionTitle icon={Sparkles} title="Visual Effects" />
+      <SettingRow label="Ambient Background" desc="Animated gradient blobs in the background">
+        <Switch checked={prefs.ambientBackground} onCheckedChange={(v) => setPref("ambientBackground", v)} />
+      </SettingRow>
+      <SettingRow label="Starfield" desc="Twinkling stars in chat backgrounds">
+        <Switch checked={prefs.showStarfield} onCheckedChange={(v) => setPref("showStarfield", v)} />
+      </SettingRow>
+      <SettingRow label="Meteor Showers" desc="Occasional meteor streaks across the sky">
+        <Switch checked={prefs.showMeteors} onCheckedChange={(v) => setPref("showMeteors", v)} />
+      </SettingRow>
+      <SettingRow label="Ambient Glow" desc="Subtle glow effects on active elements">
+        <Switch checked={prefs.showAmbientGlow} onCheckedChange={(v) => setPref("showAmbientGlow", v)} />
+      </SettingRow>
+
+      <Separator />
+
+      <SectionTitle icon={Zap} title="Animations" />
+      <SettingRow label="Enable Animations" desc="Toggle all UI animations and transitions">
+        <Switch checked={prefs.animationsEnabled} onCheckedChange={(v) => setPref("animationsEnabled", v)} />
+      </SettingRow>
+    </>
+  );
+}
+
+function SidebarTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  return (
+    <>
+      <SectionTitle icon={Sidebar} title="Navigation Style" />
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { value: "pills" as const, label: "Floating Pills", desc: "Rounded pill-shaped items" },
+          { value: "list" as const, label: "Classic List", desc: "Traditional list items" },
+        ].map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setPref("navStyle", opt.value)}
+            className={cn(
+              "flex flex-col items-center gap-2 rounded-xl border p-4 text-left transition-all duration-200",
+              prefs.navStyle === opt.value
+                ? "border-oklch(0.55_0.24_264_/0.4) bg-oklch(0.55_0.24_264_/0.08)"
+                : "border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.02]"
+            )}
+          >
+            <div className={cn(
+              "flex h-10 w-full items-center justify-center rounded-lg border transition-all",
+              prefs.navStyle === opt.value
+                ? "border-oklch(0.55_0.24_264_/0.3) bg-oklch(0.55_0.24_264_/0.1)"
+                : "border-white/[0.08]"
+            )}>
+              {opt.value === "pills" ? (
+                <div className="flex gap-1">
+                  <div className="h-2 w-6 rounded-full bg-oklch(0.55_0.24_264_/0.4)" />
+                  <div className="h-2 w-4 rounded-full bg-white/[0.08]" />
+                  <div className="h-2 w-5 rounded-full bg-white/[0.08]" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 w-full px-2">
+                  <div className="h-1.5 w-full rounded-sm bg-oklch(0.55_0.24_264_/0.4)" />
+                  <div className="h-1.5 w-3/4 rounded-sm bg-white/[0.08]" />
+                  <div className="h-1.5 w-5/6 rounded-sm bg-white/[0.08]" />
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-xs font-medium">{opt.label}</div>
+              <div className="text-[10px] text-muted-foreground/60">{opt.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <Separator />
+
+      <SectionTitle icon={Eye} title="Sidebar Behavior" />
+      <SettingRow label="Start collapsed" desc="Sidebar starts in icon-only mode">
+        <Switch checked={prefs.sidebarCollapsed} onCheckedChange={(v) => setPref("sidebarCollapsed", v)} />
+      </SettingRow>
+    </>
+  );
+}
+
+function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  const { resetUiPrefs } = useStore();
+  return (
+    <>
+      <SectionTitle icon={Globe} title="Language & Region" />
+      <SettingRow label="Language" desc="Interface language">
+        <span className="text-sm text-muted-foreground">English</span>
+      </SettingRow>
+
+      <Separator />
+
+      <SectionTitle icon={Bell} title="Notifications" />
+      <SettingRow label="Enable notifications" desc="Show system notifications">
+        <Switch checked={prefs.notificationsEnabled} onCheckedChange={(v) => setPref("notificationsEnabled", v)} />
+      </SettingRow>
+      <SettingRow label="Sound effects" desc="Play sounds for events">
+        <Switch checked={prefs.soundEffects} onCheckedChange={(v) => setPref("soundEffects", v)} />
+      </SettingRow>
+
+      <Separator />
+
+      <SectionTitle icon={Settings2} title="Data" />
+      <SettingRow label="Reset all settings" desc="Restore everything to defaults">
+        <Button variant="outline" size="sm" onClick={() => { resetUiPrefs(); }} className="text-xs">
+          <RotateCcw className="h-3 w-3 mr-1" />
+          Reset
+        </Button>
+      </SettingRow>
+    </>
   );
 }

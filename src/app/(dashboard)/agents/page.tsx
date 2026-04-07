@@ -8,10 +8,7 @@ import {
   Pencil,
   Trash2,
   RefreshCw,
-  Power,
-  PowerOff,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,8 +25,6 @@ import {
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { GATEWAY_LABELS } from "@/lib/types";
-import { getAdapters } from "@/lib/api";
-import type { AdapterMeta } from "@/lib/api";
 import type { Agent, AgentWithStatus, GatewayType } from "@/lib/types";
 import { AgentDialog } from "@/components/agents/agent-dialog";
 import { toast } from "sonner";
@@ -199,7 +194,11 @@ export default function AgentsPage() {
                   <h3 className="font-semibold truncate">{agent.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant="secondary" className="text-[10px]">
-                      {GATEWAY_LABELS[agent.gateway_type]}
+                      {GATEWAY_LABELS[agent.gateway_type] && agent.gateway_type !== "openai-compat" && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {GATEWAY_LABELS[agent.gateway_type]}
+                      </Badge>
+                    )}
                     </Badge>
                     <span className="text-[10px] text-muted-foreground truncate">
                       {agent.connection_url}

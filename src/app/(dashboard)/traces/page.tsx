@@ -2,20 +2,18 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  Activity, Loader2, Search, Clock, Zap, AlertCircle,
+  Activity, Loader2, Clock, AlertCircle,
   ChevronDown, ChevronUp, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/lib/store";
 import { getTraces, getTrace, getAgents, getConversations } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
-import type { Trace, TraceSpan, AgentWithStatus, ConversationWithDetails } from "@/lib/types";
+import type { Trace, TraceSpan, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
 const SPAN_COLORS: Record<string, string> = {

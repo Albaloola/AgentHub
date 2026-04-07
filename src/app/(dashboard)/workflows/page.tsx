@@ -3,17 +3,15 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Plus, Trash2, Play, Pause, Save, Loader2, GitBranch, Bot, Clock,
-  AlertCircle, CheckCircle, ArrowRight, ChevronDown, ChevronUp,
-  Zap, Filter, FileOutput, GripVertical, X, Settings2,
+  ArrowRight, Zap, Filter, FileOutput, X, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/lib/store";

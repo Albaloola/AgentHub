@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
 import {
@@ -26,7 +25,7 @@ import {
   getAgents, streamChat, createConversation,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
-import type { PromptVersion, AgentWithStatus, BehaviorMode } from "@/lib/types";
+import type { PromptVersion, BehaviorMode } from "@/lib/types";
 import { BEHAVIOR_MODES } from "@/lib/types";
 import { toast } from "sonner";
 
