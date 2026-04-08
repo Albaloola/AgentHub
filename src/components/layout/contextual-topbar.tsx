@@ -85,7 +85,7 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
       <div 
         className="pointer-events-none absolute inset-0"
         style={{
-          background: "linear-gradient(to right, oklch(0.15 0 0) 0%, transparent 35%, transparent 65%, oklch(0.15 0 0) 100%)",
+          background: "linear-gradient(to right, var(--background) 0%, transparent 35%, transparent 65%, var(--background) 100%)",
         }}
       />
 

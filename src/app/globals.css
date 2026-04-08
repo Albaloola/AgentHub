@@ -356,7 +356,7 @@
 
   --glass-bg: rgba(10, 10, 12, 0.58);
   --glass-border-color: rgba(108, 125, 255, 0.2);
-  --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--glass-glow-color, rgba(108, 125, 255, 0.08));
+  --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) color-mix(in srgb, var(--glass-glow-color, rgba(108, 125, 255, 0.08)) var(--glass-glow-intensity, 50%), transparent);
 
   --switch-trail: linear-gradient(to left, rgba(108, 125, 255, 0.85) 0%, rgba(139, 92, 246, 0.58) 58%, rgba(108, 125, 255, 0.14) 92%, transparent 100%);
   --thumb-color: #ffffff;
@@ -1433,8 +1433,8 @@ select {
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border: 1px solid var(--glass-border-color);
     box-shadow: var(--glass-inner-shadow),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, transparent),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, transparent);
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) color-mix(in srgb, var(--glass-glow-color, transparent) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) color-mix(in srgb, var(--glass-glow-color, transparent) var(--glass-glow-intensity, 50%), transparent);
   }
 
   .glass-strong {
@@ -1443,8 +1443,8 @@ select {
     -webkit-backdrop-filter: blur(24px) saturate(1.3);
     border: 1px solid var(--glass-border-color);
     box-shadow: var(--glass-inner-shadow),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--glass-glow-color, transparent),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--glass-glow-color, transparent);
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) color-mix(in srgb, var(--glass-glow-color, transparent) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) color-mix(in srgb, var(--glass-glow-color, transparent) var(--glass-glow-intensity, 50%), transparent);
   }
 
   /* Agent response bubbles - strong visible glow */
@@ -1452,11 +1452,11 @@ select {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--agent-glow-color, rgba(16,185,129,0.3));
+    border: 1px solid color-mix(in srgb, var(--agent-glow-color, rgba(16,185,129,0.3)) var(--glass-glow-intensity, 50%), transparent);
     box-shadow:
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--agent-glow-color, rgba(16,185,129,0.08)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--agent-glow-color, rgba(16,185,129,0.12)),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--agent-glow-color, rgba(16,185,129,0.06));
+      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) color-mix(in srgb, var(--agent-glow-color, rgba(16,185,129,0.08)) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) color-mix(in srgb, var(--agent-glow-color, rgba(16,185,129,0.12)) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) color-mix(in srgb, var(--agent-glow-color, rgba(16,185,129,0.06)) var(--glass-glow-intensity, 50%), transparent);
   }
 
   /* User message bubbles - strong visible glow */
@@ -1467,9 +1467,9 @@ select {
     border: 1px solid var(--chat-user-border);
     box-shadow:
       var(--chat-user-shadow),
-      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) var(--accent-color-glow, rgba(59,130,246,0.08)),
-      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) var(--accent-color-glow, rgba(59,130,246,0.1)),
-      0 0 calc(var(--glass-glow-spread, 20) * 3px) var(--accent-color-glow, rgba(59,130,246,0.04));
+      inset 0 0 calc(var(--glass-glow-spread, 20) * 1px) color-mix(in srgb, var(--accent-color-glow, rgba(59,130,246,0.08)) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 1.5px) color-mix(in srgb, var(--accent-color-glow, rgba(59,130,246,0.1)) var(--glass-glow-intensity, 50%), transparent),
+      0 0 calc(var(--glass-glow-spread, 20) * 3px) color-mix(in srgb, var(--accent-color-glow, rgba(59,130,246,0.04)) var(--glass-glow-intensity, 50%), transparent);
   }
 
   /* Starfield background for chat */

@@ -134,7 +134,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="surface-panel-strong relative z-10 w-[90vw] max-h-[85vh] overflow-hidden rounded-[1.2rem] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)]" style={{ maxWidth: "clamp(600px, 55vw, 900px)" }}>
+      <div ref={modalRef} className="surface-panel-strong relative z-10 w-[95vw] max-h-[90vh] overflow-hidden rounded-[1.2rem] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)]" style={{ maxWidth: "clamp(800px, 75vw, 1200px)" }}>
         <div className="flex items-center justify-between border-b border-[var(--panel-border)] px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="brand-chip flex h-9 w-9 items-center justify-center rounded-[0.9rem]">
@@ -187,8 +187,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           </div>
         )}
 
-        <div className="flex h-[calc(85vh-80px)]">
-          <div className="w-44 shrink-0 border-r border-[var(--panel-border)] p-3 space-y-1">
+        <div className="flex h-[calc(90vh-80px)]">
+          <div className="w-52 shrink-0 border-r border-[var(--panel-border)] p-4 space-y-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -533,9 +533,9 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       </p>
 
       <div className="space-y-5">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <SectionTitle icon={Moon} title="Dark Themes" />
-          <div className="grid gap-3 items-stretch md:grid-cols-3">
+          <div className="grid gap-4 items-stretch md:grid-cols-3">
             {DARK_THEMES.map((theme) => (
               <ThemePreviewCard
                 key={theme.id}
@@ -547,9 +547,9 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <SectionTitle icon={Sun} title="Light Themes" />
-          <div className="grid gap-3 items-stretch md:grid-cols-3">
+          <div className="grid gap-4 items-stretch md:grid-cols-3">
             {LIGHT_THEMES.map((theme) => (
               <ThemePreviewCard
                 key={theme.id}

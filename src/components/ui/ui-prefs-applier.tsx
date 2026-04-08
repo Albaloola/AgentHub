@@ -118,6 +118,7 @@ export function UiPrefsApplier() {
     root.style.setProperty("--glass-glow-color", uiPrefs.glowColor);
     root.style.setProperty("--agent-glow-color", uiPrefs.agentGlowColor);
     root.style.setProperty("--glass-glow-spread", (uiPrefs.glowSpread ?? 20).toString());
+    root.style.setProperty("--glass-glow-intensity", `${(uiPrefs.glowIntensity ?? 0.5) * 100}%`);
 
     // Theme
     applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
