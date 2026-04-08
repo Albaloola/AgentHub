@@ -978,13 +978,13 @@ export function Sidebar() {
                       )}
                     </button>
 
-                    <div
-                      className={cn(
-                        "overflow-hidden transition-all duration-300",
-                        (isOpen || editNavMode)
-                          ? "max-h-[31.25rem] opacity-100"
-                          : "max-h-0 opacity-0",
-                      )}
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        height: (isOpen || editNavMode) ? "auto" : 0,
+                        opacity: (isOpen || editNavMode) ? 1 : 0
+                      }}
+                      className="overflow-hidden"
                     >
                       <div className="flex flex-wrap gap-1 py-1">
                         {visibleItems.map((item) => {
@@ -1046,7 +1046,7 @@ export function Sidebar() {
                           );
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                     {isGroupDropTarget && navDropTarget.pos === "after" && (
                       <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}
@@ -1105,13 +1105,13 @@ export function Sidebar() {
                       )}
                     </button>
 
-                    <div
-                      className={cn(
-                        "overflow-hidden transition-all duration-300",
-                        (isOpen || editNavMode)
-                          ? "max-h-[31.25rem] opacity-100"
-                          : "max-h-0 opacity-0",
-                      )}
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        height: (isOpen || editNavMode) ? "auto" : 0,
+                        opacity: (isOpen || editNavMode) ? 1 : 0
+                      }}
+                      className="overflow-hidden"
                     >
                       <div className="space-y-0.5 py-0.5">
                         {visibleItems.map((item) => {
@@ -1140,8 +1140,7 @@ export function Sidebar() {
                                 style={{
                                   transition: "all 0.3s ease",
                                   ...(isActive ? {
-                                    background: `${glow}15`,
-                                    boxShadow: `0 0 8px ${glow}40, inset 0 0 12px ${glow}10`,
+                                    background: "var(--sidebar-accent)",
                                   } : {}),
                                 }}
                                 onMouseEnter={(e) => {
@@ -1167,11 +1166,7 @@ export function Sidebar() {
                                 {isActive && !editNavMode && (
                                   <motion.div
                                     layoutId="activeNavIndicator"
-                                    className="ml-auto h-1.5 w-1.5 rounded-full"
-                                    style={{
-                                      backgroundColor: glow,
-                                      boxShadow: `0 0 6px ${glow}, 0 0 12px ${glow}80`,
-                                    }}
+                                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--sidebar-primary)]"
                                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                   />
                                 )}
@@ -1183,7 +1178,7 @@ export function Sidebar() {
                           );
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                     {isGroupDropTarget && navDropTarget.pos === "after" && (
                       <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}

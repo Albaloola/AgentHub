@@ -20,7 +20,7 @@ interface Mote {
   glintSpeed: number;
 }
 
-const MOTE_COUNT = 35;
+const MOTE_COUNT = 50;
 
 export function PaperBackground() {
   const motesRef = useRef<Mote[]>([]);
@@ -32,11 +32,11 @@ export function PaperBackground() {
     motesRef.current = Array.from({ length: MOTE_COUNT }, () => ({
       x: rand() * w,
       y: rand() * h,
-      vx: (rand() - 0.5) * 0.6,
-      vy: -(0.3 + rand() * 0.7), // drift upward
+      vx: (rand() - 0.5) * 1.2,
+      vy: -(0.6 + rand() * 1.4), // drift upward faster
       size: 1.5 + rand() * 2.5,
-      baseOpacity: 0.30 + rand() * 0.10, // 0.30-0.40
-      opacity: 0.30 + rand() * 0.10,
+      baseOpacity: 0.50 + rand() * 0.20, // 0.50-0.70
+      opacity: 0.50 + rand() * 0.20,
       glintPhase: rand() * Math.PI * 2,
       glintSpeed: 0.3 + rand() * 0.5,
     }));
@@ -78,9 +78,9 @@ export function PaperBackground() {
       // Glint: motes briefly brighten to 0.6-0.7 when "catching sunlight"
       const glint = Math.sin(time * m.glintSpeed + m.glintPhase);
       if (glint > 0.5) {
-        // Map 0.5-1.0 to 0-1, then scale to peak at 0.65
+        // Map 0.5-1.0 to 0-1, then scale to peak at 0.85
         const glintStrength = (glint - 0.5) * 2;
-        m.opacity = m.baseOpacity + glintStrength * (0.65 - m.baseOpacity);
+        m.opacity = m.baseOpacity + glintStrength * (0.85 - m.baseOpacity);
       } else {
         m.opacity = m.baseOpacity;
       }
@@ -92,8 +92,8 @@ export function PaperBackground() {
       ctx.fill();
 
       // Soft glow for brighter motes (catching light)
-      if (m.opacity > 0.35) {
-        ctx.globalAlpha = (m.opacity - 0.30) * 0.9;
+      if (m.opacity > 0.55) {
+        ctx.globalAlpha = (m.opacity - 0.50) * 0.9;
         ctx.beginPath();
         ctx.arc(m.x, m.y, m.size * 3.5, 0, Math.PI * 2);
         ctx.fill();
@@ -112,7 +112,7 @@ export function PaperBackground() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(150deg, color-mix(in srgb, var(--theme-accent) 15%, transparent) 0%, color-mix(in srgb, var(--theme-accent) 12%, transparent) 30%, transparent 55%)",
+          background: "linear-gradient(160deg, color-mix(in srgb, var(--theme-accent) 30%, transparent) 0%, color-mix(in srgb, var(--theme-accent) 24%, transparent) 30%, transparent 55%)",
           animation: "paper-shaft-drift 30s ease-in-out infinite",
           pointerEvents: "none",
         }}

@@ -27,7 +27,7 @@ interface BreathBlob {
   maxRadius: number;
 }
 
-const CRYSTAL_COUNT = 22;
+const CRYSTAL_COUNT = 44;
 
 export function ArcticBackground() {
   const crystalsRef = useRef<Crystal[]>([]);
@@ -165,7 +165,7 @@ export function ArcticBackground() {
           left: 0,
           right: 0,
           height: "22%",
-          background: "linear-gradient(to bottom, color-mix(in srgb, var(--theme-accent) 10%, transparent), transparent)",
+          background: "linear-gradient(to bottom, color-mix(in srgb, var(--theme-accent) 20%, transparent), transparent)",
           pointerEvents: "none",
         }}
       />
@@ -179,7 +179,7 @@ export function ArcticBackground() {
             left: "-10%",
             width: "120%",
             height: "40%",
-            background: "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-accent) 16%, transparent) 20%, color-mix(in srgb, var(--theme-accent-alt) 14%, transparent) 50%, color-mix(in srgb, var(--theme-accent) 10%, transparent) 75%, transparent 100%)",
+            background: "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-accent) 32%, transparent) 20%, color-mix(in srgb, var(--theme-accent-alt) 28%, transparent) 50%, color-mix(in srgb, var(--theme-accent) 20%, transparent) 75%, transparent 100%)",
             filter: "blur(35px)",
             animation: "arctic-aurora-1 25s ease-in-out infinite",
             willChange: "transform",
@@ -192,7 +192,7 @@ export function ArcticBackground() {
             left: "-5%",
             width: "110%",
             height: "35%",
-            background: "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-accent-alt) 14%, transparent) 25%, color-mix(in srgb, var(--theme-accent) 12%, transparent) 55%, transparent 100%)",
+            background: "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--theme-accent-alt) 28%, transparent) 25%, color-mix(in srgb, var(--theme-accent) 24%, transparent) 55%, transparent 100%)",
             filter: "blur(40px)",
             animation: "arctic-aurora-2 30s ease-in-out infinite",
             animationDelay: "-10s",

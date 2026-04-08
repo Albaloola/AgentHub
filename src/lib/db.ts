@@ -806,6 +806,18 @@ function seed(db: Database.Database) {
     1,
   );
 
+  // Mock Echo Bot — works out of the box for testing
+  const mockId = uuid();
+  db.prepare(`
+    INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config, is_active)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    mockId, "Echo Bot", null, "mock",
+    "mock://echo",
+    JSON.stringify({ delay_ms: 40, echo: true }),
+    1,
+  );
+
   // Seed a default theme
   db.prepare(`INSERT OR IGNORE INTO theme_preferences (id) VALUES ('default')`).run();
   db.prepare(`INSERT OR IGNORE INTO onboarding_state (id) VALUES ('default')`).run();

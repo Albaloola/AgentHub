@@ -45,15 +45,15 @@ interface Particle {
 
 /* ---------- Constants ---------- */
 
-const GRID_SPACING = 80;
-const PULSE_COUNT = 6;
+const GRID_SPACING = 40;
+const PULSE_COUNT = 12;
 const PULSE_TRAIL = 200; // px
 const PULSE_SPEED = 220; // px/s
 const PULSE_SPAWN_MIN = 0.5; // seconds
 const PULSE_SPAWN_MAX = 1.5;
-const FLARE_COUNT = 8;
+const FLARE_COUNT = 16;
 const FLARE_LIFETIME = 1.0; // seconds — faster cycle for more activity
-const PARTICLE_COUNT = 40;
+const PARTICLE_COUNT = 80;
 const SCAN_PERIOD = 8; // seconds for full sweep
 const COLOR_CACHE_INTERVAL = 2; // seconds
 

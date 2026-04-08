@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2, Type, Image, Smile } from "lucide-react";
+import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import type { Agent } from "@/lib/types";
 import { CommandsMenu } from "./commands-menu";
 import { FileChips, UploadedFile } from "./file-chips";
 import { toast } from "sonner";
-import { spring, ease } from "@/lib/animation";
+import { spring } from "@/lib/animation";
 
 const CHAT_FONTS = [
   { value: "", label: "Default" },
@@ -146,8 +146,6 @@ export function ChatInput({
     setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
-  const showLeftColumn = hasStartedChat || expanded;
-
   return (
     <div
       className="relative z-10 max-w-3xl mx-auto px-4"
@@ -162,16 +160,15 @@ export function ChatInput({
 
       <motion.div
         className={cn(
-          "relative rounded-2xl transition-all duration-300",
-          "backdrop-blur-xl",
-          isFocused && "ring-2"
+          "relative rounded-2xl backdrop-blur-xl",
         )}
         style={{
           background: "var(--glass-bg)",
-          border: `1px solid ${isFocused ? "var(--ring)" : "var(--glass-border-color)"}`,
-          boxShadow: isFocused 
+          border: `1px solid ${isFocused ? "var(--ring)" : "var(--panel-border)"}`,
+          boxShadow: isFocused
             ? `var(--panel-shadow), 0 0 0 3px var(--theme-accent-soft)`
             : "var(--panel-shadow)",
+          transition: "border-color 0.2s, box-shadow 0.2s",
         }}
         animate={{
           scale: isPressed && !prefersReducedMotion ? 0.98 : 1,
@@ -213,72 +210,40 @@ export function ChatInput({
           </div>
         )}
 
-        <div className="flex items-start gap-4 p-4">
-          {showLeftColumn && (
-            <motion.div 
-              className="flex flex-col items-center gap-3 shrink-0 py-2"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              transition={{ duration: 0.2 }}
+        <div className="flex items-center gap-3 p-4">
+          <div className="flex flex-col items-center gap-2 shrink-0 self-stretch justify-end pb-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => e.target.files && handleFiles(e.target.files)}
+              disabled={disabled || uploading || isStreaming}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-violet shrink-0 text-muted-foreground hover:text-foreground"
+              disabled={disabled || uploading || isStreaming}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach file"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(e) => e.target.files && handleFiles(e.target.files)}
-                disabled={disabled || uploading || isStreaming}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-violet shrink-0"
-                disabled={disabled || uploading || isStreaming}
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Attach file"
-              >
-                <Upload className={cn("h-4 w-4", uploading && "animate-spin")} />
-              </Button>
+              <Upload className={cn("h-4 w-4", uploading && "animate-spin")} />
+            </Button>
 
-              {onFontChange && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    className={cn(
-                      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 cursor-pointer hover-glow-blue",
-                      chatFont ? "text-[var(--theme-accent-text)]" : "",
-                    )}
-                    aria-label="Change chat font"
-                  >
-                    <Type className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    {CHAT_FONTS.map((f) => (
-                      <DropdownMenuItem
-                        key={f.value}
-                        onClick={() => onFontChange(f.value)}
-                        className={cn(chatFont === f.value && "text-[var(--theme-accent-text)]")}
-                      >
-                        {f.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-cyan shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => setExpanded(!expanded)}
+              title={expanded ? "Minimize" : "Expand"}
+              aria-label={expanded ? "Minimize input" : "Expand input"}
+            >
+              {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-cyan shrink-0"
-                onClick={() => setExpanded(!expanded)}
-                title={expanded ? "Minimize" : "Expand"}
-                aria-label={expanded ? "Minimize input" : "Expand input"}
-              >
-                {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              </Button>
-            </motion.div>
-          )}
-
-          <div className="flex-1 relative min-w-0">
+          <div className="flex-1 relative min-w-0 self-start">
             <textarea
               ref={textareaRef}
               value={content}
@@ -289,16 +254,19 @@ export function ChatInput({
               placeholder={isCentered ? "Ask anything..." : "Send a message..."}
               disabled={disabled}
               className={cn(
-                "w-full resize-none bg-transparent border-0 focus:outline-none focus:ring-0",
+                "w-full bg-transparent border-0 focus:outline-none focus:ring-0",
                 "placeholder:text-muted-foreground/50 text-foreground",
                 "scrollbar-thin scrollbar-thumb-rounded",
-                expanded ? "min-h-[200px]" : "min-h-[120px] max-h-[300px]"
               )}
               style={{
                 fontSize: "0.9375rem",
                 lineHeight: "1.6",
+                resize: "none",
+                overflowY: "auto",
+                minHeight: expanded ? "300px" : "120px",
+                maxHeight: expanded ? "none" : "300px",
               }}
-              rows={expanded ? 8 : 3}
+              rows={expanded ? 12 : 4}
             />
             {content.length > 0 && (
               <div className="absolute bottom-0 right-0 text-muted-foreground/40 text-[0.6875rem] tabular-nums pointer-events-none">
@@ -307,12 +275,12 @@ export function ChatInput({
             )}
           </div>
 
-          <div className="flex flex-col justify-end shrink-0 py-2">
+          <div className="flex flex-col items-center shrink-0 self-stretch justify-end pb-1">
             {isStreaming ? (
               <Button
                 variant="destructive"
                 size="icon"
-                className="h-11 w-11 rounded-xl transition-all duration-200 hover:scale-105"
+                className="h-10 w-10 rounded-xl transition-all duration-200 hover:scale-105"
                 onClick={onCancel}
                 aria-label="Stop generating"
               >
@@ -326,7 +294,7 @@ export function ChatInput({
                 <Button
                   size="icon"
                   className={cn(
-                    "h-11 w-11 rounded-xl transition-all duration-200",
+                    "h-10 w-10 rounded-xl transition-all duration-200",
                     "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)]",
                     "text-white shadow-lg",
                     content.trim() && !disabled && "shadow-[var(--theme-accent-shadow-strong)]"

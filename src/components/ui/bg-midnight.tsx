@@ -254,34 +254,34 @@ export function MidnightBackground() {
       }
     }
 
-    // Schedule shower bursts (2-3 meteors in quick succession) every 30-45s
+    // Schedule shower bursts (3-5 meteors in quick succession) every 15-25s
     if (nextBurstRef.current === 0) {
-      nextBurstRef.current = time + 25 + rand() * 10;
+      nextBurstRef.current = time + 15 + rand() * 10;
     }
     if (time >= nextBurstRef.current) {
-      const burstCount = 2 + Math.floor(rand() * 2); // 2-3 meteors
+      const burstCount = 3 + Math.floor(rand() * 3); // 3-5 meteors
       for (let i = 0; i < burstCount; i++) {
         queue.push(time + i * 0.2); // 200ms apart
       }
-      nextBurstRef.current = time + 30 + rand() * 15; // 30-45s until next burst
+      nextBurstRef.current = time + 15 + rand() * 10; // 15-25s until next burst
     }
 
-    // Spawn regular meteors every 4-8 seconds
+    // Spawn regular meteors every 2-4 seconds
     if (nextMeteorRef.current === 0) {
-      nextMeteorRef.current = time + 2 + rand() * 3; // first one after 2-5s
+      nextMeteorRef.current = time + 1 + rand() * 2; // first one after 1-3s
     }
     if (time >= nextMeteorRef.current) {
       spawnMeteor(meteorsRef.current, w, h, time, rand, false);
-      nextMeteorRef.current = time + 4 + rand() * 4; // 4-8s until next
+      nextMeteorRef.current = time + 2 + rand() * 2; // 2-4s until next
     }
 
-    // Spawn occasional comet every 60-90 seconds
+    // Spawn occasional comet every 20-40 seconds
     if (nextCometRef.current === 0) {
-      nextCometRef.current = time + 30 + rand() * 30; // first comet 30-60s in
+      nextCometRef.current = time + 10 + rand() * 15; // first comet 10-25s in
     }
     if (time >= nextCometRef.current) {
       spawnMeteor(meteorsRef.current, w, h, time, rand, true);
-      nextCometRef.current = time + 60 + rand() * 30; // 60-90s until next
+      nextCometRef.current = time + 20 + rand() * 20; // 20-40s until next
     }
 
     // Draw & advance meteors

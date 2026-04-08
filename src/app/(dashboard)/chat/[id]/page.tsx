@@ -12,6 +12,7 @@ import { streamChat, getMessages, getConversations } from "@/lib/api";
 import { spring } from "@/lib/animation";
 import type { MessageWithToolCalls, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -340,11 +341,18 @@ export default function ChatPage() {
         />
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        <div className={cn(
+          "flex-1 flex flex-col min-h-0 overflow-hidden relative",
+          !hasStartedChat && "justify-center"
+        )}>
           {/* Messages container */}
-          <div 
+          <motion.div 
+            layout
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto min-h-0 px-4 py-4"
+            className={cn(
+              "overflow-y-auto min-h-0 px-4 py-4 scrollbar-thin scrollbar-thumb-rounded",
+              hasStartedChat ? "flex-1" : "flex-none"
+            )}
           >
             <AnimatePresence mode="popLayout">
               {!hasMessages ? (
@@ -354,7 +362,8 @@ export default function ChatPage() {
                   variants={welcomeVariants}
                   initial="visible"
                   exit="hidden"
-                  className="flex flex-col items-center justify-center min-h-full"
+                  layout
+                  className="flex flex-col items-center justify-center pt-8"
                 >
                   <EmptyChatState
                     agentName={primaryAgent?.name}
@@ -384,18 +393,17 @@ export default function ChatPage() {
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                  <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} className="h-4" />
                 </div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
 
           {/* Input area with animation */}
           <motion.div
-            className="flex-shrink-0 px-4 pb-4 pt-2"
+            layout
+            className="flex-shrink-0 px-4 pb-4 pt-2 w-full max-w-4xl mx-auto"
             initial={false}
-            animate={hasStartedChat ? "bottom" : "centered"}
-            variants={inputContainerVariants}
           >
             <motion.div
               layout

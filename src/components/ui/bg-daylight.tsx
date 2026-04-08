@@ -42,12 +42,12 @@ const CAUSTIC_STYLES = `
   }
   @keyframes daylight-prismatic {
     0%   { opacity: 0; transform: translateX(-100%) rotate(-15deg); }
-    40%  { opacity: 0.10; }
+    40%  { opacity: 0.20; }
     100% { opacity: 0; transform: translateX(100%) rotate(-15deg); }
   }
   @keyframes daylight-warmth {
-    0%, 100% { opacity: 0.08; }
-    50% { opacity: 0.14; }
+    0%, 100% { opacity: 0.16; }
+    50% { opacity: 0.28; }
   }
 `;
 
@@ -66,7 +66,7 @@ export function DaylightBackground() {
           left: "-10%",
           background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 70%)",
           filter: "blur(60px)",
-          opacity: 0.18,
+          opacity: 0.36,
           animation: "daylight-morph-1 20s ease-in-out infinite",
           willChange: "transform, border-radius",
         }}
@@ -82,7 +82,7 @@ export function DaylightBackground() {
           right: "-12%",
           background: "radial-gradient(ellipse at center, var(--theme-accent-alt) 0%, transparent 70%)",
           filter: "blur(50px)",
-          opacity: 0.16,
+          opacity: 0.32,
           animation: "daylight-morph-2 25s ease-in-out infinite",
           willChange: "transform, border-radius",
         }}
@@ -98,7 +98,7 @@ export function DaylightBackground() {
           left: "20%",
           background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 70%)",
           filter: "blur(55px)",
-          opacity: 0.15,
+          opacity: 0.30,
           animation: "daylight-morph-3 22s ease-in-out infinite",
           willChange: "transform, border-radius",
         }}
@@ -114,7 +114,7 @@ export function DaylightBackground() {
           left: "35%",
           background: "radial-gradient(ellipse at center, var(--theme-accent-alt) 0%, transparent 70%)",
           filter: "blur(50px)",
-          opacity: 0.14,
+          opacity: 0.28,
           animation: "daylight-morph-4 28s ease-in-out infinite",
           willChange: "transform, border-radius",
         }}
@@ -130,7 +130,7 @@ export function DaylightBackground() {
           left: "30%",
           background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 70%)",
           filter: "blur(60px)",
-          opacity: 0.13,
+          opacity: 0.26,
           animation: "daylight-morph-5 24s ease-in-out infinite",
           willChange: "transform, border-radius",
         }}
@@ -155,7 +155,7 @@ export function DaylightBackground() {
             height: orb.size,
             borderRadius: "50%",
             background: "radial-gradient(circle, var(--theme-accent) 0%, transparent 70%)",
-            opacity: 0.22,
+            opacity: 0.44,
             animation: `daylight-orb-float ${orb.dur}s ease-in-out infinite`,
             animationDelay: `${orb.delay}s`,
             willChange: "transform",
@@ -169,7 +169,7 @@ export function DaylightBackground() {
           position: "absolute",
           inset: 0,
           background: "linear-gradient(105deg, transparent 30%, #6366f1 40%, #8b5cf6 44%, #d946ef 48%, #f43f5e 52%, #f97316 56%, transparent 66%)",
-          opacity: 0.08,
+          opacity: 0.16,
           animation: "daylight-prismatic 15s ease-in-out infinite",
           animationDelay: "-3s",
           pointerEvents: "none",
