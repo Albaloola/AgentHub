@@ -72,7 +72,7 @@ export function ChatInput({
     if (textareaRef.current && !expanded) {
       textareaRef.current.style.height = "auto";
       const scrollHeight = textareaRef.current.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 72), 300);
+      const newHeight = Math.min(Math.max(scrollHeight, 40), 96); // 1 to ~3 lines
       textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [content, expanded]);
@@ -159,10 +159,11 @@ export function ChatInput({
       />
 
       <div 
-        className="absolute inset-0 pointer-events-none rounded-2xl blur-3xl transition-opacity duration-300"
+        className="absolute inset-0 pointer-events-none rounded-2xl blur-3xl transition-opacity duration-500"
         style={{
-          background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 70%)",
-          opacity: isFocused ? 0.3 : 0.15
+          background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 80%)",
+          opacity: isFocused ? 0.4 : 0.15,
+          transform: isFocused ? "scale(1.05)" : "scale(1)"
         }}
       />
 
@@ -218,107 +219,163 @@ export function ChatInput({
           </div>
         )}
 
-        <div className="flex items-center gap-3 p-4">
-          <div className="flex flex-col items-center gap-2 shrink-0 self-center">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => e.target.files && handleFiles(e.target.files)}
-              disabled={disabled || uploading || isStreaming}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 aspect-square rounded-xl transition-all duration-200 shrink-0 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
-              disabled={disabled || uploading || isStreaming}
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Attach file"
-            >
-              <Upload className={cn("h-4 w-4", uploading && "animate-spin")} />
-            </Button>
+        <div className={cn("flex px-3 py-3 gap-2", expanded ? "flex-col" : "items-end md:items-center")}>
+          {/* Unexpanded Left Buttons */}
+          {!expanded && (
+            <div className="flex items-center gap-1 shrink-0 pb-1 md:pb-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                disabled={disabled || uploading || isStreaming}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
+                disabled={disabled || uploading || isStreaming}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach file"
+              >
+                <Upload className={cn("h-4.5 w-4.5", uploading && "animate-spin")} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
+                onClick={() => setExpanded(true)}
+                title="Expand"
+                aria-label="Expand input"
+              >
+                <Maximize2 className="h-4.5 w-4.5" />
+              </Button>
+            </div>
+          )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 aspect-square rounded-xl transition-all duration-200 shrink-0 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
-              onClick={() => setExpanded(!expanded)}
-              title={expanded ? "Minimize" : "Expand"}
-              aria-label={expanded ? "Minimize input" : "Expand input"}
-            >
-              {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          <div className="flex-1 relative min-w-0 self-start">
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleInput}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={isCentered ? "Ask anything..." : "Send a message..."}
-              disabled={disabled}
-              className={cn(
-                "w-full bg-transparent border-0 focus:outline-none focus:ring-0",
-                "placeholder:text-muted-foreground/50 text-foreground",
-                "scrollbar-thin scrollbar-thumb-rounded",
-              )}
-              style={{
-                fontSize: "0.9375rem",
-                lineHeight: "1.6",
-                resize: "none",
-                overflowY: "auto",
-                minHeight: expanded ? "300px" : "72px",
-                maxHeight: expanded ? "none" : "300px",
-              }}
-              rows={expanded ? 12 : 4}
-            />
+          {/* Text Input Area */}
+          <div className="flex-1 relative min-w-0">
+            <div className={cn(
+              "bg-foreground/[0.04] transition-colors duration-200 focus-within:bg-foreground/[0.06] overflow-hidden",
+              expanded ? "rounded-xl p-4" : "rounded-2xl py-2.5 px-4"
+            )}>
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleInput}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={isCentered ? "Ask anything..." : "Send a message..."}
+                disabled={disabled}
+                className={cn(
+                  "w-full bg-transparent border-0 focus:outline-none focus:ring-0",
+                  "placeholder:text-muted-foreground/60 text-foreground",
+                  "scrollbar-thin scrollbar-thumb-rounded",
+                  expanded ? "min-h-[40vh]" : ""
+                )}
+                style={{
+                  fontSize: "0.9375rem",
+                  lineHeight: "1.5",
+                  resize: "none",
+                  overflowY: "auto",
+                  minHeight: expanded ? "40vh" : "24px",
+                  maxHeight: expanded ? "50vh" : "96px",
+                  display: "block"
+                }}
+              />
+            </div>
             {content.length > 0 && (
-              <div className="absolute bottom-0 right-0 text-muted-foreground/40 text-[0.6875rem] tabular-nums pointer-events-none">
-                ~{Math.ceil(content.length / 4)} tokens
+              <div className="absolute top-2 right-3 text-[var(--theme-accent-text)] opacity-40 text-[0.6875rem] tabular-nums pointer-events-none">
+                ~{Math.ceil(content.length / 4)} t
               </div>
             )}
           </div>
 
-          <div className="flex flex-col items-center shrink-0 self-stretch justify-end pb-1">
-            {isStreaming ? (
-              <Button
-                variant="destructive"
-                size="icon"
-                className="h-10 w-10 rounded-xl transition-all duration-200 hover:scale-105"
-                onClick={onCancel}
-                aria-label="Stop generating"
-              >
-                <Square className="h-4 w-4" />
-              </Button>
-            ) : (
-              <motion.div
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10 rounded-xl transition-all duration-200",
-                    "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)]",
-                    "text-white shadow-lg",
-                    content.trim() && !disabled && "shadow-[var(--theme-accent-shadow-strong)]"
-                  )}
-                  onClick={handleSend}
-                  onMouseDown={() => setIsPressed(true)}
-                  onMouseUp={() => setIsPressed(false)}
-                  onMouseLeave={() => setIsPressed(false)}
-                  disabled={!content.trim() || disabled}
-                  aria-label="Send message"
-                >
-                  <Send className="h-4 w-4" />
+          {/* Unexpanded Right Button */}
+          {!expanded && (
+            <div className="flex items-center shrink-0 pb-1 md:pb-0">
+              {isStreaming ? (
+                <Button variant="destructive" size="icon" className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all" onClick={onCancel}>
+                  <Square className="h-4.5 w-4.5" />
                 </Button>
-              </motion.div>
-            )}
-          </div>
+              ) : (
+                <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                  <Button
+                    size="icon"
+                    className={cn(
+                      "h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200",
+                      content.trim() && !disabled ? "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)] text-white shadow-lg shadow-[var(--theme-accent-shadow-strong)]" : "bg-foreground/[0.06] text-muted-foreground"
+                    )}
+                    onClick={handleSend}
+                    onMouseDown={() => setIsPressed(true)}
+                    onMouseUp={() => setIsPressed(false)}
+                    onMouseLeave={() => setIsPressed(false)}
+                    disabled={!content.trim() || disabled}
+                    aria-label="Send message"
+                  >
+                    <Send className="h-4.5 w-4.5" />
+                  </Button>
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* Expanded Bottom Row */}
+          {expanded && (
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1 pl-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                  disabled={disabled || uploading || isStreaming}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                  disabled={disabled || uploading || isStreaming}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Attach file"
+                >
+                  <Upload className={cn("h-4 w-4", uploading && "animate-spin")} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                  onClick={() => setExpanded(false)}
+                  title="Minimize"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="pr-1">
+                {isStreaming ? (
+                  <Button variant="destructive" size="sm" className="rounded-lg px-4 transition-all" onClick={onCancel}>
+                    <Square className="h-4 w-4 mr-2" /> Stop
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-5 font-medium transition-all duration-200",
+                      content.trim() && !disabled ? "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)] text-white shadow-lg shadow-[var(--theme-accent-shadow)]" : "bg-foreground/[0.06] text-muted-foreground"
+                    )}
+                    onClick={handleSend}
+                    disabled={!content.trim() || disabled}
+                  >
+                    Send <Send className="h-3.5 w-3.5 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

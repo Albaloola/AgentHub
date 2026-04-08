@@ -350,8 +350,8 @@ export default function ChatPage() {
             layout
             ref={messagesContainerRef}
             className={cn(
-              "overflow-y-auto min-h-0 px-4 py-4 scrollbar-thin scrollbar-thumb-rounded",
-              hasStartedChat ? "flex-1" : "flex-none"
+              "overflow-y-auto min-h-0 px-4 scrollbar-thin scrollbar-thumb-rounded",
+              hasStartedChat ? "flex-1 py-4 order-1" : "flex-none order-2 pb-12"
             )}
           >
             <AnimatePresence mode="popLayout">
@@ -402,7 +402,10 @@ export default function ChatPage() {
           {/* Input area with animation */}
           <motion.div
             layout
-            className="flex-shrink-0 px-4 pb-4 pt-2 w-full max-w-4xl mx-auto"
+            className={cn(
+              "flex-shrink-0 px-4 w-full max-w-4xl mx-auto z-10",
+               hasStartedChat ? "pb-4 pt-2 order-2" : "pt-8 pb-4 order-1"
+            )}
             initial={false}
           >
             <motion.div

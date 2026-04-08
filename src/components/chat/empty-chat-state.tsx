@@ -112,7 +112,7 @@ export function EmptyChatState({
 
   return (
     <div className={cn(
-      "flex flex-col items-center justify-center min-h-[65vh] text-center px-4",
+      "flex flex-col items-center justify-center text-center px-4 w-full",
       mounted ? "opacity-100" : "opacity-0",
     )}
     style={{ transition: "opacity 0.7s ease-out" }}

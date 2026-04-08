@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   X, Monitor, Moon, Sun, Type, Layout, Palette, MessageSquare,
   Settings2, Sparkles, Zap, RotateCcw, ChevronRight, Check,
-  Sidebar, Eye, Bell, Globe,
+  Sidebar, Eye, Bell, Globe, Info, Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -23,10 +23,8 @@ type SetUiPref = ReturnType<typeof useStore.getState>["setUiPref"];
 const TABS = [
   { id: "layout", label: "Layout", icon: Layout },
   { id: "theme", label: "Theme", icon: Palette },
-  { id: "chat", label: "Chat", icon: MessageSquare },
-  { id: "animations", label: "Effects", icon: Sparkles },
-  { id: "sidebar", label: "Sidebar", icon: Sidebar },
   { id: "general", label: "General", icon: Settings2 },
+  { id: "about", label: "About Us", icon: Info },
 ] as const;
 
 const DENSITY_OPTIONS = [
@@ -224,10 +222,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <div className="p-6 space-y-6">
               {activeTab === "layout" && <LayoutTab prefs={uiPrefs} setPref={setUiPref} />}
               {activeTab === "theme" && <ThemeTab prefs={uiPrefs} setPref={setUiPref} />}
-              {activeTab === "chat" && <ChatTab prefs={uiPrefs} setPref={setUiPref} />}
-              {activeTab === "animations" && <EffectsTab prefs={uiPrefs} setPref={setUiPref} />}
-              {activeTab === "sidebar" && <SidebarTab prefs={uiPrefs} setPref={setUiPref} />}
               {activeTab === "general" && <GeneralTab prefs={uiPrefs} setPref={setUiPref} />}
+              {activeTab === "about" && <AboutTab />}
             </div>
           </ScrollArea>
         </div>
@@ -258,36 +254,28 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Layout; title: strin
 }
 
 function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
-  const [fontPreview, setFontPreview] = useState(prefs.fontSize);
-  const [zoomPreview, setZoomPreview] = useState(prefs.zoom ?? 100);
-
-  const FONT_FAMILIES: Record<string, string> = {
-    geist: "var(--font-geist-sans)",
-    inter: "Inter, system-ui, sans-serif",
-    "plus-jakarta": "Plus Jakarta Sans, system-ui, sans-serif",
-    "ibm-plex": "IBM Plex Sans, system-ui, sans-serif",
-    "sf-pro": "SF Pro Display, system-ui, sans-serif",
-    "jetbrains-mono": "JetBrains Mono, monospace",
-  };
-
-  const currentFontFamily = FONT_FAMILIES[prefs.fontFamily] || FONT_FAMILIES.geist;
-
   return (
     <>
       <SectionTitle icon={Layout} title="Density" />
-      <div className="grid gap-2">
+      <div className="grid grid-cols-3 gap-3">
         {DENSITY_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setPref("density", opt.value)}
-            className={selectionCardClass(prefs.density === opt.value, "flex items-center gap-3 text-left")}
+            className={selectionCardClass(prefs.density === opt.value, "group flex flex-col h-32 items-center p-0")}
           >
-            <div className={selectionIndicatorClass(prefs.density === opt.value)}>
-              {prefs.density === opt.value && <Check className="h-3 w-3 text-white" />}
+            <div className="flex-1 w-full bg-foreground/[0.01] relative overflow-hidden transition-transform origin-bottom duration-300">
+               <div className="absolute inset-0 p-3 flex flex-col items-center justify-center gap-[4px] group-hover:scale-[1.15] transition-transform duration-300">
+                 <div className={cn("bg-[var(--theme-accent-line)] rounded-[2px]", opt.value === 'compact' ? "w-[60%] h-1" : opt.value === 'comfortable' ? "w-[60%] h-1.5" : "w-[60%] h-2.5")} />
+                 <div className={cn("bg-foreground/[0.08] rounded-[2px]", opt.value === 'compact' ? "w-[80%] h-1" : opt.value === 'comfortable' ? "w-[80%] h-1.5" : "w-[80%] h-2.5")} />
+                 <div className={cn("bg-foreground/[0.08] rounded-[2px]", opt.value === 'compact' ? "w-[70%] h-1" : opt.value === 'comfortable' ? "w-[70%] h-1.5" : "w-[70%] h-2.5")} />
+               </div>
             </div>
-            <div>
-              <div className="text-sm font-medium">{opt.label}</div>
-              <div className="text-[0.6875rem] text-muted-foreground">{opt.desc}</div>
+            <div className="flex items-center justify-between w-full px-3 py-2 border-t border-[var(--panel-border)] shadow-sm bg-[var(--glass-bg)]">
+              <span className="text-xs font-semibold">{opt.label}</span>
+              <div className={selectionIndicatorClass(prefs.density === opt.value)}>
+               {prefs.density === opt.value && <Check className="h-3 w-3 text-white" />}
+             </div>
             </div>
           </button>
         ))}
@@ -295,141 +283,100 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
 
       <Separator />
 
-      <SectionTitle icon={Type} title="Zoom" />
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">75%</span>
-          <span className="text-lg font-bold text-foreground tabular-nums">{zoomPreview}%</span>
-          <span className="text-sm text-muted-foreground">150%</span>
-        </div>
-        <Slider
-          min={75}
-          max={150}
-          step={1}
-          milestones={[75, 80, 90, 100, 110, 125, 150]}
-          snapOnRelease
-          unit="%"
-          value={[zoomPreview]}
-          onValueChange={(v) => setZoomPreview(Array.isArray(v) ? v[0] : v)}
-          onValueCommitted={(v) => setPref("zoom", Array.isArray(v) ? v[0] : v)}
-        />
-      </div>
-
-      <Separator />
-
-      <SectionTitle icon={Type} title="Font Sizes" />
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">UI Elements</span>
-            <span className="text-sm text-muted-foreground tabular-nums">{fontPreview}px</span>
-          </div>
-          <Slider
-            min={12}
-            max={24}
-            step={1}
-            milestones={[12, 14, 16, 18, 20, 24]}
-            snapOnRelease
-            unit="px"
-            value={[fontPreview]}
-            onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
-            onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Headings & Titles</span>
-            <span className="text-sm text-muted-foreground tabular-nums">{prefs.titleFontSize || 18}px</span>
-          </div>
-          <Slider
-            min={14}
-            max={32}
-            step={1}
-            milestones={[14, 16, 18, 24, 32]}
-            snapOnRelease
-            unit="px"
-            value={[prefs.titleFontSize || 18]}
-            onValueChange={(v) => setPref("titleFontSize", Array.isArray(v) ? v[0] : v)}
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Chat Content</span>
-            <span className="text-sm text-muted-foreground tabular-nums">{prefs.chatFontSize || 14}px</span>
-          </div>
-          <Slider
-            min={12}
-            max={24}
-            step={1}
-            milestones={[12, 14, 16, 18, 20, 24]}
-            snapOnRelease
-            unit="px"
-            value={[prefs.chatFontSize || 14]}
-            onValueChange={(v) => setPref("chatFontSize", Array.isArray(v) ? v[0] : v)}
-          />
-        </div>
-        <div
-          className="surface-subtle rounded-[1rem] p-4 text-center transition-all duration-200"
-          style={{ fontFamily: currentFontFamily, fontSize: `${fontPreview}px` }}
-        >
-          <span className="text-foreground/70">The quick brown fox jumps over the lazy dog</span>
-        </div>
-      </div>
-
-      <Separator />
-
-      <SectionTitle icon={Type} title="Font Family" />
+      <SectionTitle icon={Sidebar} title="Sidebar & Navigation" />
       <div className="grid grid-cols-2 gap-2">
         {[
-          { value: "geist", label: "Geist Sans", cat: "Default", style: { fontFamily: "var(--font-geist-sans)" } },
-          { value: "inter", label: "Inter", cat: "Clean", style: { fontFamily: "'Inter', system-ui" } },
-          { value: "nunito", label: "Nunito", cat: "Smooth", style: { fontFamily: "'Nunito', system-ui" } },
-          { value: "lexend", label: "Lexend", cat: "Easy Read", style: { fontFamily: "'Lexend', system-ui" } },
-          { value: "plus-jakarta", label: "Plus Jakarta", cat: "Modern", style: { fontFamily: "'Plus Jakarta Sans', system-ui" } },
-          { value: "ibm-plex", label: "IBM Plex Sans", cat: "Technical", style: { fontFamily: "'IBM Plex Sans', system-ui" } },
-          { value: "jetbrains-mono", label: "JetBrains Mono", cat: "Code", style: { fontFamily: "'JetBrains Mono', monospace" } },
-          { value: "caveat", label: "Caveat", cat: "Handwriting", style: { fontFamily: "'Caveat', cursive" } },
-          { value: "comic-neue", label: "Comic Neue", cat: "Casual", style: { fontFamily: "'Comic Neue', cursive" } },
-        ].map((font) => (
+          { value: "pills" as const, label: "Floating Pills", desc: "Rounded pill-shaped items" },
+          { value: "list" as const, label: "Classic List", desc: "Traditional list items" },
+        ].map((opt) => (
           <button
-            key={font.value}
-            onClick={() => setPref("fontFamily", font.value)}
-            className={selectionCardClass(prefs.fontFamily === font.value, "flex flex-col gap-1 text-left")}
+            key={opt.value}
+            onClick={() => setPref("navStyle", opt.value)}
+            className={selectionCardClass(prefs.navStyle === opt.value, "flex flex-col items-center gap-2 text-left")}
           >
-            <div className="flex items-center gap-2">
-              <div className={selectionIndicatorClass(prefs.fontFamily === font.value)}>
-                {prefs.fontFamily === font.value && <Check className="h-2.5 w-2.5 text-white" />}
-              </div>
-              <span className="text-xs font-medium">{font.label}</span>
-              <span className="text-[0.5625rem] text-muted-foreground ml-auto">{font.cat}</span>
+            <div className={cn(
+              "flex h-10 w-full items-center justify-center rounded-lg border transition-all",
+              prefs.navStyle === opt.value
+                ? "border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)]"
+                : "border-[var(--panel-border)]"
+            )}>
+              {opt.value === "pills" ? (
+                <div className="flex gap-1">
+                  <div className="h-2 w-6 rounded-full bg-[var(--theme-accent-line)]" />
+                  <div className="h-2 w-4 rounded-full bg-foreground/[0.08]" />
+                  <div className="h-2 w-5 rounded-full bg-foreground/[0.08]" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 w-full px-2">
+                  <div className="h-1.5 w-full rounded-sm bg-[var(--theme-accent-line)]" />
+                  <div className="h-1.5 w-3/4 rounded-sm bg-foreground/[0.08]" />
+                  <div className="h-1.5 w-5/6 rounded-sm bg-foreground/[0.08]" />
+                </div>
+              )}
             </div>
-            <span className="text-sm text-muted-foreground truncate" style={font.style}>
-              The quick brown fox
-            </span>
+            <div className="w-full">
+              <div className="text-xs font-medium">{opt.label}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{opt.desc}</div>
+            </div>
           </button>
         ))}
+      </div>
+      <div className="mt-4">
+        <SettingRow label="Start collapsed" desc="Sidebar starts in icon-only mode">
+          <Switch checked={prefs.sidebarCollapsed} onCheckedChange={(v) => setPref("sidebarCollapsed", v)} />
+        </SettingRow>
       </div>
 
       <Separator />
 
-      <SectionTitle icon={Type} title="Title Font" />
-      <p className="text-xs text-muted-foreground mb-2">Used for page headings, panel titles, and navigation</p>
-      <FontPicker
-        value={prefs.titleFont || prefs.fontFamily}
-        onChange={(v) => setPref("titleFont", v)}
-      />
+      <SectionTitle icon={Type} title="App Typography" />
+      <TypographySection title="Interface Font" desc="Used for buttons, menus, and layout" prefKey="fontFamily" prefSizeKey="fontSize" prefs={prefs} setPref={setPref} minSize={12} maxSize={22} defaultSize={14} previewText="The quick brown fox jumps over the lazy dog" />
+      
+      <Separator />
+      <TypographySection title="Heading Font" desc="Used for page titles and large text headings" prefKey="titleFont" prefSizeKey="titleFontSize" prefs={prefs} setPref={setPref} fallbackKey="fontFamily" minSize={14} maxSize={32} defaultSize={18} previewText="Heading Example" isTitle />
+
+      <Separator />
+      <TypographySection title="Chat Content Font" desc="Used inside message bubbles" prefKey="chatFont" prefSizeKey="chatFontSize" prefs={prefs} setPref={setPref} fallbackKey="fontFamily" minSize={12} maxSize={22} defaultSize={14} previewText="Here is a message preview in chat." />
 
       <Separator />
 
-      <SectionTitle icon={Type} title="Chat Font" />
-      <p className="text-xs text-muted-foreground mb-2">Used for message bubbles and chat text</p>
-      <FontPicker
-        value={prefs.chatFont || prefs.fontFamily}
-        onChange={(v) => setPref("chatFont", v)}
-      />
+      <SectionTitle icon={MessageSquare} title="Chat Settings" />
+      <SettingRow label="Show timestamps" desc="Display time next to each message">
+        <Switch checked={prefs.showTimestamps} onCheckedChange={(v) => setPref("showTimestamps", v)} />
+      </SettingRow>
+      <SettingRow label="Show avatars" desc="Display agent avatars in chat">
+        <Switch checked={prefs.showAvatars} onCheckedChange={(v) => setPref("showAvatars", v)} />
+      </SettingRow>
+      <SettingRow label="Auto-scroll to bottom" desc="Automatically scroll to newest messages">
+        <Switch checked={prefs.autoScroll} onCheckedChange={(v) => setPref("autoScroll", v)} />
+      </SettingRow>
     </>
+  );
+}
+
+function TypographySection({ title, desc, prefKey, prefSizeKey, prefs, setPref, fallbackKey, minSize, maxSize, defaultSize, previewText, isTitle }: any) {
+  const currentFont = prefs[prefKey] || (fallbackKey ? prefs[fallbackKey] : "geist");
+  const currentSize = prefs[prefSizeKey] || defaultSize;
+  const currentCss = Object.values(FONT_PICKER_FAMILIES).find((f) => f.includes(currentFont)) || FONT_PICKER_FAMILIES[currentFont] || FONT_PICKER_FAMILIES.geist;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium">{title}</h4>
+        <p className="text-xs text-muted-foreground">{desc}</p>
+      </div>
+      <FontPicker value={currentFont} onChange={(v) => setPref(prefKey, v)} />
+      <div className="grid gap-2">
+        <div className="flex justify-between items-center px-1">
+          <span className="text-[0.6875rem] text-muted-foreground">Size</span>
+          <span className="text-[0.6875rem] tabular-nums font-mono text-muted-foreground">{currentSize}px</span>
+        </div>
+        <Slider min={minSize} max={maxSize} step={1} milestones={[minSize, Math.floor((minSize+maxSize)/2), maxSize]} snapOnRelease unit="px" value={[currentSize]} onValueChange={(v) => setPref(prefSizeKey, v[0])} />
+      </div>
+      <div className={cn("surface-subtle border border-[var(--panel-border)] rounded-xl p-4 flex items-center justify-center min-h-[80px]", isTitle && "font-bold tracking-tight")} style={{ fontFamily: currentCss, fontSize: `${currentSize}px` }}>
+        {previewText}
+      </div>
+    </div>
   );
 }
 
@@ -551,16 +498,21 @@ function ThemePreviewCard({
           <div className={selectionIndicatorClass(selected)}>
             {selected && <Check className="h-3 w-3 text-white" />}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{theme.label}</span>
-              <span className={chipClass(false, "px-2 py-0.5 text-[0.625rem]")}>
+              <span className="text-sm font-medium truncate">{theme.label}</span>
+              <span className={chipClass(false, "px-2 py-0.5 text-[0.625rem] shrink-0")}>
                 {theme.accentLabel}
               </span>
             </div>
-            <p className="mt-1 text-[0.6875rem] leading-5 text-muted-foreground">{theme.description}</p>
+            <p className="mt-1 text-[0.6875rem] leading-snug text-muted-foreground line-clamp-3">{theme.description}</p>
           </div>
-          {theme.mode === "dark" ? <Moon className="h-4 w-4 text-muted-foreground" /> : <Sun className="h-4 w-4 text-muted-foreground" />}
+          <div className="shrink-0 mt-0.5 ml-1">
+            {theme.mode === "dark" 
+              ? <Moon className="h-4 w-4 text-muted-foreground" /> 
+              : <Sun className="h-4 w-4 text-muted-foreground" />
+            }
+          </div>
         </div>
       </div>
     </button>
@@ -676,32 +628,24 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
             <span>Bright</span>
           </div>
         </div>
+
+        {/* Glow Intensity Slider */}
+        <SettingRow label="Glow Intensity" desc="Strength of the thematic lighting">
+            <Slider
+              min={0} max={1} step={0.1}
+              value={[prefs.glowIntensity ?? 0.5]}
+              onValueChange={(v) => setPref("glowIntensity", Array.isArray(v) ? v[0] : v)}
+              className="max-w-[120px]"
+            />
+        </SettingRow>
       </div>
     </>
   );
 }
 
-function ChatTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
-  return (
-    <>
-      <SectionTitle icon={MessageSquare} title="Chat Display" />
-      <SettingRow label="Show timestamps" desc="Display time next to each message">
-        <Switch checked={prefs.showTimestamps} onCheckedChange={(v) => setPref("showTimestamps", v)} />
-      </SettingRow>
-      <SettingRow label="Show avatars" desc="Display agent avatars in chat">
-        <Switch checked={prefs.showAvatars} onCheckedChange={(v) => setPref("showAvatars", v)} />
-      </SettingRow>
-      <SettingRow label="Markdown rendering" desc="Render markdown in messages">
-        <Switch checked={prefs.markdownEnabled} onCheckedChange={(v) => setPref("markdownEnabled", v)} />
-      </SettingRow>
-      <SettingRow label="Auto-scroll to bottom" desc="Automatically scroll to newest messages">
-        <Switch checked={prefs.autoScroll} onCheckedChange={(v) => setPref("autoScroll", v)} />
-      </SettingRow>
-    </>
-  );
-}
-
-function EffectsTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  const resetUiPrefs = useStore((s) => s.resetUiPrefs);
+  const [confirmReset, setConfirmReset] = useState(false);
   return (
     <>
       <SectionTitle icon={Sparkles} title="Visual Effects" />
@@ -724,67 +668,9 @@ function EffectsTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
       <SettingRow label="Enable Animations" desc="Toggle all UI animations and transitions">
         <Switch checked={prefs.animationsEnabled} onCheckedChange={(v) => setPref("animationsEnabled", v)} />
       </SettingRow>
-    </>
-  );
-}
-
-function SidebarTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
-  return (
-    <>
-      <SectionTitle icon={Sidebar} title="Navigation Style" />
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { value: "pills" as const, label: "Floating Pills", desc: "Rounded pill-shaped items" },
-          { value: "list" as const, label: "Classic List", desc: "Traditional list items" },
-        ].map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setPref("navStyle", opt.value)}
-            className={selectionCardClass(prefs.navStyle === opt.value, "flex flex-col items-center gap-2 text-left")}
-          >
-            <div className={cn(
-              "flex h-10 w-full items-center justify-center rounded-lg border transition-all",
-              prefs.navStyle === opt.value
-                ? "border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)]"
-                : "border-[var(--panel-border)]"
-            )}>
-              {opt.value === "pills" ? (
-                <div className="flex gap-1">
-                  <div className="h-2 w-6 rounded-full bg-[var(--theme-accent-line)]" />
-                  <div className="h-2 w-4 rounded-full bg-foreground/[0.08]" />
-                  <div className="h-2 w-5 rounded-full bg-foreground/[0.08]" />
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1 w-full px-2">
-                  <div className="h-1.5 w-full rounded-sm bg-[var(--theme-accent-line)]" />
-                  <div className="h-1.5 w-3/4 rounded-sm bg-foreground/[0.08]" />
-                  <div className="h-1.5 w-5/6 rounded-sm bg-foreground/[0.08]" />
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="text-xs font-medium">{opt.label}</div>
-              <div className="text-[0.625rem] text-muted-foreground">{opt.desc}</div>
-            </div>
-          </button>
-        ))}
-      </div>
 
       <Separator />
 
-      <SectionTitle icon={Eye} title="Sidebar Behavior" />
-      <SettingRow label="Start collapsed" desc="Sidebar starts in icon-only mode">
-        <Switch checked={prefs.sidebarCollapsed} onCheckedChange={(v) => setPref("sidebarCollapsed", v)} />
-      </SettingRow>
-    </>
-  );
-}
-
-function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
-  const resetUiPrefs = useStore((s) => s.resetUiPrefs);
-  const [confirmReset, setConfirmReset] = useState(false);
-  return (
-    <>
       <SectionTitle icon={Globe} title="Language & Region" />
       <SettingRow label="Language" desc="Interface language">
         <span className="text-sm text-muted-foreground">English</span>
@@ -899,15 +785,33 @@ function GlowColorPicker({ label, value, onChange }: { label: string; value: str
           <span className="text-xs">Custom</span>
         </button>
       </div>
-      {customOpen && (
-        <div className="mt-3">
-          <ColorPicker
-            color={value}
-            onChange={onChange}
-            onClose={() => setCustomOpen(false)}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
+        {customOpen && (
+          <div className="mt-3">
+            <ColorPicker
+              color={value}
+              onChange={onChange}
+              onClose={() => setCustomOpen(false)}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  function AboutTab() {
+    return (
+      <div className="p-6 text-center flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in zoom-in-95 duration-500">
+         <div className="h-20 w-20 mb-6 rounded-[1.4rem] bg-gradient-to-br from-[var(--theme-accent)] to-[var(--theme-accent-alt)] shadow-xl shadow-[var(--theme-accent-shadow)] flex items-center justify-center text-white relative">
+            <div className="absolute inset-0 rounded-[1.4rem] opacity-50 bg-[linear-gradient(to_bottom,white_0%,transparent_100%)] opacity-20 pointer-events-none" />
+            <Bot className="h-10 w-10 relative z-10" />
+         </div>
+         <h1 className="text-3xl font-bold tracking-tight mb-3">AgentHub</h1>
+         <p className="text-foreground/80 max-w-sm mx-auto leading-relaxed text-sm mb-6">
+           Designed with care by Omer Elbushra. I am a solo developer with a deep interest in AI. I hope you find this useful, and thank you!
+         </p>
+         <div className="px-4 py-2 mt-4 rounded-xl border border-[var(--panel-border-strong)] bg-foreground/[0.04]">
+           <p className="text-[0.6875rem] font-mono text-muted-foreground uppercase tracking-widest">Apache 2.0 License</p>
+         </div>
+      </div>
+    )
+  }

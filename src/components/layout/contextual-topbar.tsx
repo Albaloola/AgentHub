@@ -79,46 +79,46 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
 
   return (
     <div
-      className="relative flex h-10 shrink-0 items-center justify-between px-4"
-      style={{
-        backgroundColor: "var(--background)",
-      }}
+      className="relative flex h-14 shrink-0 items-center justify-between px-6 z-20"
     >
-      <div
+      {/* Heavy gradient mask: opaque near edges, fully transparent in center */}
+      <div 
         className="pointer-events-none absolute inset-0"
         style={{
-          background: "linear-gradient(to bottom, var(--topbar-line) 0%, transparent 1px)",
-          opacity: 0.6,
+          background: "linear-gradient(to right, oklch(0.15 0 0) 0%, transparent 35%, transparent 65%, oklch(0.15 0 0) 100%)",
         }}
       />
 
+      {/* Subtle floor reflection glow acting as a bottom border line */}
       <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-[1px]"
         style={{
-          background: "var(--panel-border)",
+          background: "linear-gradient(to right, transparent, color-mix(in srgb, var(--theme-accent) 40%, transparent), transparent)",
+          boxShadow: "0 4px 12px 1px color-mix(in srgb, var(--theme-accent) 25%, transparent)",
         }}
       />
 
-      <div className="flex items-center gap-2 flex-1">
-        <span className="text-sm font-semibold">{title}</span>
+      <div className="flex items-center gap-2 flex-1 relative z-10">
+        <span className="text-base font-bold tracking-tight text-foreground">{title}</span>
       </div>
 
-      <div className="flex justify-center flex-1">
+      <div className="flex justify-center flex-1 relative z-10">
         {mounted && (
-          <span className="text-xs font-mono text-muted-foreground tabular-nums">
+          <span className="text-sm font-semibold tracking-wide text-foreground/90 tabular-nums">
             {formatDateTime(now)}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 flex-1">
+      <div className="flex items-center justify-end gap-2 flex-1 relative z-10">
         <Button
           variant="ghost"
           size="icon"
           onClick={onOpenSettings}
           aria-label="Open settings"
+          className="hover:bg-foreground/[0.08]"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-4.5 w-4.5" />
         </Button>
         <NotificationCenter />
       </div>

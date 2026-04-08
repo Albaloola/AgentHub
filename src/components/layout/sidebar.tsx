@@ -797,7 +797,7 @@ export function Sidebar() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           !isResizingSidebar && "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
         )}
-        style={{ width: collapsed ? 52 : sidebarWidth }}
+        style={{ width: collapsed ? 64 : sidebarWidth }}
       >
         {/* Logo + collapse toggle */}
         <div
