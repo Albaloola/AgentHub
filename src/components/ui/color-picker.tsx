@@ -182,7 +182,7 @@ export function ColorPicker({ color, onChange, onClose }: ColorPickerProps) {
         </div>
         <button
           onClick={onClose}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+          className="px-3 py-1.5 rounded-lg text-xs font-medium surface-accent text-[var(--theme-accent-text)] transition-colors hover:bg-[var(--theme-accent-soft)]"
         >
           Done
         </button>

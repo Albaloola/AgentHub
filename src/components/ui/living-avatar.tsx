@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 type AvatarState = "idle" | "thinking" | "speaking" | "error" | "success" | "offline";
@@ -36,6 +37,60 @@ const DOT_SIZE = {
 export function LivingAvatar({ name, id, state = "idle", size = "md", className }: LivingAvatarProps) {
   const initials = getInitials(name);
   const colorClass = getAvatarColor(id);
+  const auraStyle: CSSProperties | undefined =
+    state === "thinking"
+      ? {
+          background:
+            "linear-gradient(90deg, color-mix(in srgb, var(--accent-blue) 24%, transparent), color-mix(in srgb, var(--accent-violet) 24%, transparent), color-mix(in srgb, var(--accent-blue) 24%, transparent))",
+        }
+      : state === "speaking"
+        ? {
+            background:
+              "linear-gradient(90deg, color-mix(in srgb, var(--accent-blue) 20%, transparent), color-mix(in srgb, var(--accent-cyan) 20%, transparent), color-mix(in srgb, var(--accent-violet) 20%, transparent))",
+          }
+        : state === "error"
+          ? { background: "color-mix(in srgb, var(--accent-rose) 20%, transparent)" }
+          : state === "success"
+            ? { background: "color-mix(in srgb, var(--accent-emerald) 20%, transparent)" }
+            : undefined;
+
+  const ringStyle: CSSProperties | undefined =
+    state === "thinking"
+      ? {
+          background:
+            "conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--accent-blue) 56%, transparent), color-mix(in srgb, var(--accent-violet) 44%, transparent), transparent)",
+          animation: "spin 2s linear infinite",
+          borderRadius: "inherit",
+        }
+      : state === "speaking"
+        ? {
+            borderColor: "color-mix(in srgb, var(--accent-blue) 42%, transparent)",
+            boxShadow: "0 0 12px color-mix(in srgb, var(--accent-blue) 24%, transparent)",
+          }
+        : state === "error"
+          ? {
+              borderColor: "color-mix(in srgb, var(--accent-rose) 50%, transparent)",
+              boxShadow: "0 0 8px color-mix(in srgb, var(--accent-rose) 28%, transparent)",
+            }
+          : state === "success"
+            ? {
+                borderColor: "color-mix(in srgb, var(--accent-emerald) 50%, transparent)",
+                boxShadow: "0 0 8px color-mix(in srgb, var(--accent-emerald) 28%, transparent)",
+              }
+            : undefined;
+
+  const statusDotStyle: CSSProperties | undefined =
+    state === "idle"
+      ? { background: "var(--status-online)", boxShadow: "0 0 6px color-mix(in srgb, var(--status-online) 40%, transparent)" }
+      : state === "thinking"
+        ? { background: "var(--accent-blue)", boxShadow: "0 0 6px color-mix(in srgb, var(--accent-blue) 45%, transparent)" }
+        : state === "speaking"
+          ? { background: "var(--accent-cyan)", boxShadow: "0 0 6px color-mix(in srgb, var(--accent-cyan) 45%, transparent)" }
+          : state === "error"
+            ? { background: "var(--status-danger)", boxShadow: "0 0 6px color-mix(in srgb, var(--status-danger) 45%, transparent)" }
+            : state === "success"
+              ? { background: "var(--accent-emerald)", boxShadow: "0 0 6px color-mix(in srgb, var(--accent-emerald) 45%, transparent)" }
+              : { background: "var(--status-offline)" };
 
   return (
     <div className={cn("relative inline-flex items-center justify-center", RING_SIZE[size], className)}>
@@ -43,12 +98,13 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
       <div
         className={cn(
           "absolute -inset-1 rounded-2xl opacity-0 transition-opacity duration-500",
-          state === "thinking" && "opacity-40 animate-[luminance-pulse_2s_ease-in-out_infinite] bg-gradient-to-r from-blue-500/20 via-violet-500/20 to-blue-500/20 blur-md",
-          state === "speaking" && "opacity-30 animate-[luminance-pulse_1.5s_ease-in-out_infinite] bg-gradient-to-r from-blue-400/20 via-cyan-400/20 to-violet-400/20 blur-md",
-          state === "error" && "opacity-30 bg-red-500/20 blur-md",
-          state === "success" && "opacity-30 bg-emerald-500/20 blur-md",
+          state === "thinking" && "opacity-40 animate-[luminance-pulse_2s_ease-in-out_infinite] blur-md",
+          state === "speaking" && "opacity-30 animate-[luminance-pulse_1.5s_ease-in-out_infinite] blur-md",
+          state === "error" && "opacity-30 blur-md",
+          state === "success" && "opacity-30 blur-md",
           state === "idle" && "opacity-20 bg-foreground/[0.03] blur-sm",
         )}
+        style={auraStyle}
       />
 
       {/* Outer ring - animated based on state */}
@@ -56,17 +112,13 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
         className={cn(
           "absolute inset-0 rounded-2xl transition-all duration-500",
           state === "thinking" && "border-2 border-transparent",
-          state === "speaking" && "border-2 border-blue-400/40 animate-[pulse_1.5s_ease-in-out_infinite]",
-          state === "error" && "border-2 border-red-500/50 shadow-[0_0_8px_oklch(0.5_0.2_25/0.3)]",
-          state === "success" && "border-2 border-emerald-500/50 shadow-[0_0_8px_oklch(0.5_0.2_162/0.3)]",
+          state === "speaking" && "border-2 animate-[pulse_1.5s_ease-in-out_infinite]",
+          state === "error" && "border-2",
+          state === "success" && "border-2",
           state === "offline" && "border-2 border-gray-600/30",
           state === "idle" && "border-2 border-foreground/[0.08] hover:border-foreground/[0.15]",
         )}
-        style={state === "thinking" ? {
-          background: "conic-gradient(from 0deg, transparent, rgba(99,102,241,0.5), rgba(139,92,246,0.4), transparent)",
-          animation: "spin 2s linear infinite",
-          borderRadius: "inherit",
-        } : undefined}
+        style={ringStyle}
       />
 
       {/* Inner avatar */}
@@ -91,8 +143,11 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
         {/* Sound wave rings for speaking */}
         {state === "speaking" && (
           <>
-            <div className="absolute -inset-1 rounded-xl border border-blue-400/20 animate-[ping_2s_ease-in-out_infinite]" />
-            <div className="absolute -inset-1.5 rounded-xl border border-violet-400/10 animate-[ping_2s_ease-in-out_infinite]" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute -inset-1 rounded-xl border animate-[ping_2s_ease-in-out_infinite]" style={{ borderColor: "color-mix(in srgb, var(--accent-blue) 22%, transparent)" }} />
+            <div
+              className="absolute -inset-1.5 rounded-xl border animate-[ping_2s_ease-in-out_infinite]"
+              style={{ animationDelay: "0.5s", borderColor: "color-mix(in srgb, var(--accent-violet) 14%, transparent)" }}
+            />
           </>
         )}
       </div>
@@ -102,20 +157,16 @@ export function LivingAvatar({ name, id, state = "idle", size = "md", className 
         className={cn(
           "absolute -bottom-0.5 -right-0.5 z-20 rounded-full border-2 border-card transition-all duration-300",
           DOT_SIZE[size],
-          state === "idle" && "bg-emerald-500 shadow-[0_0_4px_oklch(0.5_0.2_162/0.4)]",
-          state === "thinking" && "bg-blue-500 animate-pulse shadow-[0_0_6px_oklch(0.5_0.2_264/0.5)]",
-          state === "speaking" && "bg-blue-400 shadow-[0_0_6px_oklch(0.5_0.2_200/0.5)]",
-          state === "error" && "bg-red-500 shadow-[0_0_6px_oklch(0.5_0.2_25/0.5)]",
-          state === "success" && "bg-emerald-400 shadow-[0_0_6px_oklch(0.5_0.2_162/0.5)]",
-          state === "offline" && "bg-gray-500",
+          state === "thinking" && "animate-pulse",
         )}
+        style={statusDotStyle}
       />
 
       {/* Tool use sparkle effect */}
       {state === "speaking" && (
         <>
-          <div className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-blue-400/60 animate-ping" />
-          <div className="absolute -bottom-1 -left-1 h-1 w-1 rounded-full bg-violet-400/40 animate-ping" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full animate-ping" style={{ background: "color-mix(in srgb, var(--accent-blue) 60%, transparent)" }} />
+          <div className="absolute -bottom-1 -left-1 h-1 w-1 rounded-full animate-ping" style={{ animationDelay: "0.5s", background: "color-mix(in srgb, var(--accent-violet) 44%, transparent)" }} />
         </>
       )}
     </div>

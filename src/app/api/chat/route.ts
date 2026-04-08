@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const userMsgId = uuid();
   db.prepare(
     "INSERT INTO messages (id, conversation_id, sender_agent_id, content, token_count) VALUES (?, ?, ?, ?, ?)",
-  ).run(userMsgId, body.conversation_id, null, body.content, body.content.length / 4);
+  ).run(userMsgId, body.conversation_id, null, body.content, Math.ceil(body.content.length / 4));
 
   db.prepare("UPDATE conversations SET updated_at = datetime('now') WHERE id = ?").run(
     body.conversation_id,
@@ -327,12 +327,13 @@ async function streamAgentResponse(
     send({ type: "error", error: errorMsg, agent_id: agent.id });
   }
 
-  tokenCount = Math.max(fullContent.length / 4, 1);
+  tokenCount = Math.max(Math.ceil(fullContent.length / 4), 1);
   const responseTime = Date.now() - startTime;
 
   const hasError = fullContent.startsWith("*Error:");
   db.prepare("UPDATE messages SET content = ?, thinking_content = ?, token_count = ? WHERE id = ?").run(fullContent, fullThinking, tokenCount, agentMsgId);
-  db.prepare("UPDATE agents SET last_seen = datetime('now'), total_messages = total_messages + 1, total_tokens = total_tokens + ?, avg_response_time_ms = ? WHERE id = ?").run(tokenCount, responseTime, agent.id);
+  // Running average: new_avg = ((old_avg * old_count) + new_value) / (old_count + 1)
+  db.prepare("UPDATE agents SET last_seen = datetime('now'), total_messages = total_messages + 1, total_tokens = total_tokens + ?, avg_response_time_ms = CASE WHEN total_messages = 0 THEN ? ELSE ((avg_response_time_ms * total_messages) + ?) / (total_messages + 1) END WHERE id = ?").run(tokenCount, responseTime, responseTime, agent.id);
   // Performance snapshot for degradation monitoring
   db.prepare("INSERT INTO performance_snapshots (id, agent_id, latency_ms, token_count, error_occurred) VALUES (?, ?, ?, ?, ?)").run(uuid(), agent.id, responseTime, tokenCount, hasError ? 1 : 0);
   // Update conversation estimated token count and cost

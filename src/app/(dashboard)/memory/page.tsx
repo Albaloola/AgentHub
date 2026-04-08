@@ -33,11 +33,11 @@ const CATEGORIES = ["general", "project", "credentials", "preferences", "custom"
 
 function getCategoryColor(category: string): string {
   switch (category) {
-    case "general": return "border-blue-500/30 text-blue-600";
-    case "project": return "border-violet-500/30 text-violet-600";
-    case "credentials": return "border-rose-500/30 text-rose-600";
-    case "preferences": return "border-amber-500/30 text-amber-600";
-    case "custom": return "border-cyan-500/30 text-cyan-600";
+    case "general": return "border-[var(--accent-blue)]/30 text-[var(--accent-blue)]";
+    case "project": return "border-[var(--accent-violet)]/30 text-[var(--accent-violet)]";
+    case "credentials": return "border-[var(--accent-rose)]/30 text-[var(--accent-rose)]";
+    case "preferences": return "border-[var(--accent-amber)]/30 text-[var(--accent-amber)]";
+    case "custom": return "border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)]";
     default: return "";
   }
 }
@@ -84,7 +84,7 @@ export default function MemoryPage() {
 
   function getAgentName(id: string | null): string | null {
     if (!id) return null;
-    return agents.find((a) => a.id === id)?.name ?? id.slice(0, 8);
+    return agents.find((a) => a.id === id)?.name ?? "Unknown Agent";
   }
 
   const filtered = sharedMemory.filter((entry) => {
@@ -130,7 +130,7 @@ export default function MemoryPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Database className="h-5 w-5 text-blue-500" />
+            <Database className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{sharedMemory.length}</div>
               <div className="text-xs text-muted-foreground">Total Entries</div>
@@ -139,7 +139,7 @@ export default function MemoryPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Tag className="h-5 w-5 text-violet-500" />
+            <Tag className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">{uniqueCategories.size}</div>
               <div className="text-xs text-muted-foreground">Categories</div>
@@ -148,7 +148,7 @@ export default function MemoryPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Eye className="h-5 w-5 text-amber-500" />
+            <Eye className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalAccesses}</div>
               <div className="text-xs text-muted-foreground">Total Accesses</div>
@@ -274,7 +274,7 @@ export default function MemoryPage() {
                       {entry.category}
                     </Badge>
                     {expired && (
-                      <Badge variant="outline" className="text-[0.625rem] border-rose-500/30 text-rose-600">
+                      <Badge variant="outline" className="text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
                         expired
                       </Badge>
                     )}
@@ -304,10 +304,10 @@ export default function MemoryPage() {
                         className={cn(
                           "h-full rounded-full transition-all",
                           entry.confidence >= 0.7
-                            ? "bg-emerald-500"
+                            ? "bg-[var(--status-online)]"
                             : entry.confidence >= 0.4
-                              ? "bg-amber-500"
-                              : "bg-rose-500",
+                              ? "bg-[var(--status-warning)]"
+                              : "bg-[var(--status-danger)]",
                         )}
                         style={{ width: `${Math.round(entry.confidence * 100)}%` }}
                       />

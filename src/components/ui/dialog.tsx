@@ -31,9 +31,16 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50",
+        "data-open:animate-in data-open:fade-in-0 data-open:duration-250",
+        "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-200",
         className
       )}
+      style={{
+        backgroundColor: "var(--glass-bg)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
       {...props}
     />
   )
@@ -53,9 +60,15 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-[1rem] p-5 text-sm text-popover-foreground outline-none sm:max-w-sm",
+          "glass-strong",
+          "data-open:animation-[dialog-panel-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
+          "data-closed:animation-[dialog-panel-out_0.2s_cubic-bezier(0.4,0,0.2,1)_both]",
           className
         )}
+        style={{
+          transform: "translate(-50%, -50%)",
+        }}
         {...props}
       >
         {children}
@@ -70,8 +83,7 @@ function DialogContent({
               />
             }
           >
-            <XIcon
-            />
+            <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -102,7 +114,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        "-mx-5 -mb-5 flex flex-col-reverse gap-2 rounded-b-[1rem] border-t border-[var(--panel-border)] bg-[var(--surface-muted)] p-5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

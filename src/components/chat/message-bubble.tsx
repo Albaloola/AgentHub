@@ -27,6 +27,7 @@ interface MessageBubbleProps {
   onEditComplete?: () => void;
   showActions?: boolean;
   animationDelay?: number;
+  searchQuery?: string;
 }
 
 export function MessageBubble({
@@ -36,6 +37,7 @@ export function MessageBubble({
   onEditComplete,
   showActions = true,
   animationDelay = 0,
+  searchQuery = "",
 }: MessageBubbleProps) {
   const isUser = message.sender_agent_id === null;
   const [editing, setEditing] = useState(false);
@@ -74,6 +76,18 @@ export function MessageBubble({
     catch { toast.error("Failed to pin"); }
   }
 
+  // Highlight search terms in content
+  const highlightedContent = searchQuery.trim()
+    ? message.content.replace(
+        new RegExp(`(${escapeRegExp(searchQuery)})`, "gi"),
+        "**$1**"
+      )
+    : message.content;
+
+  function escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   // Handoff message
   if (!!message.is_handoff) {
     return (
@@ -92,12 +106,12 @@ export function MessageBubble({
   if (!!message.is_summary) {
     return (
       <div className="flex gap-3 px-2 py-2 animate-fade-in">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 animate-float">
-          <Sparkles className="h-4 w-4 text-amber-400" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--theme-accent-softer)] animate-float">
+          <Sparkles className="h-4 w-4 text-[var(--accent-amber)]" />
         </div>
-        <div className="flex-1 glass-bubble rounded-2xl px-5 py-3 text-sm border-amber-500/20">
-          <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-400 mb-2">Compacted Context</Badge>
-          <div className="prose prose-sm max-w-none dark:prose-invert text-muted-foreground">
+        <div className="flex-1 glass-bubble rounded-2xl px-5 py-3 text-sm border-[var(--theme-accent-border)]">
+          <Badge variant="outline" className="text-[0.625rem] border-[var(--theme-accent-border)] text-[var(--accent-amber)] mb-2">Compacted Context</Badge>
+          <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           </div>
         </div>
@@ -119,7 +133,7 @@ export function MessageBubble({
     >
       {/* Avatar */}
       {isUser ? (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-500/20">
+        <div className="brand-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] text-white">
           <User className="h-4 w-4" />
         </div>
       ) : message.agent ? (
@@ -141,7 +155,7 @@ export function MessageBubble({
             {message.agent && (
               <span className="text-xs font-medium text-muted-foreground/80">{message.agent.name}</span>
             )}
-            {!!message.is_pinned && <Bookmark className="h-3 w-3 text-amber-400 fill-amber-400" />}
+            {!!message.is_pinned && <Bookmark className="h-3 w-3 text-[var(--accent-amber)] fill-[var(--accent-amber)]" />}
             {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
             <span className="text-[0.625rem] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
           </div>
@@ -149,7 +163,7 @@ export function MessageBubble({
 
         {isUser && !!(message.is_pinned || message.is_edited) && (
           <div className="flex items-center gap-2 px-1">
-            {!!message.is_pinned && <Bookmark className="h-3 w-3 text-amber-400 fill-amber-400" />}
+            {!!message.is_pinned && <Bookmark className="h-3 w-3 text-[var(--accent-amber)] fill-[var(--accent-amber)]" />}
             {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
           </div>
         )}
@@ -188,10 +202,10 @@ export function MessageBubble({
           message.content && (
             <div className={cn(
               "rounded-2xl px-5 py-3 text-sm transition-all duration-200",
-              isUser ? "glass-bubble-user text-white" : "glass-bubble text-foreground",
+              isUser ? "glass-bubble-user text-foreground" : "glass-bubble text-foreground",
               hovered && "shadow-lg",
             )}>
-              <div className={cn("prose prose-sm max-w-none", isUser ? "prose-invert" : "dark:prose-invert")}>
+              <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -200,27 +214,31 @@ export function MessageBubble({
                       const codeString = String(children).replace(/\n$/, "");
                       if (match) return <CodeBlock language={match[1]} code={codeString} />;
                       return (
-                        <code className="rounded-md bg-black/20 px-1.5 py-0.5 text-xs font-mono" {...props}>
+                        <code className="rounded-md border border-[var(--code-border)] bg-[var(--code-surface)] px-1.5 py-0.5 text-xs font-mono" {...props}>
                           {children}
                         </code>
                       );
                     },
                     table({ children }) {
                       return (
-                        <div className="overflow-x-auto my-3 rounded-xl border border-border/30 glass">
+                        <div className="surface-code my-3 overflow-x-auto rounded-xl">
                           <table className="min-w-full text-xs">{children}</table>
                         </div>
                       );
                     },
                     th({ children }) {
-                      return <th className="border-b border-border/30 bg-muted/30 px-3 py-2 text-left font-medium">{children}</th>;
+                      return <th className="border-b border-[var(--panel-border)] bg-[var(--surface-muted)] px-3 py-2 text-left font-medium">{children}</th>;
                     },
                     td({ children }) {
-                      return <td className="border-b border-border/20 px-3 py-2">{children}</td>;
+                      return <td className="border-b border-[var(--panel-border)] px-3 py-2">{children}</td>;
+                    },
+                    strong({ children }) {
+                      // Style search highlights
+                      return <mark className="bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)] rounded px-0.5">{children}</mark>;
                     },
                   }}
                 >
-                  {message.content}
+                  {highlightedContent}
                 </ReactMarkdown>
               </div>
               {isStreaming && (
@@ -234,18 +252,18 @@ export function MessageBubble({
         {showActions && hovered && !editing && !isStreaming && (
           <div className="flex items-center gap-0.5 px-1 animate-fade-in flex-wrap overflow-hidden max-w-full" style={{ animationDuration: "150ms" }}>
             {isUser && (
-              <ActionBtn icon={Pencil} onClick={() => { setEditContent(message.content); setEditing(true); }} title="Edit" glowColor="#3b82f6" />
+              <ActionBtn icon={Pencil} onClick={() => { setEditContent(message.content); setEditing(true); }} title="Edit" glowClass="hover-glow-blue" />
             )}
             {!isUser && (
               <>
-                <ActionBtn icon={ThumbsUp} onClick={() => handleVote("up")} title="Good" active={votes.up > 0} activeColor="text-emerald-400" glowColor="#10b981" />
-                <ActionBtn icon={ThumbsDown} onClick={() => handleVote("down")} title="Bad" active={votes.down > 0} activeColor="text-red-400" glowColor="#fb565b" />
+                <ActionBtn icon={ThumbsUp} onClick={() => handleVote("up")} title="Good" active={votes.up > 0} activeColor="text-[var(--accent-emerald)]" glowClass="hover-glow-emerald" />
+                <ActionBtn icon={ThumbsDown} onClick={() => handleVote("down")} title="Bad" active={votes.down > 0} activeColor="text-[var(--accent-rose)]" glowClass="hover-glow-rose" />
                 {onRegenerate && (
-                  <ActionBtn icon={RefreshCw} onClick={() => onRegenerate(message.id, message.sender_agent_id ?? undefined)} title="Regenerate" glowColor="#8b5cf6" />
+                  <ActionBtn icon={RefreshCw} onClick={() => onRegenerate(message.id, message.sender_agent_id ?? undefined)} title="Regenerate" glowClass="hover-glow-violet" />
                 )}
               </>
             )}
-            <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={!!message.is_pinned} activeColor="text-amber-400" glowColor="#f59e0b" />
+            <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={!!message.is_pinned} activeColor="text-[var(--accent-amber)]" glowClass="hover-glow-amber" />
             <CopyBtn text={message.content} />
             {message.token_count > 0 && (
               <span className="text-[0.625rem] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
@@ -257,31 +275,22 @@ export function MessageBubble({
   );
 }
 
-function ActionBtn({ icon: Icon, onClick, title, active, activeColor, glowColor }: {
+function ActionBtn({ icon: Icon, onClick, title, active, activeColor, glowClass = "hover-glow-blue" }: {
   icon: React.ComponentType<{ className?: string }>;
   onClick: () => void;
   title: string;
   active?: boolean;
   activeColor?: string;
-  glowColor?: string;
+  glowClass?: string;
 }) {
-  const glow = glowColor ?? (activeColor?.includes("emerald") ? "#10b981" : activeColor?.includes("red") ? "#fb565b" : activeColor?.includes("amber") ? "#f59e0b" : "#3b82f6");
   return (
     <Button
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7 rounded-lg transition-all duration-200", active && activeColor)}
+      className={cn("h-7 w-7 rounded-lg transition-all duration-200", glowClass, active && activeColor)}
       onClick={onClick}
       title={title}
       aria-label={title}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = `0 0 8px ${glow}60, 0 0 20px ${glow}25`;
-        e.currentTarget.style.background = `${glow}15`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.background = "transparent";
-      }}
     >
       <Icon className={cn("h-3.5 w-3.5", active && activeColor ? `${activeColor} fill-current` : "text-muted-foreground/60")} />
     </Button>
@@ -294,14 +303,12 @@ function CopyBtn({ text }: { text: string }) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 rounded-lg transition-all duration-200"
+      className="h-7 w-7 rounded-lg transition-all duration-200 hover-glow-cyan"
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
       title="Copy"
       aria-label="Copy message"
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 8px rgba(6,182,212,0.5), 0 0 20px rgba(6,182,212,0.2)"; e.currentTarget.style.background = "rgba(6,182,212,0.1)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "transparent"; }}
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground/60" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-[var(--accent-emerald)]" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground/60" />}
     </Button>
   );
 }
@@ -313,13 +320,13 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   const displayCode = collapsed ? code.split("\n").slice(0, 15).join("\n") + "\n..." : code;
 
   return (
-    <div className="relative my-3 rounded-xl overflow-hidden border border-border/20 glass">
-      <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground/70 border-b border-border/20">
+    <div className="surface-code relative my-3 overflow-hidden rounded-xl">
+      <div className="flex items-center justify-between border-b border-[var(--code-border)] px-4 py-2 text-xs text-muted-foreground/70">
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--code-dot-red)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--code-dot-amber)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--code-dot-green)" }} />
           </div>
           <span className="font-medium">{language}</span>
           <span className="opacity-50">{lineCount} lines</span>
@@ -331,7 +338,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
             </Button>
           )}
           <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }} aria-label="Copy code">
-            {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 text-[var(--accent-emerald)]" /> : <Copy className="h-3 w-3" />}
           </Button>
         </div>
       </div>
@@ -340,12 +347,12 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         style={oneDark}
         showLineNumbers
         customStyle={{ margin: 0, borderRadius: 0, fontSize: "12px", background: "transparent", maxHeight: collapsed ? "360px" : undefined }}
-        lineNumberStyle={{ minWidth: "2.5em", paddingRight: "1em", color: "oklch(0.35 0 0)" }}
+        lineNumberStyle={{ minWidth: "2.5em", paddingRight: "1em", color: "var(--muted-foreground)" }}
       >
         {displayCode}
       </SyntaxHighlighter>
       {collapsed && (
-        <button className="w-full py-2 text-xs text-muted-foreground/50 hover:text-muted-foreground bg-transparent border-t border-border/20 transition-colors" onClick={() => setCollapsed(false)}>
+        <button className="w-full border-t border-[var(--code-border)] bg-transparent py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground" onClick={() => setCollapsed(false)}>
           Show all {lineCount} lines
         </button>
       )}
@@ -355,17 +362,22 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 
 function ToolCallPill({ toolCall }: { toolCall: MessageWithToolCalls["tool_calls"][number] }) {
   const [open, setOpen] = useState(false);
-  const statusColor =
-    toolCall.status === "success" ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5" :
-    toolCall.status === "error" ? "text-red-400 border-red-500/20 bg-red-500/5" :
-    "text-amber-400 border-amber-500/20 bg-amber-500/5";
+  const statusVar =
+    toolCall.status === "success" ? "var(--status-online)" :
+    toolCall.status === "error" ? "var(--status-danger)" :
+    "var(--status-warning)";
+  const statusStyle = {
+    color: statusVar,
+    borderColor: `color-mix(in srgb, ${statusVar} 20%, transparent)`,
+    background: `color-mix(in srgb, ${statusVar} 5%, transparent)`,
+  } as React.CSSProperties;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className={cn("flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-all hover:bg-foreground/5 w-full glass", statusColor)} aria-expanded={open}>
+      <CollapsibleTrigger className="flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-all hover:bg-foreground/5 w-full glass" style={statusStyle} aria-expanded={open}>
         <Wrench className="h-3 w-3" />
         <span className="font-mono font-medium">{toolCall.tool_name}</span>
-        <Badge variant="outline" className={cn("ml-auto text-[0.625rem] px-1.5 py-0 rounded-md", statusColor)}>{toolCall.status}</Badge>
+        <Badge variant="outline" className="ml-auto text-[0.625rem] px-1.5 py-0 rounded-md" style={statusStyle}>{toolCall.status}</Badge>
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </CollapsibleTrigger>
       <CollapsibleContent>

@@ -10,7 +10,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { name, color } = await request.json();
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
   const id = uuid();
-  db.prepare("INSERT INTO tags (id, name, color) VALUES (?, ?, ?)").run(id, name, color || "#6366f1");
-  return NextResponse.json({ id, name, color: color || "#6366f1" });
+  db.prepare("INSERT INTO tags (id, name, color) VALUES (?, ?, ?)").run(id, name.trim(), color || "#6366f1");
+  return NextResponse.json({ id, name: name.trim(), color: color || "#6366f1" });
 }

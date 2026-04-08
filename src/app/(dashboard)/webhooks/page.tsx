@@ -144,7 +144,7 @@ export default function WebhooksPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <WebhookIcon className="h-5 w-5 text-blue-500" />
+            <WebhookIcon className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{webhooks.length}</div>
               <div className="text-xs text-muted-foreground">Total Webhooks</div>
@@ -153,7 +153,7 @@ export default function WebhooksPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Zap className="h-5 w-5 text-amber-500" />
+            <Zap className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalTriggers}</div>
               <div className="text-xs text-muted-foreground">Total Triggers</div>
@@ -162,7 +162,7 @@ export default function WebhooksPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Activity className="h-5 w-5 text-green-500" />
+            <Activity className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">{activeCount}</div>
               <div className="text-xs text-muted-foreground">Active</div>
@@ -201,8 +201,8 @@ export default function WebhooksPage() {
                   className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/30 transition-colors"
                   onClick={() => handleExpand(webhook.id)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10">
-                    <WebhookIcon className="h-5 w-5 text-blue-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10">
+                    <WebhookIcon className="h-5 w-5 text-[var(--accent-blue)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export default function WebhooksPage() {
                         variant="outline"
                         className={
                           webhook.is_active
-                            ? "text-[0.625rem] border-green-500/30 text-green-600"
+                            ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]"
                             : "text-[0.625rem] border-muted-foreground/30 text-muted-foreground"
                         }
                       >
@@ -219,7 +219,7 @@ export default function WebhooksPage() {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground truncate mt-0.5">
-                      Agent: {webhook.agent_name || webhook.agent_id} &middot;{" "}
+                      Agent: {webhook.agent_name || agents.find((a) => a.id === webhook.agent_id)?.name || "Unknown Agent"} &middot;{" "}
                       {webhook.total_triggers} triggers
                       {webhook.last_triggered_at && (
                         <> &middot; Last: {new Date(webhook.last_triggered_at).toLocaleDateString()}</>
@@ -321,9 +321,9 @@ export default function WebhooksPage() {
                                 variant="outline"
                                 className={
                                   ev.status === "success"
-                                    ? "text-[0.625rem] border-green-500/30 text-green-600 shrink-0"
+                                    ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)] shrink-0"
                                     : ev.status === "error"
-                                      ? "text-[0.625rem] border-red-500/30 text-red-600 shrink-0"
+                                      ? "text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)] shrink-0"
                                       : "text-[0.625rem] shrink-0"
                                 }
                               >
@@ -338,7 +338,7 @@ export default function WebhooksPage() {
                                   </pre>
                                 )}
                                 {ev.error && (
-                                  <p className="text-[0.625rem] text-red-500 mt-0.5">{ev.error}</p>
+                                  <p className="text-[0.625rem] text-[var(--status-danger)] mt-0.5">{ev.error}</p>
                                 )}
                               </div>
                               <span className="text-[0.625rem] text-muted-foreground shrink-0">

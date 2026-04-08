@@ -17,11 +17,16 @@ export async function POST(request: Request) {
     role?: string;
   };
 
-  if (!body.display_name) {
+  if (!body.display_name?.trim()) {
     return NextResponse.json(
       { error: "display_name is required" },
       { status: 400 },
     );
+  }
+
+  const validRoles = ["admin", "operator", "viewer"];
+  if (body.role && !validRoles.includes(body.role)) {
+    return NextResponse.json({ error: `role must be one of: ${validRoles.join(", ")}` }, { status: 400 });
   }
 
   const id = uuid();

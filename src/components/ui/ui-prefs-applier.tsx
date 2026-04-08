@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useStore } from "@/lib/store";
+import { THEME_CLASS_NAMES, resolveThemePreference } from "@/lib/themes";
 
 // Font CDN links for fonts not bundled with Next.js
 const FONT_CDNS: Record<string, string> = {
@@ -48,6 +49,16 @@ export function UiPrefsApplier() {
 
   useEffect(() => {
     const root = document.documentElement;
+    const applyTheme = (prefersDark: boolean) => {
+      const resolved = resolveThemePreference(uiPrefs.theme, prefersDark);
+
+      root.classList.remove(...THEME_CLASS_NAMES);
+      root.classList.toggle("dark", resolved.mode === "dark");
+      root.classList.add(resolved.className);
+      root.dataset.theme = resolved.id;
+      root.dataset.themeMode = resolved.mode;
+      root.style.colorScheme = resolved.mode;
+    };
 
     // Density
     root.setAttribute("data-density", uiPrefs.density);
@@ -109,19 +120,7 @@ export function UiPrefsApplier() {
     root.style.setProperty("--glass-glow-spread", (uiPrefs.glowSpread ?? 20).toString());
 
     // Theme
-    if (uiPrefs.theme === "dark") {
-      root.classList.add("dark");
-    } else if (uiPrefs.theme === "light") {
-      root.classList.remove("dark");
-    } else {
-      // System preference
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (prefersDark) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
-    }
+    applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, [uiPrefs]);
 
   // Listen for system theme changes when theme is set to "system"
@@ -129,11 +128,14 @@ export function UiPrefsApplier() {
     if (uiPrefs.theme !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      const resolved = resolveThemePreference(uiPrefs.theme, e.matches);
+      const root = document.documentElement;
+      root.classList.remove(...THEME_CLASS_NAMES);
+      root.classList.toggle("dark", resolved.mode === "dark");
+      root.classList.add(resolved.className);
+      root.dataset.theme = resolved.id;
+      root.dataset.themeMode = resolved.mode;
+      root.style.colorScheme = resolved.mode;
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);

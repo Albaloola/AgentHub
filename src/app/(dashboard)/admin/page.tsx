@@ -29,8 +29,8 @@ import { toast } from "sonner";
 
 function roleBadgeClass(role: string) {
   switch (role) {
-    case "admin": return "bg-red-500/10 text-red-600 border-red-500/30";
-    case "operator": return "bg-blue-500/10 text-blue-600 border-blue-500/30";
+    case "admin": return "bg-[var(--status-danger)]/10 text-[var(--status-danger)] border-[var(--status-danger)]/30";
+    case "operator": return "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30";
     case "viewer": return "bg-gray-500/10 text-gray-500 border-gray-500/30";
     default: return "";
   }
@@ -38,13 +38,13 @@ function roleBadgeClass(role: string) {
 
 function actionBadgeClass(action: string) {
   if (action.startsWith("delete") || action.startsWith("remove")) {
-    return "bg-red-500/10 text-red-600 border-red-500/30";
+    return "bg-[var(--status-danger)]/10 text-[var(--status-danger)] border-[var(--status-danger)]/30";
   }
   if (action.startsWith("create") || action.startsWith("add")) {
-    return "bg-emerald-500/10 text-emerald-600 border-emerald-500/30";
+    return "bg-[var(--status-online)]/10 text-[var(--status-online)] border-[var(--status-online)]/30";
   }
   if (action.startsWith("update") || action.startsWith("edit")) {
-    return "bg-blue-500/10 text-blue-600 border-blue-500/30";
+    return "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30";
   }
   return "bg-gray-500/10 text-gray-500 border-gray-500/30";
 }
@@ -174,8 +174,8 @@ export default function AdminPage() {
                 {users.map((user) => (
                   <Card key={user.id}>
                     <CardContent className="flex items-center gap-3 p-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10">
-                        <Shield className="h-5 w-5 text-violet-500" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-violet)]/10">
+                        <Shield className="h-5 w-5 text-[var(--accent-violet)]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
             ) : (
-              <AuditTable entries={auditLog} />
+              <AuditTable entries={auditLog} users={users} />
             )}
           </TabsContent>
 
@@ -237,7 +237,7 @@ export default function AdminPage() {
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <Bot className="h-5 w-5 text-blue-500" />
+                  <Bot className="h-5 w-5 text-[var(--accent-blue)]" />
                   <div>
                     <div className="text-2xl font-bold">{agentCount}</div>
                     <div className="text-xs text-muted-foreground">Agents</div>
@@ -246,7 +246,7 @@ export default function AdminPage() {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <Users className="h-5 w-5 text-violet-500" />
+                  <Users className="h-5 w-5 text-[var(--accent-violet)]" />
                   <div>
                     <div className="text-2xl font-bold">{users.length}</div>
                     <div className="text-xs text-muted-foreground">Users</div>
@@ -255,7 +255,7 @@ export default function AdminPage() {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <ScrollText className="h-5 w-5 text-amber-500" />
+                  <ScrollText className="h-5 w-5 text-[var(--accent-amber)]" />
                   <div>
                     <div className="text-2xl font-bold">{auditLog.length}</div>
                     <div className="text-xs text-muted-foreground">Audit Entries</div>
@@ -264,7 +264,7 @@ export default function AdminPage() {
               </Card>
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <Database className="h-5 w-5 text-emerald-500" />
+                  <Database className="h-5 w-5 text-[var(--accent-emerald)]" />
                   <div>
                     <div className="text-2xl font-bold">SQLite</div>
                     <div className="text-xs text-muted-foreground">Database</div>
@@ -318,7 +318,7 @@ export default function AdminPage() {
   );
 }
 
-function AuditTable({ entries }: { entries: AuditLogEntry[] }) {
+function AuditTable({ entries, users }: { entries: AuditLogEntry[]; users: UserAccount[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
@@ -340,7 +340,7 @@ function AuditTable({ entries }: { entries: AuditLogEntry[] }) {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">{entry.actor_id ?? "system"}</span>
+                  <span className="font-medium">{entry.actor_id ? (users.find((u) => u.id === entry.actor_id)?.display_name ?? "system") : "system"}</span>
                   <Badge
                     variant="outline"
                     className={actionBadgeClass(entry.action)}

@@ -121,7 +121,7 @@ export default function IntegrationsPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Link className="h-5 w-5 text-blue-500" />
+            <Link className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{integrations.length}</div>
               <div className="text-xs text-muted-foreground">Total Integrations</div>
@@ -130,7 +130,7 @@ export default function IntegrationsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Power className="h-5 w-5 text-emerald-500" />
+            <Power className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">{activeCount}</div>
               <div className="text-xs text-muted-foreground">Active</div>
@@ -139,7 +139,7 @@ export default function IntegrationsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Zap className="h-5 w-5 text-amber-500" />
+            <Zap className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalEvents.toLocaleString()}</div>
               <div className="text-xs text-muted-foreground">Total Events</div>
@@ -174,7 +174,7 @@ export default function IntegrationsPage() {
               <Card key={integration.id} className="overflow-hidden">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600/10 text-blue-500">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]">
                       {TYPE_ICONS[integration.type] || <Plug className="h-5 w-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export default function IntegrationsPage() {
                           variant="outline"
                           className={
                             integration.is_active
-                              ? "text-[0.625rem] border-emerald-500/30 text-emerald-600"
+                              ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]"
                               : "text-[0.625rem] border-gray-500/30 text-gray-500"
                           }
                         >
@@ -340,6 +340,7 @@ function CreateIntegrationDialog({
           <Select
             value={agentId ?? "__none__"}
             onValueChange={(v) => setAgentId(v === "__none__" ? null : v ?? null)}
+            items={{ __none__: "No agent assigned", ...Object.fromEntries(agents.filter((a) => a.is_active).map((a) => [a.id, a.name])) }}
           >
             <SelectTrigger><SelectValue placeholder="No agent assigned" /></SelectTrigger>
             <SelectContent>

@@ -38,6 +38,10 @@ export async function PATCH(
     values.push(body.display_name);
   }
   if (body.role !== undefined) {
+    const validRoles = ["admin", "operator", "viewer"];
+    if (!validRoles.includes(body.role)) {
+      return NextResponse.json({ error: `role must be one of: ${validRoles.join(", ")}` }, { status: 400 });
+    }
     updates.push("role = ?");
     values.push(body.role);
   }

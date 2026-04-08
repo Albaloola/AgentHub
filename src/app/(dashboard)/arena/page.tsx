@@ -92,7 +92,7 @@ export default function ArenaPage() {
   }
 
   function getAgentName(id: string): string {
-    return agents.find((a) => a.id === id)?.name ?? id.slice(0, 8);
+    return agents.find((a) => a.id === id)?.name ?? "Unknown Agent";
   }
 
   function parseAgentIds(round: ArenaRound): string[] {
@@ -134,7 +134,7 @@ export default function ArenaPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Swords className="h-5 w-5 text-blue-500" />
+            <Swords className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{arenaRounds.length}</div>
               <div className="text-xs text-muted-foreground">Total Rounds</div>
@@ -143,7 +143,7 @@ export default function ArenaPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <CheckCircle2 className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">{completedRounds.length}</div>
               <div className="text-xs text-muted-foreground">Completed</div>
@@ -152,7 +152,7 @@ export default function ArenaPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Users className="h-5 w-5 text-violet-500" />
+            <Users className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">{uniqueAgentIds.size}</div>
               <div className="text-xs text-muted-foreground">Agents Evaluated</div>
@@ -206,12 +206,12 @@ export default function ArenaPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {isPending ? (
-                              <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
+                              <Badge variant="outline" className="text-[0.625rem] border-[var(--status-warning)]/30 text-[var(--status-warning)]">
                                 <Clock className="h-3 w-3 mr-0.5" />
                                 pending
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
+                              <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
                                 <CheckCircle2 className="h-3 w-3 mr-0.5" />
                                 completed
                               </Badge>
@@ -245,7 +245,7 @@ export default function ArenaPage() {
                               className={cn(
                                 "flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm",
                                 isWinner
-                                  ? "border-amber-500/40 bg-amber-500/10"
+                                  ? "border-[var(--accent-amber)]/40 bg-[var(--accent-amber)]/10"
                                   : "border-border",
                               )}
                             >
@@ -259,7 +259,7 @@ export default function ArenaPage() {
                               </div>
                               <span>{getAgentName(agentId)}</span>
                               {isWinner && (
-                                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                                <Trophy className="h-3.5 w-3.5 text-[var(--accent-amber)]" />
                               )}
                               {isPending && (
                                 <Button
@@ -336,7 +336,7 @@ export default function ArenaPage() {
                               </div>
                               <span className="font-medium">{entry.agent_name}</span>
                               {idx === 0 && (
-                                <Trophy className="h-4 w-4 text-amber-500" />
+                                <Trophy className="h-4 w-4 text-[var(--accent-amber)]" />
                               )}
                             </div>
                           </td>
@@ -350,7 +350,7 @@ export default function ArenaPage() {
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[7.5rem]">
                                 <div
-                                  className="h-full bg-emerald-500 rounded-full transition-all"
+                                  className="h-full bg-[var(--status-online)] rounded-full transition-all"
                                   style={{ width: `${Math.round(entry.win_rate * 100)}%` }}
                                 />
                               </div>

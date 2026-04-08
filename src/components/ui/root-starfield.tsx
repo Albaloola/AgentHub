@@ -112,10 +112,7 @@ const STARFIELD_STYLES = `
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    background:
-      radial-gradient(ellipse 140% 100% at 20% 80%, oklch(0.14 0.02 260 / 0.5) 0%, transparent 55%),
-      radial-gradient(ellipse 120% 80% at 80% 20%, oklch(0.13 0.015 280 / 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse 100% 100% at 50% 50%, oklch(0.10 0.008 260) 0%, oklch(0.07 0.005 260) 100%);
+    background: var(--starfield-bg);
   }
 
   .root-starfield__nebula {
@@ -130,7 +127,7 @@ const STARFIELD_STYLES = `
     height: 60vh;
     top: -15%;
     right: -20%;
-    background: radial-gradient(circle, oklch(0.35 0.1 264 / 0.08), transparent 70%);
+    background: var(--starfield-nebula-1);
     animation: root-nebula-pulse 20s ease-in-out infinite;
   }
 
@@ -139,7 +136,7 @@ const STARFIELD_STYLES = `
     height: 70vh;
     bottom: -20%;
     left: -15%;
-    background: radial-gradient(circle, oklch(0.30 0.08 200 / 0.06), transparent 70%);
+    background: var(--starfield-nebula-2);
     animation: root-nebula-pulse 25s ease-in-out infinite;
     animation-delay: -8s;
   }
@@ -149,7 +146,7 @@ const STARFIELD_STYLES = `
     height: 50vh;
     top: 35%;
     left: 25%;
-    background: radial-gradient(circle, oklch(0.32 0.09 294 / 0.05), transparent 70%);
+    background: var(--starfield-nebula-3);
     animation: root-nebula-pulse 30s ease-in-out infinite;
     animation-delay: -15s;
   }
@@ -175,23 +172,23 @@ const STARFIELD_STYLES = `
   .root-starfield__star {
     position: absolute;
     border-radius: 50%;
-    background: oklch(0.98 0 0);
+    background: var(--starfield-star);
     animation: root-twinkle var(--tw-duration, 4s) ease-in-out infinite;
     animation-delay: var(--tw-delay, 0s);
     will-change: opacity;
   }
 
   .root-starfield__star--warm {
-    background: oklch(0.97 0.04 70);
+    background: var(--starfield-star-warm);
   }
 
   .root-starfield__star--cool {
-    background: oklch(0.94 0.05 240);
+    background: var(--starfield-star-cool);
   }
 
   .root-starfield__star--bright {
-    background: oklch(1 0.02 260);
-    box-shadow: 0 0 4px 2px oklch(0.8 0.1 260 / 0.4);
+    background: var(--starfield-star-bright);
+    box-shadow: 0 0 4px 2px var(--starfield-star-glow);
   }
 
   .root-starfield__meteor {
@@ -200,9 +197,9 @@ const STARFIELD_STYLES = `
     height: 120px;
     background: linear-gradient(
       to bottom,
-      oklch(0.98 0 0),
-      oklch(0.75 0.1 260 / 0.6),
-      oklch(0.6 0.12 260 / 0.25),
+      var(--starfield-meteor-trail-1),
+      var(--starfield-meteor-trail-2),
+      var(--starfield-meteor-trail-3),
       transparent
     );
     border-radius: 100px;
@@ -223,10 +220,10 @@ const STARFIELD_STYLES = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: oklch(0.98 0.05 260);
+    background: var(--starfield-meteor-head);
     box-shadow:
-      0 0 12px 4px oklch(0.8 0.15 260 / 0.6),
-      0 0 24px 8px oklch(0.7 0.12 260 / 0.3);
+      0 0 12px 4px var(--starfield-star-glow),
+      0 0 24px 8px color-mix(in srgb, var(--starfield-star-glow) 65%, transparent);
   }
 
   .root-starfield__meteor--long {
@@ -238,8 +235,8 @@ const STARFIELD_STYLES = `
     width: 7px;
     height: 7px;
     box-shadow:
-      0 0 15px 5px oklch(0.8 0.15 260 / 0.7),
-      0 0 30px 10px oklch(0.7 0.12 260 / 0.3);
+      0 0 15px 5px var(--starfield-star-glow),
+      0 0 30px 10px color-mix(in srgb, var(--starfield-star-glow) 65%, transparent);
   }
 
   .root-starfield__meteor--short {
@@ -254,9 +251,9 @@ const STARFIELD_STYLES = `
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      oklch(0.9 0.08 260 / 0.3) 0%,
-      oklch(0.7 0.15 60 / 0.15) 30%,
-      oklch(0.6 0.12 200 / 0.08) 60%,
+      var(--starfield-flare-1) 0%,
+      var(--starfield-flare-2) 30%,
+      var(--starfield-flare-3) 60%,
       transparent 80%
     );
     animation: root-lens-flare var(--flare-duration, 12s) ease-in-out infinite;
@@ -271,8 +268,8 @@ const STARFIELD_STYLES = `
     height: 200px;
     background: linear-gradient(
       to bottom,
-      oklch(0.95 0.05 260 / 0.8),
-      oklch(0.8 0.1 260 / 0.4),
+      var(--starfield-lightning-1),
+      var(--starfield-lightning-2),
       transparent
     );
     filter: blur(1px);
@@ -298,6 +295,20 @@ const STARFIELD_STYLES = `
     background-size: 128px 128px;
     pointer-events: none;
     mix-blend-mode: overlay;
+  }
+
+  /* ---- LIGHT MODE ---- */
+  :root:not(.dark) .root-starfield {
+    background: var(--starfield-bg);
+  }
+  :root:not(.dark) .root-starfield__nebula,
+  :root:not(.dark) .root-starfield__layer,
+  :root:not(.dark) .root-starfield__meteor,
+  :root:not(.dark) .root-starfield__lens-flare,
+  :root:not(.dark) .root-starfield__lightning,
+  :root:not(.dark) .root-starfield__ambient-glow,
+  :root:not(.dark) .root-starfield__noise {
+    display: none;
   }
 `;
 

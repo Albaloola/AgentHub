@@ -104,7 +104,7 @@ export default function PoliciesPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Shield className="h-5 w-5 text-blue-500" />
+            <Shield className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{policies.length}</div>
               <div className="text-xs text-muted-foreground">Total Policies</div>
@@ -113,7 +113,7 @@ export default function PoliciesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+            <ShieldCheck className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">
                 {policies.filter((p) => p.is_active).length}
@@ -124,7 +124,7 @@ export default function PoliciesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertOctagon className="h-5 w-5 text-red-500" />
+            <AlertOctagon className="h-5 w-5 text-[var(--status-danger)]" />
             <div>
               <div className="text-2xl font-bold">{totalViolations}</div>
               <div className="text-xs text-muted-foreground">Total Violations</div>
@@ -157,9 +157,9 @@ export default function PoliciesPage() {
           {policies.map((policy) => {
             const severityColor =
               policy.severity === "block"
-                ? "border-red-500/30 text-red-600 bg-red-500/10"
+                ? "border-[var(--status-danger)]/30 text-[var(--status-danger)] bg-[var(--status-danger)]/10"
                 : policy.severity === "warn"
-                  ? "border-yellow-500/30 text-yellow-600 bg-yellow-500/10"
+                  ? "border-[var(--status-warning)]/30 text-[var(--status-warning)] bg-[var(--status-warning)]/10"
                   : "border-muted-foreground/30 text-muted-foreground bg-muted";
             const agentName = getAgentName(policy.agent_id);
             return (
@@ -169,11 +169,11 @@ export default function PoliciesPage() {
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10 shrink-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10 shrink-0">
                       {policy.severity === "block" ? (
-                        <ShieldAlert className="h-5 w-5 text-red-500" />
+                        <ShieldAlert className="h-5 w-5 text-[var(--status-danger)]" />
                       ) : policy.severity === "warn" ? (
-                        <AlertOctagon className="h-5 w-5 text-yellow-500" />
+                        <AlertOctagon className="h-5 w-5 text-[var(--status-warning)]" />
                       ) : (
                         <Activity className="h-5 w-5 text-muted-foreground" />
                       )}

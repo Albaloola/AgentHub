@@ -183,7 +183,7 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
                 {group.id.startsWith("custom-") && (
                   <button
                     onClick={() => removeGroup(gi)}
-                    className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-red-400 hover:bg-red-500/10"
+                    className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-[var(--status-danger)] hover:bg-[var(--status-danger)]/10"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -201,7 +201,7 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
                     onDrop={() => handleDrop(gi, ii)}
                     className={cn(
                       "flex items-center gap-3 px-4 py-2.5 transition-colors",
-                      dragOverTarget?.groupIdx === gi && dragOverTarget?.itemIdx === ii && "bg-blue-500/10",
+                      dragOverTarget?.groupIdx === gi && dragOverTarget?.itemIdx === ii && "bg-[var(--accent-blue)]/10",
                       !item.visible && "opacity-40",
                     )}
                   >
@@ -240,7 +240,7 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
                   onDrop={() => handleDrop(gi, group.items.length)}
                   className={cn(
                     "h-2 transition-colors",
-                    dragOverTarget?.groupIdx === gi && dragOverTarget?.itemIdx === group.items.length && "bg-blue-500/20",
+                    dragOverTarget?.groupIdx === gi && dragOverTarget?.itemIdx === group.items.length && "bg-[var(--accent-blue)]/20",
                   )}
                 />
               </div>

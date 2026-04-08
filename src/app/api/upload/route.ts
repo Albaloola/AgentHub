@@ -31,6 +31,12 @@ export async function POST(request: Request) {
   const bytes = await file.arrayBuffer();
   fs.writeFileSync(filePath, Buffer.from(bytes));
 
+  // Create attachment record in database
+  db.prepare(
+    `INSERT INTO attachments (id, message_id, file_name, file_type, file_size, file_path, created_at)
+     VALUES (?, NULL, ?, ?, ?, ?, datetime('now'))`
+  ).run(fileId, file.name, file.type, file.size, filePath);
+
   return NextResponse.json({
     id: fileId,
     file_name: file.name,

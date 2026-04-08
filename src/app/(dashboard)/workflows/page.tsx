@@ -135,7 +135,7 @@ export default function WorkflowsPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <GitBranch className="h-5 w-5 text-blue-500" />
+            <GitBranch className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{workflows.length}</div>
               <div className="text-xs text-muted-foreground">Workflows</div>
@@ -144,7 +144,7 @@ export default function WorkflowsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Zap className="h-5 w-5 text-emerald-500" />
+            <Zap className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">
                 {workflows.filter((w) => w.is_active).length}
@@ -155,7 +155,7 @@ export default function WorkflowsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Bot className="h-5 w-5 text-violet-500" />
+            <Bot className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">
                 {workflows.reduce((sum, w) => {
@@ -205,9 +205,9 @@ export default function WorkflowsPage() {
                 <div className="flex items-center gap-3 p-4">
                   <div className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-lg",
-                    wf.is_active ? "bg-emerald-600/10" : "bg-muted",
+                    wf.is_active ? "bg-[var(--status-online)]/10" : "bg-muted",
                   )}>
-                    <GitBranch className={cn("h-5 w-5", wf.is_active ? "text-emerald-500" : "text-muted-foreground")} />
+                    <GitBranch className={cn("h-5 w-5", wf.is_active ? "text-[var(--status-online)]" : "text-muted-foreground")} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function WorkflowsPage() {
                         variant="outline"
                         className={cn(
                           "text-[0.625rem]",
-                          wf.is_active ? "border-emerald-500/30 text-emerald-600" : "",
+                          wf.is_active ? "border-[var(--status-online)]/30 text-[var(--status-online)]" : "",
                         )}
                       >
                         {wf.is_active ? "Active" : "Inactive"}
@@ -514,7 +514,7 @@ function WorkflowCanvas({
         >
           {/* Connection hint */}
           {connecting && (
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-[var(--accent-blue)] text-white text-xs px-3 py-1 rounded-full">
               Click a target node to connect
             </div>
           )}
@@ -558,7 +558,7 @@ function WorkflowCanvas({
                 className={cn(
                   "absolute rounded-lg border-2 bg-card shadow-sm transition-shadow select-none",
                   isSelected ? "border-primary shadow-md" : "border-border",
-                  isConnecting ? "border-blue-500 ring-2 ring-blue-500/20" : "",
+                  isConnecting ? "border-[var(--accent-blue)] ring-2 ring-[var(--accent-blue)]/20" : "",
                   dragging?.id === node.id ? "cursor-grabbing" : "cursor-grab",
                 )}
                 style={{
@@ -573,9 +573,9 @@ function WorkflowCanvas({
                 <div className="flex items-center gap-2 px-3 py-2 h-full">
                   <div className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-                    node.type === "agent" ? "bg-blue-600/10" :
-                    node.type === "condition" ? "bg-amber-600/10" :
-                    node.type === "delay" ? "bg-violet-600/10" : "bg-emerald-600/10",
+                    node.type === "agent" ? "bg-[var(--accent-blue)]/10" :
+                    node.type === "condition" ? "bg-[var(--accent-amber)]/10" :
+                    node.type === "delay" ? "bg-[var(--accent-violet)]/10" : "bg-[var(--accent-emerald)]/10",
                   )}>
                     {agent ? (
                       <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[0.5625rem] font-medium text-white", getAvatarColor(agent.id))}>
@@ -583,9 +583,9 @@ function WorkflowCanvas({
                       </div>
                     ) : (
                       <NodeIcon className={cn("h-4 w-4",
-                        node.type === "agent" ? "text-blue-500" :
-                        node.type === "condition" ? "text-amber-500" :
-                        node.type === "delay" ? "text-violet-500" : "text-emerald-500",
+                        node.type === "agent" ? "text-[var(--accent-blue)]" :
+                        node.type === "condition" ? "text-[var(--accent-amber)]" :
+                        node.type === "delay" ? "text-[var(--accent-violet)]" : "text-[var(--accent-emerald)]",
                       )} />
                     )}
                   </div>
@@ -663,6 +663,7 @@ function WorkflowCanvas({
                       }),
                     )
                   }
+                  items={Object.fromEntries(agents.filter((a) => a.is_active).map((a) => [a.id, a.name]))}
                 >
                   <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select agent" /></SelectTrigger>
                   <SelectContent>

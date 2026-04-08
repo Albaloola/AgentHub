@@ -17,27 +17,27 @@ import type { Trace, TraceSpan, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
 const SPAN_COLORS: Record<string, string> = {
-  routing: "bg-blue-500",
-  adapter: "bg-violet-500",
-  tool_call: "bg-amber-500",
-  subagent: "bg-cyan-500",
-  response: "bg-emerald-500",
-  guardrail: "bg-red-500",
+  routing: "bg-[var(--accent-blue)]",
+  adapter: "bg-[var(--accent-violet)]",
+  tool_call: "bg-[var(--accent-amber)]",
+  subagent: "bg-[var(--accent-cyan)]",
+  response: "bg-[var(--accent-emerald)]",
+  guardrail: "bg-[var(--accent-rose)]",
 };
 
 const SPAN_LABEL_COLORS: Record<string, string> = {
-  routing: "text-blue-600 bg-blue-500/10",
-  adapter: "text-violet-600 bg-violet-500/10",
-  tool_call: "text-amber-600 bg-amber-500/10",
-  subagent: "text-cyan-600 bg-cyan-500/10",
-  response: "text-emerald-600 bg-emerald-500/10",
-  guardrail: "text-red-600 bg-red-500/10",
+  routing: "text-[var(--accent-blue)] bg-[var(--accent-blue)]/10",
+  adapter: "text-[var(--accent-violet)] bg-[var(--accent-violet)]/10",
+  tool_call: "text-[var(--accent-amber)] bg-[var(--accent-amber)]/10",
+  subagent: "text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10",
+  response: "text-[var(--accent-emerald)] bg-[var(--accent-emerald)]/10",
+  guardrail: "text-[var(--accent-rose)] bg-[var(--accent-rose)]/10",
 };
 
 function durationColor(ms: number): string {
-  if (ms < 500) return "text-emerald-500";
-  if (ms < 2000) return "text-yellow-500";
-  return "text-red-500";
+  if (ms < 500) return "text-[var(--status-online)]";
+  if (ms < 2000) return "text-[var(--status-warning)]";
+  return "text-[var(--status-danger)]";
 }
 
 function formatDuration(ms: number): string {
@@ -138,7 +138,7 @@ export default function TracesPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Activity className="h-5 w-5 text-blue-500" />
+            <Activity className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{traces.length}</div>
               <div className="text-xs text-muted-foreground">Total Traces</div>
@@ -147,7 +147,7 @@ export default function TracesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Clock className="h-5 w-5 text-violet-500" />
+            <Clock className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className={cn("text-2xl font-bold", durationColor(avgDuration))}>
                 {formatDuration(avgDuration)}
@@ -158,7 +158,7 @@ export default function TracesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-[var(--status-danger)]" />
             <div>
               <div className="text-2xl font-bold">{errorCount}</div>
               <div className="text-xs text-muted-foreground">Errors</div>
@@ -178,7 +178,7 @@ export default function TracesPage() {
               <SelectItem value="">All conversations</SelectItem>
               {conversations.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
-                  {c.name || c.id.slice(0, 8)}
+                  {c.name || "Untitled"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -286,8 +286,8 @@ export default function TracesPage() {
                         className={cn(
                           "text-[0.625rem]",
                           trace.status === "error"
-                            ? "border-red-500/30 text-red-600"
-                            : "border-emerald-500/30 text-emerald-600",
+                            ? "border-[var(--status-danger)]/30 text-[var(--status-danger)]"
+                            : "border-[var(--status-online)]/30 text-[var(--status-online)]",
                         )}
                       >
                         {trace.status}
@@ -402,8 +402,8 @@ export default function TracesPage() {
                                   className={cn(
                                     "text-[0.625rem]",
                                     selectedSpan.status === "error"
-                                      ? "border-red-500/30 text-red-600"
-                                      : "border-emerald-500/30 text-emerald-600",
+                                      ? "border-[var(--status-danger)]/30 text-[var(--status-danger)]"
+                                      : "border-[var(--status-online)]/30 text-[var(--status-online)]",
                                   )}
                                 >
                                   {selectedSpan.status}

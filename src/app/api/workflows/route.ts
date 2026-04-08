@@ -9,9 +9,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { name, description, nodes, edges } = await request.json();
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
   const id = uuid();
   db.prepare(
     "INSERT INTO workflows (id, name, description, nodes, edges) VALUES (?, ?, ?, ?, ?)",
-  ).run(id, name, description || null, JSON.stringify(nodes || []), JSON.stringify(edges || []));
+  ).run(id, name.trim(), description || null, JSON.stringify(nodes || []), JSON.stringify(edges || []));
   return NextResponse.json({ id, message: "Workflow created" });
 }

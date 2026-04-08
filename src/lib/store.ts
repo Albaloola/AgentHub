@@ -28,6 +28,7 @@ import type {
   PromptVersion,
   KnowledgeBase,
 } from "./types";
+import type { ThemePreference } from "./themes";
 
 interface AppState {
   // Agents
@@ -189,7 +190,7 @@ interface AppState {
     showMeteors: boolean;
     showAmbientGlow: boolean;
     navStyle: "pills" | "list";
-    theme: string;
+    theme: ThemePreference;
     accentColor: string;
     showTimestamps: boolean;
     showAvatars: boolean;
@@ -225,7 +226,7 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   showMeteors: true,
   showAmbientGlow: true,
   navStyle: "pills",
-  theme: "dark",
+  theme: "midnight",
   accentColor: "blue-violet",
   showTimestamps: true,
   showAvatars: true,
@@ -241,9 +242,27 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
 
 function loadUiPrefs(): AppState["uiPrefs"] {
   try {
-    const stored = localStorage.getItem("agenthub-ui-prefs-v4");
+    const stored =
+      localStorage.getItem("agenthub-ui-prefs-v5") ??
+      localStorage.getItem("agenthub-ui-prefs-v4");
+
     if (stored) {
-      return { ...DEFAULT_UI_PREFS, ...JSON.parse(stored) };
+      const raw = JSON.parse(stored) as Record<string, unknown>;
+      const oldTheme = (raw.theme as string) ?? undefined;
+      const normalizedTheme =
+        oldTheme === "dark"
+          ? "midnight"
+          : oldTheme === "light"
+            ? "daylight"
+            : (oldTheme as AppState["uiPrefs"]["theme"]) ?? DEFAULT_UI_PREFS.theme;
+
+      const parsed = raw as Partial<AppState["uiPrefs"]>;
+
+      return {
+        ...DEFAULT_UI_PREFS,
+        ...parsed,
+        theme: normalizedTheme,
+      };
     }
   } catch {}
   return { ...DEFAULT_UI_PREFS };
@@ -251,7 +270,7 @@ function loadUiPrefs(): AppState["uiPrefs"] {
 
 function saveUiPrefs(prefs: AppState["uiPrefs"]) {
   try {
-    localStorage.setItem("agenthub-ui-prefs-v4", JSON.stringify(prefs));
+    localStorage.setItem("agenthub-ui-prefs-v5", JSON.stringify(prefs));
   } catch {}
 }
 
@@ -325,7 +344,10 @@ export const useStore = create<AppState>((set) => ({
   thinkingComplete: false,
   setThinkingContent: (content, isComplete) =>
     set((state) => ({
-      thinkingContent: state.thinkingContent + content,
+      // Reset: empty content + isComplete explicitly false = clear everything
+      // Mark complete: empty content + isComplete true = keep content, mark done
+      // Append: non-empty content = append to existing
+      thinkingContent: content === "" && isComplete === false ? "" : state.thinkingContent + content,
       thinkingComplete: isComplete ?? state.thinkingComplete,
     })),
 

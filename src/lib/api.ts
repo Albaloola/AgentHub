@@ -393,7 +393,7 @@ export function getTemplates(): Promise<unknown[]> {
 }
 
 export function createTemplate(body: CreateTemplateBody): Promise<{ id: string }> {
-  return fetchJSON("/api/templates", { method: "POST", body: JSON.stringify(body) });
+  return fetchJSON("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
 export function deleteTemplate(id: string): Promise<unknown> {
@@ -407,7 +407,7 @@ export function getTags(): Promise<unknown[]> {
 }
 
 export function createTag(name: string, color: string): Promise<unknown> {
-  return fetchJSON("/api/tags", { method: "POST", body: JSON.stringify({ name, color }) });
+  return fetchJSON("/api/tags", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, color }) });
 }
 
 export function addTagToConversation(convId: string, tagId: string): Promise<unknown> {

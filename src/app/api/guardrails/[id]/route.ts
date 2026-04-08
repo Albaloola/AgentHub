@@ -56,6 +56,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  db.prepare("DELETE FROM guardrail_rules WHERE id = ?").run(id);
+  const result = db.prepare("DELETE FROM guardrail_rules WHERE id = ?").run(id);
+  if (result.changes === 0) return NextResponse.json({ error: "Rule not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

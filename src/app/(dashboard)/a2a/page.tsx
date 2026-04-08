@@ -115,7 +115,7 @@ export default function A2APage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Network className="h-5 w-5 text-blue-500" />
+            <Network className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{cards.length}</div>
               <div className="text-xs text-muted-foreground">Total Cards</div>
@@ -124,7 +124,7 @@ export default function A2APage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Globe className="h-5 w-5 text-emerald-500" />
+            <Globe className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">
                 {cards.filter((c) => c.is_published).length}
@@ -147,9 +147,9 @@ export default function A2APage() {
       </div>
 
       {/* Info section */}
-      <Card className="border-blue-500/20 bg-blue-500/5">
+      <Card className="border-[var(--accent-blue)]/20 bg-[var(--accent-blue)]/5">
         <CardContent className="flex items-start gap-3 p-4">
-          <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+          <Info className="h-5 w-5 text-[var(--accent-blue)] mt-0.5 shrink-0" />
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">About A2A Protocol</p>
             <p>
@@ -205,7 +205,7 @@ export default function A2APage() {
                           className={cn(
                             "text-[0.625rem]",
                             card.is_published
-                              ? "border-emerald-500/30 text-emerald-600"
+                              ? "border-[var(--status-online)]/30 text-[var(--status-online)]"
                               : "border-muted-foreground/30 text-muted-foreground",
                           )}
                         >

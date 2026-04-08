@@ -97,7 +97,7 @@ export function FloatingStats({
               <Activity
                 className={cn(
                   "h-4 w-4",
-                  isStreaming ? "text-blue-400 animate-pulse" : "text-muted-foreground",
+                  isStreaming ? "text-[var(--accent-blue)] animate-pulse" : "text-muted-foreground",
                 )}
               />
               <span className="text-sm font-medium">Live Stats</span>
@@ -115,18 +115,18 @@ export function FloatingStats({
           <ScrollArea className="max-h-[60vh]">
             <div className="p-4 space-y-4">
               {/* Token usage */}
-              <StatSection icon={Coins} iconColor="text-amber-400" label="Tokens">
+              <StatSection icon={Coins} iconColor="text-[var(--accent-amber)]" label="Tokens">
                 <div className="text-lg font-semibold tabular-nums text-foreground">
                   {formatTokens(stats.totalTokens)}
                 </div>
                 {isStreaming && (
-                  <span className="text-[0.625rem] text-blue-400 animate-pulse">streaming...</span>
+                  <span className="text-[0.625rem] text-[var(--accent-blue)] animate-pulse">streaming...</span>
                 )}
               </StatSection>
 
               {/* Response time */}
               {stats.responseTime && (
-                <StatSection icon={Clock} iconColor="text-cyan-400" label="Response Time">
+                <StatSection icon={Clock} iconColor="text-[var(--accent-cyan)]" label="Response Time">
                   <div className="text-sm font-medium tabular-nums text-foreground">
                     {stats.responseTime}
                   </div>
@@ -134,7 +134,7 @@ export function FloatingStats({
               )}
 
               {/* Tool calls */}
-              <StatSection icon={Wrench} iconColor="text-violet-400" label={`Tool Calls (${stats.totalToolCalls})`}>
+              <StatSection icon={Wrench} iconColor="text-[var(--accent-violet)]" label={`Tool Calls (${stats.totalToolCalls})`}>
                 {stats.toolCallsList.length > 0 ? (
                   <div className="space-y-1 mt-1">
                     {stats.toolCallsList.map((tc) => (
@@ -151,10 +151,10 @@ export function FloatingStats({
                           className={cn(
                             "text-[0.5625rem] px-1 py-0 rounded-md",
                             tc.status === "success"
-                              ? "text-emerald-400 border-emerald-500/20"
+                              ? "text-[var(--accent-emerald)] border-[var(--status-online)]/20"
                               : tc.status === "error"
-                                ? "text-red-400 border-red-500/20"
-                                : "text-yellow-400 border-yellow-500/20",
+                                ? "text-[var(--status-danger)] border-[var(--status-danger)]/20"
+                                : "text-[var(--status-warning)] border-[var(--status-warning)]/20",
                           )}
                         >
                           {tc.status}
@@ -168,7 +168,7 @@ export function FloatingStats({
               </StatSection>
 
               {/* Subagents */}
-              <StatSection icon={Network} iconColor="text-emerald-400" label={`Subagents (${subagents.length})`}>
+              <StatSection icon={Network} iconColor="text-[var(--accent-emerald)]" label={`Subagents (${subagents.length})`}>
                 {subagents.length > 0 ? (
                   <div className="space-y-1 mt-1">
                     {subagents.map((sa) => (
@@ -185,10 +185,10 @@ export function FloatingStats({
                           className={cn(
                             "text-[0.5625rem] px-1 py-0 rounded-md",
                             sa.status === "completed"
-                              ? "text-emerald-400 border-emerald-500/20"
+                              ? "text-[var(--accent-emerald)] border-[var(--status-online)]/20"
                               : sa.status === "failed"
-                                ? "text-red-400 border-red-500/20"
-                                : "text-yellow-400 border-yellow-500/20",
+                                ? "text-[var(--status-danger)] border-[var(--status-danger)]/20"
+                                : "text-[var(--status-warning)] border-[var(--status-warning)]/20",
                           )}
                         >
                           {sa.status}
@@ -204,7 +204,7 @@ export function FloatingStats({
               {/* Auto-approve toggle */}
               <div className="flex items-center justify-between rounded-xl border border-border/20 glass-bubble px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-3.5 w-3.5 text-orange-400" />
+                  <Shield className="h-3.5 w-3.5 text-[var(--accent-amber)]" />
                   <span className="text-xs font-medium">Auto-approve</span>
                 </div>
                 <Switch
@@ -226,19 +226,19 @@ export function FloatingStats({
             "flex flex-col items-center gap-2 rounded-2xl px-2.5 py-3 transition-all duration-300",
             "glass-strong border border-border/20 hover:border-border/40",
             "shadow-lg shadow-black/30 hover:shadow-xl",
-            isStreaming && "shadow-[0_0_16px_rgba(59,130,246,0.2)]",
+            isStreaming && "shadow-[var(--neon-blue-shadow)]",
           )}
         >
           <Activity
             className={cn(
               "h-4 w-4",
-              isStreaming ? "text-blue-400 animate-pulse" : "text-muted-foreground/60",
+              isStreaming ? "text-[var(--accent-blue)] animate-pulse" : "text-muted-foreground/60",
             )}
           />
 
           {/* Token count */}
           <div className="flex flex-col items-center">
-            <Coins className="h-3 w-3 text-amber-400/70" />
+            <Coins className="h-3 w-3 text-[var(--accent-amber)] opacity-70" />
             <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
               {formatTokens(stats.totalTokens)}
             </span>
@@ -246,7 +246,7 @@ export function FloatingStats({
 
           {/* Tool calls count */}
           <div className="flex flex-col items-center">
-            <Wrench className="h-3 w-3 text-violet-400/70" />
+            <Wrench className="h-3 w-3 text-[var(--accent-violet)] opacity-70" />
             <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
               {stats.totalToolCalls}
             </span>
@@ -255,7 +255,7 @@ export function FloatingStats({
           {/* Subagents count */}
           {subagents.length > 0 && (
             <div className="flex flex-col items-center">
-              <Network className="h-3 w-3 text-emerald-400/70" />
+              <Network className="h-3 w-3 text-[var(--accent-emerald)] opacity-70" />
               <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
                 {subagents.length}
               </span>
@@ -294,21 +294,21 @@ function StatSection({
 function ToolStatusIcon({ status }: { status: string }) {
   switch (status) {
     case "success":
-      return <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />;
+      return <CheckCircle2 className="h-3 w-3 text-[var(--accent-emerald)] shrink-0" />;
     case "error":
-      return <XCircle className="h-3 w-3 text-red-400 shrink-0" />;
+      return <XCircle className="h-3 w-3 text-[var(--status-danger)] shrink-0" />;
     default:
-      return <Loader2 className="h-3 w-3 text-yellow-400 animate-spin shrink-0" />;
+      return <Loader2 className="h-3 w-3 text-[var(--status-warning)] animate-spin shrink-0" />;
   }
 }
 
 function SubagentStatusIcon({ status }: { status: string }) {
   switch (status) {
     case "completed":
-      return <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />;
+      return <CheckCircle2 className="h-3 w-3 text-[var(--accent-emerald)] shrink-0" />;
     case "failed":
-      return <XCircle className="h-3 w-3 text-red-400 shrink-0" />;
+      return <XCircle className="h-3 w-3 text-[var(--status-danger)] shrink-0" />;
     default:
-      return <Loader2 className="h-3 w-3 text-yellow-400 animate-spin shrink-0" />;
+      return <Loader2 className="h-3 w-3 text-[var(--status-warning)] animate-spin shrink-0" />;
   }
 }

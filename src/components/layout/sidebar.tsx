@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Bot,
   MessageSquare,
@@ -61,6 +62,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
+import { stagger, duration, ease } from "@/lib/animation";
 import {
   getConversations,
   deleteConversation,
@@ -187,6 +189,26 @@ const CATEGORY_GLOW: Record<string, string> = {
   Operations: "#10b981",  // emerald
   Security: "#fb565b",    // rose
   System: "#3b82f6",      // blue
+};
+
+const navContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: stagger.fast,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const navItemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.2, ease: ease.gentle },
+  },
 };
 
 export function Sidebar() {
@@ -865,41 +887,55 @@ export function Sidebar() {
           style={collapsed ? undefined : { height: navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (
-            <div className="flex flex-col items-center gap-1">
+            <motion.div
+              className="flex flex-col items-center gap-1"
+              variants={navContainerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {ALL_NAV_ITEMS.map((item) => {
                 const isActive = pathname === item.href;
                 return (
-                  <Tooltip key={item.href}>
-                    <TooltipTrigger
-                      render={
-                        <Link
-                          href={item.href}
-                          onClick={() => setSidebarOpen(false)}
-                          className={cn(
-                            "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200",
-                            isActive
-                              ? "bg-oklch(0.55_0.24_264_/0.15) text-foreground"
-                              : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
-                          )}
-                        >
-                          {isActive && (
-                            <div className="absolute inset-0 rounded-lg bg-oklch(0.55_0.24_264_/0.08) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
-                          )}
-                          <item.icon className="relative h-4 w-4" />
-                        </Link>
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={8}>
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
+                  <motion.div key={item.href} variants={navItemVariants}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Link
+                            href={item.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                              "relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200",
+                              isActive
+                                ? "bg-oklch(0.55_0.24_264_/0.15) text-foreground"
+                                : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
+                            )}
+                          >
+                            {isActive && (
+                              <div className="absolute inset-0 rounded-lg bg-oklch(0.55_0.24_264_/0.08) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
+                            )}
+                            <item.icon className="relative h-4 w-4" />
+                          </Link>
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={8}>
+                        {item.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           ) : isPills ? (
-            <div className="space-y-2" onDragOver={(e) => e.preventDefault()} onDrop={onNavDrop}>
+            <motion.div
+              className="space-y-2"
+              variants={navContainerVariants}
+              initial="hidden"
+              animate="visible"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onNavDrop}
+            >
               {navGroups.map((group) => {
                 const isOpen = expandedCategories[group.label] ?? true;
                 const meta = getGroupMeta(group.id);
@@ -910,7 +946,7 @@ export function Sidebar() {
                 const isGroupDropTarget = navDropTarget?.type === "group" && navDropTarget.groupId === group.id;
 
                 return (
-                  <div key={group.id} className="relative">
+                  <motion.div key={group.id} className="relative" variants={navItemVariants}>
                     {isGroupDropTarget && navDropTarget.pos === "before" && (
                       <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}
@@ -1014,12 +1050,19 @@ export function Sidebar() {
                     {isGroupDropTarget && navDropTarget.pos === "after" && (
                       <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           ) : (
-            <div className="space-y-1" onDragOver={(e) => e.preventDefault()} onDrop={onNavDrop}>
+            <motion.div
+              className="space-y-1"
+              variants={navContainerVariants}
+              initial="hidden"
+              animate="visible"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onNavDrop}
+            >
               {navGroups.map((group) => {
                 const isOpen = expandedCategories[group.label] ?? true;
                 const meta = getGroupMeta(group.id);
@@ -1030,7 +1073,7 @@ export function Sidebar() {
                 const isGroupDropTarget = navDropTarget?.type === "group" && navDropTarget.groupId === group.id;
 
                 return (
-                  <div key={group.id} className="relative">
+                  <motion.div key={group.id} className="relative" variants={navItemVariants}>
                     {isGroupDropTarget && navDropTarget.pos === "before" && (
                       <div className="absolute top-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}
@@ -1122,7 +1165,15 @@ export function Sidebar() {
                                 <ItemIcon className="h-4 w-4 shrink-0" />
                                 <span className="truncate">{item.label}</span>
                                 {isActive && !editNavMode && (
-                                  <div className="ml-auto h-1.5 w-1.5 rounded-full bg-oklch(0.55_0.24_264) shadow-[0_0_6px_oklch(0.55_0.24_264/0.5)]" />
+                                  <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="ml-auto h-1.5 w-1.5 rounded-full"
+                                    style={{
+                                      backgroundColor: glow,
+                                      boxShadow: `0 0 6px ${glow}, 0 0 12px ${glow}80`,
+                                    }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                  />
                                 )}
                               </Link>
                               {isItemDropTarget && navDropTarget.pos === "after" && (
@@ -1136,10 +1187,10 @@ export function Sidebar() {
                     {isGroupDropTarget && navDropTarget.pos === "after" && (
                       <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-400 rounded-full z-10" />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </nav>
 

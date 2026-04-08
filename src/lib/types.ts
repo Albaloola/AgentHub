@@ -42,6 +42,8 @@ export interface Conversation {
   is_autonomous: boolean;
   total_cost: number;
   behavior_mode: string;
+  folder_id: string | null;
+  ghost_user_ids: string;
   created_at: string;
   updated_at: string;
 }

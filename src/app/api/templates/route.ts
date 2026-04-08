@@ -11,6 +11,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { name, description, response_mode, system_prompt, max_responses_per_turn, stop_on_completion, agent_ids, agent_roles } = body;
 
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
+
   const id = uuid();
   db.prepare(
     "INSERT INTO templates (id, name, description, response_mode, system_prompt, max_responses_per_turn, stop_on_completion) VALUES (?, ?, ?, ?, ?, ?, ?)",

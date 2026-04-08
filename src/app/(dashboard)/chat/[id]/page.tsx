@@ -1,127 +1,122 @@
 "use client";
 
-import { useEffect, useRef, useState, use, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { EmptyChatState } from "@/components/chat/empty-chat-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { MessageBubble } from "@/components/chat/message-bubble";
-import { ChatInput } from "@/components/chat/chat-input";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { InlineThinking } from "@/components/chat/inline-thinking";
-import { TerminalViewer } from "@/components/chat/terminal-viewer";
-import { FloatingStats } from "@/components/chat/floating-stats";
-import { ArtifactsPanel } from "@/components/chat/artifacts-panel";
-import { ReplayPanel } from "@/components/chat/replay-panel";
+import { ChatInput } from "@/components/chat/chat-input";
 import { useStore } from "@/lib/store";
-import { useShallow } from "zustand/react/shallow";
-import { getMessages, getConversations, streamChat } from "@/lib/api";
-import type { ConversationWithDetails, MessageWithToolCalls, ToolCall } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { streamChat, getMessages, getConversations } from "@/lib/api";
+import { spring } from "@/lib/animation";
+import type { MessageWithToolCalls, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
-import { v4 as uuid } from "uuid";
-import { useVirtualizer } from "@tanstack/react-virtual";
 
-const VIRTUALIZATION_THRESHOLD = 100;
-
-export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const router = useRouter();
-  const {
-    messages, setMessages, appendMessage, updateLastAssistantMessage,
-    appendToolCall, updateToolCall,
-    setConversations,
-    isStreaming, setIsStreaming, streamingAgentId, setStreamingAgentId,
-    toolPanelOpen, setToolPanelOpen,
-    thinkingContent, thinkingComplete, setThinkingContent,
-    subagents, addSubagent, updateSubagent, clearSubagents,
-    generationStatus, setGenerationStatus,
-    autoApprove, setAutoApprove,
-    setThinkingStartTime, thinkingStartTime,
-  } = useStore(useShallow((s) => ({
-    messages: s.messages, setMessages: s.setMessages, appendMessage: s.appendMessage, updateLastAssistantMessage: s.updateLastAssistantMessage,
-    appendToolCall: s.appendToolCall, updateToolCall: s.updateToolCall,
-    setConversations: s.setConversations,
-    isStreaming: s.isStreaming, setIsStreaming: s.setIsStreaming, streamingAgentId: s.streamingAgentId, setStreamingAgentId: s.setStreamingAgentId,
-    toolPanelOpen: s.toolPanelOpen, setToolPanelOpen: s.setToolPanelOpen,
-    thinkingContent: s.thinkingContent, thinkingComplete: s.thinkingComplete, setThinkingContent: s.setThinkingContent,
-    subagents: s.subagents, addSubagent: s.addSubagent, updateSubagent: s.updateSubagent, clearSubagents: s.clearSubagents,
-    generationStatus: s.generationStatus, setGenerationStatus: s.setGenerationStatus,
-    autoApprove: s.autoApprove, setAutoApprove: s.setAutoApprove,
-    setThinkingStartTime: s.setThinkingStartTime, thinkingStartTime: s.thinkingStartTime,
-  })));
-
+export default function ChatPage() {
+  const { id: conversationId } = useParams<{ id: string }>();
+  const prefersReducedMotion = useReducedMotion();
+  
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Local state
+  const [isLoading, setIsLoading] = useState(true);
   const [conversation, setConversation] = useState<ConversationWithDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [messageQueue, setMessageQueue] = useState<{ content: string; targetAgentId?: string }[]>([]);
-  const [replayOpen, setReplayOpen] = useState(false);
-  const [chatFont, setChatFont] = useState<string>(() => {
-    try { return localStorage.getItem(`agenthub-chat-font-${id}`) || ""; } catch { return ""; }
-  });
-  const abortRef = useRef<AbortController | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const streamContentRef = useRef("");
-  const streamMsgIdRef = useRef("");
-  const processingQueue = useRef(false);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<number[]>([]);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
+  
+  // Store state
+  const {
+    messages,
+    setMessages,
+    appendMessage,
+    updateLastAssistantMessage,
+    isStreaming,
+    setIsStreaming,
+    streamingAgentId,
+    setStreamingAgentId,
+    setActiveConversationId,
+    setThinkingContent,
+    setThinkingStartTime,
+    agents,
+    setAgents,
+    conversations,
+    setConversations,
+  } = useStore();
 
+  // Check if chat has started (has messages)
+  const hasMessages = messages.length > 0;
+
+  // Fetch initial data
   useEffect(() => {
-    loadChat();
-    return () => { abortRef.current?.abort(); };
-  }, [id]);
+    if (!conversationId) return;
+    
+    setActiveConversationId(conversationId);
+    setHasStartedChat(false);
+    
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        // Fetch conversations and messages in parallel
+        const [convsData, msgsData] = await Promise.all([
+          getConversations(),
+          getMessages(conversationId),
+        ]);
+        
+        setConversations(convsData);
+        const currentConv = convsData.find((c) => c.id === conversationId) || null;
+        setConversation(currentConv);
+        setMessages(msgsData);
+        
+        // If there are existing messages, mark chat as started
+        if (msgsData.length > 0) {
+          setHasStartedChat(true);
+        }
+      } catch (error) {
+        toast.error("Failed to load conversation");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadData();
+    
+    return () => {
+      setActiveConversationId(null);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [conversationId, setActiveConversationId, setConversations, setMessages]);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    // Auto-scroll to bottom
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
+    if (messagesEndRef.current && !prefersReducedMotion) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isStreaming]);
+  }, [messages, prefersReducedMotion]);
 
-  async function loadChat() {
-    setLoading(true);
-    try {
-      const [msgs, convs] = await Promise.all([getMessages(id), getConversations()]);
-      setMessages(msgs);
-      setConversations(convs);
-      const conv = convs.find((c) => c.id === id) ?? null;
-      setConversation(conv);
-    } catch {
-      toast.error("Failed to load conversation");
-      router.push("/");
-    } finally {
-      setLoading(false);
+  // Handle sending a message
+  const handleSendMessage = useCallback(async (content: string, targetAgentId?: string, attachmentIds?: string[]) => {
+    if (!conversationId || !content.trim()) return;
+    
+    // Mark chat as started (triggers animation)
+    if (!hasStartedChat) {
+      setHasStartedChat(true);
     }
-  }
-
-  // Process queued messages after current stream finishes
-  useEffect(() => {
-    if (!isStreaming && messageQueue.length > 0 && !processingQueue.current) {
-      processingQueue.current = true;
-      const next = messageQueue[0];
-      setMessageQueue((q) => q.slice(1));
-      setTimeout(() => {
-        processingQueue.current = false;
-        sendMessage(next.content, next.targetAgentId);
-      }, 300);
-    }
-  }, [isStreaming, messageQueue]);
-
-  function handleSend(content: string, targetAgentId?: string, attachmentIds?: string[]) {
-    // If already streaming, queue the message
-    if (isStreaming) {
-      setMessageQueue((q) => [...q, { content, targetAgentId }]);
-      toast.success(`Message queued (${messageQueue.length + 1} in queue)`);
-      return;
-    }
-    sendMessage(content, targetAgentId);
-  }
-
-  function sendMessage(content: string, targetAgentId?: string) {
-    // Add user message locally
-    const userMsg: MessageWithToolCalls = {
-      id: uuid(),
-      conversation_id: id,
+    
+    // Create user message
+    const userMessage: MessageWithToolCalls = {
+      id: `temp-${Date.now()}`,
+      conversation_id: conversationId,
       sender_agent_id: null,
-      content,
+      content: content.trim(),
       thinking_content: "",
       token_count: 0,
       parent_message_id: null,
@@ -136,33 +131,57 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       created_at: new Date().toISOString(),
       tool_calls: [],
     };
-    appendMessage(userMsg);
-
-    // Start streaming
+    
+    appendMessage(userMessage);
     setIsStreaming(true);
-    setGenerationStatus("generating");
-    streamContentRef.current = "";
-    streamMsgIdRef.current = "";
-    setThinkingContent("", false);
-    setThinkingStartTime(null);
-
-    const abortController = new AbortController();
-    abortRef.current = abortController;
-
-    streamChat(id, content, {
-      onContent: (chunk) => {
-        streamContentRef.current += chunk;
-
-        if (!streamMsgIdRef.current) {
-          // Haven't created the placeholder message yet — wait for agent_start
-          // But if we get content first, create a placeholder
-          const tempId = uuid();
-          streamMsgIdRef.current = tempId;
-          const placeholder: MessageWithToolCalls = {
-            id: tempId,
-            conversation_id: id,
-            sender_agent_id: streamingAgentId ?? conversation?.agents[0]?.id ?? "",
-            content: streamContentRef.current,
+    setThinkingStartTime(Date.now());
+    
+    // Abort any existing stream
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
+    let assistantMessageId: string | null = null;
+    let hasReceivedContent = false;
+    
+    streamChat(
+      conversationId,
+      content.trim(),
+      {
+        onContent: (chunk) => {
+          if (!hasReceivedContent) {
+            hasReceivedContent = true;
+            setThinkingContent("", true); // Mark thinking as complete
+          }
+          updateLastAssistantMessage(chunk);
+        },
+        onToolCall: (data) => {
+          // Tool calls are handled in the message bubble
+        },
+        onToolResult: (data) => {
+          // Tool results are handled in the message bubble
+        },
+        onError: (error) => {
+          toast.error(error);
+          setIsStreaming(false);
+          setStreamingAgentId(null);
+        },
+        onDone: (data) => {
+          assistantMessageId = data.message_id;
+          setIsStreaming(false);
+          setStreamingAgentId(null);
+          setThinkingContent("", false);
+        },
+        onAgentStart: (data) => {
+          setStreamingAgentId(data.agent_id);
+          // Add placeholder assistant message
+          const assistantMessage: MessageWithToolCalls = {
+            id: data.message_id,
+            conversation_id: conversationId,
+            sender_agent_id: data.agent_id,
+            agent: agents.find((a) => a.id === data.agent_id),
+            content: "",
             thinking_content: "",
             token_count: 0,
             parent_message_id: null,
@@ -176,413 +195,224 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             is_edited: false,
             created_at: new Date().toISOString(),
             tool_calls: [],
-            agent: conversation?.agents[0],
           };
-          appendMessage(placeholder);
-        } else {
-          updateLastAssistantMessage(streamContentRef.current);
-        }
+          appendMessage(assistantMessage);
+        },
+        onThinking: (thinking) => {
+          setThinkingContent(thinking, false);
+        },
+        onThinkingEnd: () => {
+          setThinkingContent("", true);
+        },
       },
+      { target_agent_id: targetAgentId, signal: abortControllerRef.current.signal }
+    );
+  }, [conversationId, hasStartedChat, agents, appendMessage, setIsStreaming, setStreamingAgentId, updateLastAssistantMessage, setThinkingContent, setThinkingStartTime]);
 
-      onToolCall: (data) => {
-        const msgId = streamMsgIdRef.current;
-        if (!msgId) return;
-
-        const toolCall: ToolCall = {
-          id: data.tool_call_id || uuid(),
-          message_id: msgId,
-          agent_id: streamingAgentId ?? "",
-          tool_name: data.tool_name,
-          input: JSON.stringify(data.tool_input),
-          output: "{}",
-          status: "pending",
-          timestamp: new Date().toISOString(),
-        };
-        appendToolCall(msgId, toolCall);
-      },
-
-      onToolResult: (data) => {
-        const msgId = streamMsgIdRef.current;
-        if (!msgId) return;
-        updateToolCall(msgId, data.tool_call_id, {
-          output: JSON.stringify(data.tool_output),
-          status: "success",
-        });
-      },
-
-      onError: (error) => {
-        toast.error(error);
-      },
-
-      onDone: (data) => {
-        setIsStreaming(false);
-        setStreamingAgentId(null);
-        setGenerationStatus(streamContentRef.current ? "done" : "no_response");
-        // Reload to sync with DB
-        getMessages(id).then(setMessages).catch(() => {});
-        getConversations().then(setConversations).catch(() => {});
-      },
-
-      onAgentStart: (data) => {
-        setStreamingAgentId(data.agent_id);
-      },
-
-      onThinking: (content) => {
-        if (!thinkingStartTime) setThinkingStartTime(Date.now());
-        setThinkingContent(content);
-      },
-
-      onThinkingEnd: () => {
-        setThinkingContent("", true);
-      },
-
-      onSubagentSpawned: (data) => {
-        addSubagent({
-          id: data.subagent_id,
-          parent_agent_id: data.agent_id ?? "",
-          goal: data.goal,
-          status: "running",
-          spawned_at: new Date().toISOString(),
-        });
-      },
-
-      onSubagentProgress: () => {},
-
-      onSubagentCompleted: (data) => {
-        updateSubagent(data.subagent_id, { status: "completed", result: data.result });
-      },
-
-      onSubagentFailed: (data) => {
-        updateSubagent(data.subagent_id, { status: "failed", error: data.error });
-      },
-    }, {
-      target_agent_id: targetAgentId,
-      signal: abortController.signal,
-    });
-  }
-
-  function handleCancel() {
-    abortRef.current?.abort();
+  // Handle stop generation
+  const handleStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     setIsStreaming(false);
     setStreamingAgentId(null);
-  }
+  }, [setIsStreaming, setStreamingAgentId]);
 
-  function handleRegenerate(messageId: string, agentId?: string) {
-    // Find the user message before this agent message
-    const msgIndex = messages.findIndex((m) => m.id === messageId);
-    if (msgIndex < 0) return;
-    let userMsg: MessageWithToolCalls | undefined;
-    for (let i = msgIndex - 1; i >= 0; i--) {
-      if (messages[i].sender_agent_id === null) {
-        userMsg = messages[i];
-        break;
+  // Handle reset conversation
+  const handleReset = useCallback(async () => {
+    if (!conversationId) return;
+    try {
+      const msgsData = await getMessages(conversationId);
+      setMessages(msgsData);
+      setHasStartedChat(msgsData.length > 0);
+    } catch (error) {
+      toast.error("Failed to refresh messages");
+    }
+  }, [conversationId, setMessages]);
+
+  // Handle regenerate
+  const handleRegenerate = useCallback(async (messageId: string, agentId?: string) => {
+    // Implementation would call the regenerate API
+    toast.info("Regenerate feature coming soon");
+  }, []);
+
+  // Handle suggestion click from empty state
+  const handleSuggestionClick = useCallback((prompt: string) => {
+    handleSendMessage(prompt);
+  }, [handleSendMessage]);
+
+  // Search functionality
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setCurrentSearchIndex(-1);
+      return;
+    }
+    
+    const indices: number[] = [];
+    messages.forEach((msg, idx) => {
+      if (msg.content.toLowerCase().includes(query.toLowerCase())) {
+        indices.push(idx);
       }
+    });
+    setSearchResults(indices);
+    setCurrentSearchIndex(indices.length > 0 ? 0 : -1);
+  }, [messages]);
+
+  const handleNavigateSearch = useCallback((direction: "next" | "prev") => {
+    if (searchResults.length === 0) return;
+    
+    if (direction === "next") {
+      setCurrentSearchIndex((prev) => (prev + 1) % searchResults.length);
+    } else {
+      setCurrentSearchIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
     }
-    if (!userMsg) return;
-    handleSend(userMsg.content, agentId);
-  }
+  }, [searchResults.length]);
 
-  function handleEditComplete() {
-    getMessages(id).then(setMessages).catch(() => {});
-  }
+  // Get primary agent for empty state
+  const primaryAgent = conversation?.agents?.[0];
 
-  function handleChatFontChange(font: string) {
-    setChatFont(font);
-    try { localStorage.setItem(`agenthub-chat-font-${id}`, font); } catch {}
-  }
+  // Animation variants
+  const welcomeVariants = {
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      y: 0,
+    },
+    hidden: { 
+      opacity: 0, 
+      scale: 0.95,
+      y: -20,
+    },
+  };
 
-  if (loading) {
-    return <ChatSkeleton />;
-  }
+  const inputContainerVariants = {
+    centered: {
+      y: 0,
+      transition: {
+        ...spring.gentle,
+        duration: 0.4,
+      },
+    },
+    bottom: {
+      y: 0,
+      transition: {
+        ...spring.gentle,
+        duration: 0.4,
+      },
+    },
+  };
 
-  return (
-    <div className="flex h-full min-h-0">
-      {/* Chat area */}
-      <div className="flex flex-1 flex-col min-h-0 min-w-0">
-        <ChatHeader
-          conversation={conversation}
-          isStreaming={isStreaming}
-          streamingAgentId={streamingAgentId}
-          toolPanelOpen={toolPanelOpen}
-          onToggleToolPanel={() => setToolPanelOpen(!toolPanelOpen)}
-          onStop={handleCancel}
-          onReplay={() => setReplayOpen((o) => !o)}
-          replayOpen={replayOpen}
-          queueCount={messageQueue.length}
-          onReset={() => {
-            setMessages([]);
-            setMessageQueue([]);
-            setThinkingContent("", true);
-            clearSubagents();
-            getMessages(id).then(setMessages).catch(() => {});
-          }}
-        />
-
-        {/* Replay panel */}
-        {replayOpen && (
-          <div className="px-6 pb-2 shrink-0">
-            <ReplayPanel conversationId={id} onClose={() => setReplayOpen(false)} />
-          </div>
-        )}
-
-        {/* Messages area */}
-        <VirtualizedMessages
-          scrollRef={scrollRef}
-          messages={messages}
-          isStreaming={isStreaming}
-          chatFont={chatFont}
-          conversation={conversation}
-          thinkingContent={thinkingContent}
-          thinkingComplete={thinkingComplete}
-          messageQueue={messageQueue}
-          onSuggestionClick={(prompt) => sendMessage(prompt)}
-          onRegenerate={handleRegenerate}
-          onEditComplete={handleEditComplete}
-        />
-
-        {/* Input - inside the centered area when empty, at bottom when chatting */}
-        <div className={cn(
-          messages.length === 0 && !isStreaming ? "px-6 pb-8 fluid-content-width mx-auto w-full" : "",
-        )}>
-          <ChatInput
-            onSend={handleSend}
-            onCancel={handleCancel}
-            isStreaming={isStreaming}
-            agents={conversation?.type === "group" ? conversation.agents : undefined}
-            conversationId={id}
-            chatFont={chatFont}
-            onFontChange={handleChatFontChange}
-          />
-        </div>
-      </div>
-
-      {/* Floating stats panel */}
-      <FloatingStats
-        messages={messages}
-        subagents={subagents}
-        isStreaming={isStreaming}
-        autoApprove={autoApprove}
-        onToggleAutoApprove={() => setAutoApprove(!autoApprove)}
-      />
-      <ArtifactsPanel messages={messages} />
-    </div>
-  );
-}
-
-/** Messages area - uses virtualization for large conversations (100+ messages) */
-function VirtualizedMessages({
-  scrollRef,
-  messages,
-  isStreaming,
-  chatFont,
-  conversation,
-  thinkingContent,
-  thinkingComplete,
-  messageQueue,
-  onSuggestionClick,
-  onRegenerate,
-  onEditComplete,
-}: {
-  scrollRef: React.RefObject<HTMLDivElement | null>;
-  messages: MessageWithToolCalls[];
-  isStreaming: boolean;
-  chatFont: string;
-  conversation: ConversationWithDetails | null;
-  thinkingContent: string;
-  thinkingComplete: boolean;
-  messageQueue: { content: string; targetAgentId?: string }[];
-  onSuggestionClick: (prompt: string) => void;
-  onRegenerate: (messageId: string, agentId?: string) => void;
-  onEditComplete: () => void;
-}) {
-  const useVirtual = messages.length >= VIRTUALIZATION_THRESHOLD;
-
-  const virtualizer = useVirtualizer({
-    count: messages.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 120,
-    overscan: 10,
-    enabled: useVirtual,
-  });
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [messages.length, isStreaming]);
-
-  const fontStyle = chatFont ? { fontFamily: `'${chatFont.replace("-", " ")}', var(--font-chat)` } : undefined;
-
-  // Shared footer content (thinking, tool calls, queue)
-  const footer = (
-    <>
-      {(thinkingContent || isStreaming) && messages.length > 0 && messages[messages.length - 1].sender_agent_id === null && (
-        <InlineThinking
-          thinkingContent={thinkingContent}
-          isComplete={thinkingComplete}
-          isStreaming={isStreaming}
-        />
-      )}
-      {messages.length > 0 && messages[messages.length - 1].tool_calls.length > 0 && (
-        <TerminalViewer
-          toolCalls={messages[messages.length - 1].tool_calls}
-          isStreaming={isStreaming && messages[messages.length - 1].sender_agent_id !== null}
-        />
-      )}
-      {messageQueue.length > 0 && (
-        <div className="flex items-center justify-center gap-2 py-2 animate-fade-in">
-          <div className="glass-bubble rounded-full px-4 py-1.5 flex items-center gap-2 queue-pulse neon-border">
-            <div className="flex gap-1">
-              {Array.from({ length: Math.min(messageQueue.length, 3) }).map((_, i) => (
-                <div key={i} className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
-              ))}
-            </div>
-            <span className="text-xs text-blue-400">{messageQueue.length} message{messageQueue.length !== 1 ? "s" : ""} queued</span>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  // Non-virtualized path for small conversations
-  if (!useVirtual) {
+  if (isLoading) {
     return (
-      <div
-        ref={scrollRef}
-        className={cn(
-          "flex-1 min-h-0 overflow-y-auto chat-font",
-          messages.length === 0 && !isStreaming && "flex flex-col justify-center",
-        )}
-        id="chat-scroll"
-        style={fontStyle}
-        aria-live="polite"
-        aria-label="Chat messages"
-      >
-        <div className="relative z-10 mx-auto fluid-content-width space-y-3 p-6">
-          {messages.length === 0 && !isStreaming && (
-            <EmptyChatState
-              agentName={conversation?.agents?.[0]?.name}
-              agentId={conversation?.agents?.[0]?.id}
-              onSuggestionClick={onSuggestionClick}
-            />
-          )}
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isStreaming={isStreaming && i === messages.length - 1 && msg.sender_agent_id !== null}
-              onRegenerate={onRegenerate}
-              onEditComplete={onEditComplete}
-            />
-          ))}
-          {footer}
+      <div className="flex h-full min-h-0">
+        <div className="flex flex-1 flex-col min-h-0 min-w-0">
+          <div className="flex items-center gap-2 px-2 shrink-0 py-2">
+            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-muted-foreground">Loading conversation...</div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Virtualized path for large conversations
-  return (
-    <div
-      ref={scrollRef}
-      className="flex-1 min-h-0 overflow-y-auto chat-font"
-      id="chat-scroll"
-      style={fontStyle}
-      aria-live="polite"
-      aria-label="Chat messages"
-    >
-      <div
-        className="relative z-10 mx-auto fluid-content-width p-6"
-        style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}
-      >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
-          const msg = messages[virtualRow.index];
-          return (
-            <div
-              key={msg.id}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-                paddingBottom: 12,
-              }}
-            >
-              <MessageBubble
-                message={msg}
-                isStreaming={isStreaming && virtualRow.index === messages.length - 1 && msg.sender_agent_id !== null}
-                onRegenerate={onRegenerate}
-                onEditComplete={onEditComplete}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="relative z-10 mx-auto fluid-content-width px-6 pb-6">
-        {footer}
-      </div>
-    </div>
-  );
-}
-
-/** Skeleton shown while the chat conversation is loading */
-function ChatSkeleton() {
   return (
     <div className="flex h-full min-h-0">
       <div className="flex flex-1 flex-col min-h-0 min-w-0">
-        {/* Header skeleton */}
-        <div className="flex items-center gap-2 px-2 shrink-0 py-2">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-4 w-24" />
-          <div className="flex-1" />
-          <Skeleton className="h-6 w-14 rounded-md" />
-          <Skeleton className="h-6 w-16 rounded-md" />
-        </div>
+        {/* Header */}
+        <ChatHeader
+          conversation={conversation}
+          isStreaming={isStreaming}
+          streamingAgentId={streamingAgentId}
+          toolPanelOpen={false}
+          onToggleToolPanel={() => {}}
+          onReset={handleReset}
+          onStop={handleStop}
+          searchQuery={searchQuery}
+          onSearchQueryChange={handleSearchQueryChange}
+          searchResultCount={searchResults.length}
+          onNavigateSearch={handleNavigateSearch}
+        />
 
-        {/* Message bubbles skeleton */}
-        <div className="flex-1 min-h-0 overflow-hidden p-6">
-          <div className="mx-auto fluid-content-width space-y-4">
-            {/* User message - right aligned */}
-            <div className="flex justify-end">
-              <Skeleton className="h-12 w-[55%] rounded-2xl" />
-            </div>
-
-            {/* Agent message - left aligned, wider */}
-            <div className="flex justify-start gap-3">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0 mt-1" />
-              <div className="space-y-2 flex-1 max-w-[70%]">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[85%]" />
-                <Skeleton className="h-4 w-[60%]" />
-              </div>
-            </div>
-
-            {/* User message */}
-            <div className="flex justify-end">
-              <Skeleton className="h-10 w-[40%] rounded-2xl" />
-            </div>
-
-            {/* Agent message */}
-            <div className="flex justify-start gap-3">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0 mt-1" />
-              <div className="space-y-2 flex-1 max-w-[65%]">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[90%]" />
-                <Skeleton className="h-4 w-[75%]" />
-                <Skeleton className="h-4 w-[45%]" />
-              </div>
-            </div>
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+          {/* Messages container */}
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto min-h-0 px-4 py-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {!hasMessages ? (
+                // Empty state with welcome content
+                <motion.div
+                  key="empty-state"
+                  variants={welcomeVariants}
+                  initial="visible"
+                  exit="hidden"
+                  className="flex flex-col items-center justify-center min-h-full"
+                >
+                  <EmptyChatState
+                    agentName={primaryAgent?.name}
+                    agentId={primaryAgent?.id}
+                    onSuggestionClick={handleSuggestionClick}
+                  />
+                </motion.div>
+              ) : (
+                // Messages list
+                <div className="max-w-3xl mx-auto space-y-4">
+                  <AnimatePresence initial={false}>
+                    {messages.map((message, index) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, x: message.sender_agent_id === null ? 20 : -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        layout
+                      >
+                        <MessageBubble
+                          message={message}
+                          isStreaming={isStreaming && index === messages.length - 1 && message.sender_agent_id !== null}
+                          onRegenerate={handleRegenerate}
+                          showActions={true}
+                          searchQuery={searchQuery}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
 
-        {/* Input skeleton */}
-        <div className="px-6 pb-6">
-          <Skeleton className="h-12 w-full rounded-xl" />
+          {/* Input area with animation */}
+          <motion.div
+            className="flex-shrink-0 px-4 pb-4 pt-2"
+            initial={false}
+            animate={hasStartedChat ? "bottom" : "centered"}
+            variants={inputContainerVariants}
+          >
+            <motion.div
+              layout
+              transition={prefersReducedMotion ? { duration: 0 } : { ...spring.gentle, duration: 0.4 }}
+            >
+              <ChatInput
+                onSend={handleSendMessage}
+                onCancel={handleStop}
+                isStreaming={isStreaming}
+                agents={conversation?.agents || []}
+                disabled={isLoading}
+                conversationId={conversationId}
+                isCentered={!hasStartedChat}
+                hasStartedChat={hasStartedChat}
+              />
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </div>

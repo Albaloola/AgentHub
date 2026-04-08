@@ -219,7 +219,7 @@ export function ShareDialog({
         <div className="flex items-center gap-2 rounded-lg bg-foreground/[0.05] px-3 py-2">
           {isShared ? (
             <>
-              <Globe className="h-3.5 w-3.5 text-blue-400" />
+              <Globe className="h-3.5 w-3.5 text-[var(--accent-blue)]" />
               <span className="text-xs text-muted-foreground">
                 Shared with {permissions.length}{" "}
                 {permissions.length === 1 ? "user" : "users"}

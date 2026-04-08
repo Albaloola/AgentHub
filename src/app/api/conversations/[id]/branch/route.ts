@@ -15,9 +15,16 @@ export async function POST(
   const newId = uuid();
   const branchPoint = branch_at_message_id || new Date().toISOString();
 
+  const conv = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id) as Record<string, unknown>;
   db.prepare(
-    "INSERT INTO conversations (id, type, name, parent_conversation_id) VALUES (?, ?, ?, ?)",
-  ).run(newId, conversation.type, `${conversation.name} (Branch)`, id);
+    "INSERT INTO conversations (id, type, name, agent_id, parent_conversation_id) VALUES (?, ?, ?, ?, ?)",
+  ).run(newId, conversation.type, `${conversation.name} (Branch)`, conv.agent_id ?? null, id);
+
+  // Copy group agent assignments
+  const groupAgents = db.prepare("SELECT * FROM conversation_agents WHERE conversation_id = ?").all(id) as { agent_id: string; response_mode: string; agent_role: string }[];
+  for (const ga of groupAgents) {
+    db.prepare("INSERT INTO conversation_agents (conversation_id, agent_id, response_mode, agent_role) VALUES (?, ?, ?, ?)").run(newId, ga.agent_id, ga.response_mode, ga.agent_role);
+  }
 
   if (branch_at_message_id) {
     const msgs = db.prepare(

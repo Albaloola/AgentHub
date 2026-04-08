@@ -1,483 +1,425 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  Bot, MessageSquare, Plus, Users, Activity, ArrowRight,
-  Zap, Clock, Shield, GitBranch, Brain, Cpu, GripVertical, Lock, Unlock, LayoutGrid, LayoutList,
+  Bot,
+  MessageSquare,
+  Activity,
+  TrendingUp,
+  Zap,
+  ArrowRight,
+  Plus,
+  Users,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HudPanel, HudStat } from "@/components/ui/hud-panel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LivingAvatar } from "@/components/ui/living-avatar";
-import { useStore } from "@/lib/store";
-import { useShallow } from "zustand/react/shallow";
-import { getAgents, getConversations, createConversation, checkAgentHealth } from "@/lib/api";
-import { cn, timeAgo } from "@/lib/utils";
-import type { AgentWithStatus } from "@/lib/types";
-import { Responsive } from "react-grid-layout";
-import "react-grid-layout/css/styles.css";
+import { getAgents, getConversations, createConversation } from "@/lib/api";
+import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
+import { FadeIn, MotionList, MotionItem } from "@/components/ui/motion-primitives";
+import { toast } from "sonner";
+import type { AgentWithStatus, ConversationWithDetails } from "@/lib/types";
 
-const DEFAULT_LAYOUTS = {
-  lg: [
-    { i: "stats", x: 0, y: 0, w: 12, h: 2, isResizable: false },
-    { i: "fleet", x: 0, y: 2, w: 8, h: 6, minW: 4, minH: 3 },
-    { i: "actions", x: 8, y: 2, w: 4, h: 6, minW: 3, minH: 3 },
-    { i: "recent", x: 0, y: 8, w: 12, h: 5, minW: 6, minH: 3 },
-  ],
-  md: [
-    { i: "stats", x: 0, y: 0, w: 10, h: 2, isResizable: false },
-    { i: "fleet", x: 0, y: 2, w: 6, h: 6, minW: 4, minH: 3 },
-    { i: "actions", x: 6, y: 2, w: 4, h: 6, minW: 3, minH: 3 },
-    { i: "recent", x: 0, y: 8, w: 10, h: 5, minW: 4, minH: 3 },
-  ],
-  sm: [
-    { i: "stats", x: 0, y: 0, w: 6, h: 2, isResizable: false },
-    { i: "fleet", x: 0, y: 2, w: 6, h: 6, minW: 3, minH: 3 },
-    { i: "actions", x: 0, y: 8, w: 6, h: 5, minW: 3, minH: 3 },
-    { i: "recent", x: 0, y: 13, w: 6, h: 5, minW: 3, minH: 3 },
-  ],
-};
-
-function loadLayouts(): typeof DEFAULT_LAYOUTS {
-  try {
-    const stored = localStorage.getItem("agenthub-dashboard-layouts");
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return DEFAULT_LAYOUTS;
-}
-
-function saveLayouts(layouts: typeof DEFAULT_LAYOUTS) {
-  try {
-    localStorage.setItem("agenthub-dashboard-layouts", JSON.stringify(layouts));
-  } catch {}
-}
-
-export default function HomePage() {
+export default function DashboardPage() {
   const router = useRouter();
-  const { agents, setAgents, conversations, setConversations, updateAgentStatus } = useStore(useShallow((s) => ({ agents: s.agents, setAgents: s.setAgents, conversations: s.conversations, setConversations: s.setConversations, updateAgentStatus: s.updateAgentStatus })));
-  const [gridLocked, setGridLocked] = useState(true);
-  const [fleetView, setFleetView] = useState<"list" | "grid">("list");
-  const [layouts, setLayouts] = useState(DEFAULT_LAYOUTS);
-  const [time, setTime] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
-  const gridContainerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(1024);
+  const [agents, setAgents] = useState<AgentWithStatus[]>([]);
+  const [conversations, setConversations] = useState<ConversationWithDetails[]>([]);
 
   useEffect(() => {
-    const el = gridContainerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-    ro.observe(el);
-    setContainerWidth(el.clientWidth);
-    return () => ro.disconnect();
+    loadDashboardData();
   }, []);
 
-  useEffect(() => {
-    setLayouts(loadLayouts());
-  }, []);
-
-  useEffect(() => {
-    loadData();
-    setTime(new Date());
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLayoutChange = useCallback((_layout: any, allLayouts: any) => {
-    setLayouts(allLayouts);
-    saveLayouts(allLayouts);
-  }, []);
-
-  async function loadData() {
+  async function loadDashboardData() {
     setLoading(true);
     try {
-      const [a, c] = await Promise.all([getAgents(), getConversations()]);
-      setAgents(a);
-      setConversations(c);
+      const [agentsData, convsData] = await Promise.all([
+        getAgents(),
+        getConversations(),
+      ]);
+      setAgents(agentsData);
+      setConversations(convsData.slice(0, 10));
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   }
 
-  async function startChat(agent: AgentWithStatus) {
-    const { id } = await createConversation({ agent_id: agent.id });
-    router.push(`/chat/${id}`);
-  }
+  const onlineAgents = agents.filter((a) => a.status === "online");
+  const activeAgents = agents.filter((a) => a.is_active);
+  const totalMessages = agents.reduce((sum, a) => sum + (a.total_messages || 0), 0);
+  const totalTokens = agents.reduce((sum, a) => sum + (a.total_tokens || 0), 0);
 
-  async function pingAgent(agent: AgentWithStatus) {
+  async function handleQuickChat(agentId: string) {
     try {
-      const result = await checkAgentHealth(agent.id);
-      updateAgentStatus(agent.id, result.status === "ok" ? "online" : "error", result.latency_ms);
+      const { id } = await createConversation({ agent_id: agentId });
+      router.push(`/chat/${id}`);
     } catch {
-      updateAgentStatus(agent.id, "error");
+      toast.error("Failed to create conversation");
     }
   }
 
-  const onlineCount = agents.filter((a) => a.status === "online").length;
-  const totalMessages = conversations.reduce((sum, c) => sum + c.message_count, 0);
-  const activeConvs = conversations.filter((c) => {
-    const updated = new Date(c.updated_at + "Z");
-    return Date.now() - updated.getTime() < 24 * 60 * 60 * 1000;
-  }).length;
-
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
   return (
-    <div className="min-h-full">
-      <div className="relative z-10 p-6 space-y-4">
-        {/* Mission control header */}
-        <div className="flex items-center justify-between">
+    <div className="p-6 md:p-8 space-y-8">
+      <FadeIn direction="up" distance={16}>
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">Mission Control</h1>
-            <p className="text-sm text-muted-foreground/60 mt-0.5">
-              {time ? (
-                <>
-                  {time.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-                  {" "}
-                  <span className="tabular-nums">{time.toLocaleTimeString()}</span>
-                </>
-              ) : (
-                <span className="tabular-nums">--:--:--</span>
-              )}
+            <h1 className="text-3xl font-bold tracking-tight">Mission Control</h1>
+            <p className="text-muted-foreground mt-2">
+              Overview of your agents, recent activity, and system health
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl gap-1.5 transition-all duration-200",
-                gridLocked ? "text-muted-foreground" : "glass neon-action text-blue-400",
-              )}
-              onClick={() => setGridLocked(!gridLocked)}
-              title={gridLocked ? "Unlock grid to rearrange panels" : "Lock grid layout"}
-              aria-label={gridLocked ? "Unlock grid layout" : "Lock grid layout"}
-            >
-              {gridLocked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-              {gridLocked ? "Locked" : "Editing"}
+            <Button variant="outline" onClick={() => router.push("/agents")}>
+              <Bot className="h-4 w-4 mr-2" />
+              Manage Agents
             </Button>
-            <Button variant="outline" size="sm" className="rounded-xl glass neon-action gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/agents")}>
-              <Plus className="h-3.5 w-3.5" />
-              New Agent
-            </Button>
-            <Button size="sm" className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 neon-action gap-1.5 transition-all duration-200 hover-lift" onClick={() => router.push("/groups")}>
-              <Users className="h-3.5 w-3.5" />
-              Group Chat
+            <Button onClick={() => router.push("/agents")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Agent
             </Button>
           </div>
         </div>
+      </FadeIn>
 
-        {/* Draggable grid */}
-        <div ref={gridContainerRef}>
-        <Responsive
-          className="dashboard-grid"
-          width={containerWidth}
-          layouts={layouts}
-          breakpoints={{ lg: 1024, md: 768, sm: 0 }}
-          cols={{ lg: 12, md: 10, sm: 6 }}
-          rowHeight={60}
-          margin={[16, 16] as [number, number]}
-          containerPadding={[0, 0] as [number, number]}
-          dragConfig={{ enabled: !gridLocked, handle: ".panel-drag-header", cancel: "button, a, input" }}
-          resizeConfig={{ enabled: !gridLocked, handles: ["n", "s", "e", "w", "ne", "nw", "se", "sw"] as const }}
-          onLayoutChange={handleLayoutChange}
-        >
-          {/* Stats row */}
-          <div key="stats">
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4 h-full">
-              <HudStat icon={<Bot className="h-4 w-4" />} label="Agents Online" value={`${onlineCount}/${agents.length}`} accent="emerald" />
-              <HudStat icon={<MessageSquare className="h-4 w-4" />} label="Conversations" value={conversations.length} accent="blue" />
-              <HudStat icon={<Zap className="h-4 w-4" />} label="Messages" value={totalMessages} accent="violet" />
-              <HudStat icon={<Activity className="h-4 w-4" />} label="Active (24h)" value={activeConvs} accent="amber" />
-            </div>
-          </div>
+      <FadeIn direction="up" distance={16} delay={0.1}>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Agents"
+            value={agents.length}
+            subtitle={`${onlineAgents.length} online`}
+            icon={Bot}
+            trend={onlineAgents.length > 0 ? "+active" : undefined}
+            loading={loading}
+            href="/agents"
+            color="blue"
+          />
+          <StatCard
+            title="Active Agents"
+            value={activeAgents.length}
+            subtitle={`${Math.round((activeAgents.length / Math.max(agents.length, 1)) * 100)}% enabled`}
+            icon={Zap}
+            loading={loading}
+            href="/agents"
+            color="amber"
+          />
+          <StatCard
+            title="Total Messages"
+            value={formatNumber(totalMessages)}
+            subtitle="Across all agents"
+            icon={MessageSquare}
+            loading={loading}
+            href="/analytics"
+            color="emerald"
+          />
+          <StatCard
+            title="Tokens Processed"
+            value={formatNumber(totalTokens)}
+            subtitle="Lifetime usage"
+            icon={BarChart3}
+            loading={loading}
+            href="/analytics"
+            color="violet"
+          />
+        </div>
+      </FadeIn>
 
-          {/* Agent Fleet Panel */}
-          <div key="fleet">
-            <HudPanel
-              title="Agent Fleet"
-              icon={<Cpu className="h-4 w-4" />}
-              accent="blue"
-              collapsible
-              status={`${onlineCount} online`}
-              className="h-full"
-              badge={
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-md"
-                    onClick={(e) => { e.stopPropagation(); setFleetView(fleetView === "list" ? "grid" : "list"); }}
-                    title={fleetView === "list" ? "Grid view" : "List view"}
-                    aria-label={fleetView === "list" ? "Switch to grid view" : "Switch to list view"}
-                  >
-                    {fleetView === "list" ? <LayoutGrid className="h-3 w-3" /> : <LayoutList className="h-3 w-3" />}
-                  </Button>
-                  {!gridLocked && <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 cursor-grab" />}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <FadeIn direction="up" distance={16} delay={0.2} className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-blue-400" />
+                  Agent Status
+                </CardTitle>
+              </div>
+              <Link
+                href="/agents"
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
                 </div>
-              }
-            >
-              <div className={cn("p-4 overflow-y-auto scrollbar-hidden", fleetView === "list" ? "space-y-3" : "grid grid-cols-2 gap-3")} style={{ maxHeight: "calc(100% - 40px)" }}>
-                {agents.filter((a) => a.is_active).map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-3 transition-all duration-300 hover:bg-foreground/[0.04] hover:border-foreground/[0.1] hover:shadow-[0_0_16px_oklch(0.55_0.24_264/0.08)] cursor-pointer group light-sweep-hover"
-                    onClick={() => startChat(agent)}
-                  >
-                    <LivingAvatar
-                      name={agent.name}
-                      id={agent.id}
-                      state={agent.status === "online" ? "idle" : agent.status === "error" ? "error" : "offline"}
-                      size="md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{agent.name}</span>
-                        <span
-                          className={cn(
-                            "inline-block h-2 w-2 rounded-full shrink-0",
-                            agent.health_score > 80
-                              ? "bg-emerald-500 shadow-[0_0_4px_theme(colors.emerald.500/0.5)]"
-                              : agent.health_score >= 50
-                                ? "bg-yellow-500 shadow-[0_0_4px_theme(colors.yellow.500/0.5)]"
-                                : "bg-red-500 shadow-[0_0_4px_theme(colors.red.500/0.5)]",
+              ) : agents.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No agents registered yet</p>
+                  <Button className="mt-4" onClick={() => router.push("/agents")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Register Your First Agent
+                  </Button>
+                </div>
+              ) : (
+                <MotionList className="space-y-2">
+                  {agents.slice(0, 6).map((agent) => (
+                    <MotionItem key={agent.id}>
+                      <div
+                        className="flex items-center gap-4 p-3 rounded-lg border border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.02] transition-all cursor-pointer group"
+                        onClick={() => router.push(`/agents/${agent.id}`)}
+                      >
+                        <div className="relative">
+                          {agent.avatar_url ? (
+                            <img
+                              src={agent.avatar_url}
+                              alt={agent.name}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className={cn(
+                                "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-white",
+                                getAvatarColor(agent.id)
+                              )}
+                            >
+                              {getInitials(agent.name)}
+                            </div>
                           )}
-                          title={`Health: ${agent.health_score}/100`}
-                        />
-                        <Badge variant="outline" className="text-[0.625rem] rounded-md">{agent.gateway_type}</Badge>
-                      </div>
-                      <div className="text-[0.6875rem] text-muted-foreground/50 mt-0.5">
-                        {agent.total_messages} messages
-                        {agent.latency_ms !== undefined && <span className="ml-2">{agent.latency_ms}ms</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); pingAgent(agent); }}
-                      >
-                        Ping
-                      </Button>
-                      <MessageSquare className="h-4 w-4 text-muted-foreground/40 group-hover:text-blue-400 transition-colors" />
-                    </div>
-                  </div>
-                ))}
-
-                {agents.filter((a) => a.is_active).length === 0 && (
-                  <div className="text-center py-8 text-sm text-muted-foreground/50">
-                    No agents registered.
-                    <button className="text-blue-400 ml-1 hover:underline" onClick={() => router.push("/agents")}>
-                      Add one
-                    </button>
-                  </div>
-                )}
-              </div>
-            </HudPanel>
-          </div>
-
-          {/* Quick Actions Panel */}
-          <div key="actions">
-            <HudPanel
-              title="Quick Actions"
-              icon={<Zap className="h-4 w-4" />}
-              accent="violet"
-              collapsible
-              className="h-full"
-              badge={!gridLocked ? <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 cursor-grab grid-drag-handle" /> : undefined}
-            >
-              <div className="p-4 space-y-2 overflow-y-auto" style={{ maxHeight: "calc(100% - 40px)" }}>
-                {[
-                  { label: "Templates", desc: "Start from a template", icon: GitBranch, href: "/templates", color: "text-blue-400" },
-                  { label: "Playground", desc: "Test prompts", icon: Activity, href: "/playground", color: "text-violet-400" },
-                  { label: "Arena", desc: "Compare agents", icon: Shield, href: "/arena", color: "text-amber-400" },
-                  { label: "Knowledge", desc: "Manage documents", icon: Brain, href: "/knowledge", color: "text-emerald-400" },
-                ].map((action) => (
-                  <button
-                    key={action.label}
-                    className="flex items-center gap-3 w-full rounded-xl border border-foreground/[0.04] p-3 text-left transition-all duration-300 hover:bg-foreground/[0.04] hover:border-foreground/[0.08] hover:shadow-[0_0_12px_oklch(0.55_0.24_264/0.06)] light-sweep-hover"
-                    onClick={() => router.push(action.href)}
-                  >
-                    <action.icon className={cn("h-4 w-4", action.color)} />
-                    <div>
-                      <div className="text-sm font-medium">{action.label}</div>
-                      <div className="text-[0.625rem] text-muted-foreground/50">{action.desc}</div>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground/30" />
-                  </button>
-                ))}
-              </div>
-            </HudPanel>
-          </div>
-
-          {/* Recent Conversations */}
-          <div key="recent">
-            <HudPanel
-              title="Recent Conversations"
-              icon={<Clock className="h-4 w-4" />}
-              accent="cyan"
-              collapsible
-              status={`${conversations.length} total`}
-              className="h-full"
-              badge={!gridLocked ? <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 cursor-grab grid-drag-handle" /> : undefined}
-            >
-              <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(100% - 40px)" }}>
-                <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                  {conversations.slice(0, 6).map((conv) => {
-                    const agent = conv.agents[0];
-                    return (
-                      <button
-                        key={conv.id}
-                        className="flex items-center gap-3 rounded-xl border border-foreground/[0.04] p-3 text-left transition-all duration-300 hover:bg-foreground/[0.04] hover:border-foreground/[0.08] hover:shadow-[0_0_12px_oklch(0.55_0.24_264/0.06)] light-sweep-hover"
-                        onClick={() => router.push(`/chat/${conv.id}`)}
-                      >
-                        {agent && (
-                          <LivingAvatar name={agent.name} id={agent.id} state="idle" size="sm" />
-                        )}
+                          <div
+                            className={cn(
+                              "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card",
+                              agent.status === "online" && "bg-emerald-500",
+                              agent.status === "error" && "bg-rose-500",
+                              agent.status === "offline" && "bg-slate-500"
+                            )}
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{conv.name}</div>
-                          <div className="text-[0.625rem] text-muted-foreground/50">
-                            {conv.message_count} msgs
-                            <span className="mx-1">.</span>
-                            {timeAgo(conv.updated_at)}
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium truncate">{agent.name}</span>
+                            {!agent.is_active && (
+                              <Badge variant="secondary" className="text-[0.625rem]">
+                                Disabled
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="capitalize">{agent.status}</span>
+                            {agent.latency_ms !== undefined && (
+                              <span>{agent.latency_ms}ms</span>
+                            )}
+                            {agent.total_messages > 0 && (
+                              <span>{agent.total_messages} msgs</span>
+                            )}
                           </div>
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </HudPanel>
-          </div>
-        </Responsive>
-        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickChat(agent.id);
+                          }}
+                          disabled={!agent.is_active}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
+                    </MotionItem>
+                  ))}
+                </MotionList>
+              )}
+            </CardContent>
+          </Card>
+        </FadeIn>
 
-        {/* Version footer */}
-        <div className="flex items-center gap-2 pt-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-foreground/[0.06] to-transparent" />
-          <span className="text-[0.625rem] text-muted-foreground/30">AgentHub v0.1.0</span>
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-foreground/[0.06] to-transparent" />
-        </div>
+        <FadeIn direction="up" distance={16} delay={0.3}>
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-emerald-400" />
+                  Recent Activity
+                </CardTitle>
+              </div>
+              <Link
+                href="/search"
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              >
+                Search <ArrowRight className="h-4 w-4" />
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No conversations yet</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => router.push("/agents")}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start a Chat
+                  </Button>
+                </div>
+              ) : (
+                <MotionList className="space-y-3">
+                  {conversations.map((conv) => (
+                    <MotionItem key={conv.id}>
+                      <Link
+                        href={`/chat/${conv.id}`}
+                        className="block p-3 rounded-lg border border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.02] transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-sm">
+                              {conv.name || "Untitled Conversation"}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {conv.agents?.[0]?.name || "Unknown Agent"}
+                            </p>
+                          </div>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {timeAgo(conv.updated_at)}
+                          </span>
+                        </div>
+                        {conv.summary && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                            {conv.summary}
+                          </p>
+                        )}
+                      </Link>
+                    </MotionItem>
+                  ))}
+                </MotionList>
+              )}
+            </CardContent>
+          </Card>
+        </FadeIn>
       </div>
+
+      <FadeIn direction="up" distance={16} delay={0.4}>
+        <Card className="border-dashed">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 border border-blue-500/20">
+                <Sparkles className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold">Quick Actions</h3>
+                <p className="text-sm text-muted-foreground">
+                  Jump to common tasks and workflows
+                </p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" onClick={() => router.push("/agents")}>
+                  <Bot className="h-4 w-4 mr-2" />
+                  Agents
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/groups")}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Group Chats
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/analytics")}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Analytics
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/playground")}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Playground
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </FadeIn>
     </div>
   );
 }
 
-function DashboardSkeleton() {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
+  loading,
+  href,
+  color,
+}: {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ElementType;
+  trend?: string;
+  loading: boolean;
+  href: string;
+  color: "blue" | "amber" | "emerald" | "violet" | "rose" | "cyan";
+}) {
+  const colorClasses = {
+    blue: "from-blue-500/20 to-blue-600/10 border-blue-500/20 text-blue-400",
+    amber: "from-amber-500/20 to-amber-600/10 border-amber-500/20 text-amber-400",
+    emerald: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 text-emerald-400",
+    violet: "from-violet-500/20 to-violet-600/10 border-violet-500/20 text-violet-400",
+    rose: "from-rose-500/20 to-rose-600/10 border-rose-500/20 text-rose-400",
+    cyan: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/20 text-cyan-400",
+  };
+
   return (
-    <div className="min-h-full">
-      <div className="relative z-10 p-6 space-y-4">
-        {/* Header skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-24 rounded-xl" />
-            <Skeleton className="h-8 w-28 rounded-xl" />
-            <Skeleton className="h-8 w-28 rounded-xl" />
-          </div>
-        </div>
-
-        {/* Stats row skeleton */}
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+    <Link href={href} className="block">
+      <Card className="hover:border-foreground/[0.12] transition-all cursor-pointer group">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              {loading ? (
+                <Skeleton className="h-8 w-24 mt-2" />
+              ) : (
+                <div className="flex items-baseline gap-2 mt-2">
+                  <p className="text-2xl font-bold">{value}</p>
+                  {trend && (
+                    <span className="text-xs text-emerald-400 font-medium">
+                      {trend}
+                    </span>
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+            </div>
             <div
-              key={i}
-              className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] bg-card/60 backdrop-blur-sm p-4"
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br border",
+                colorClasses[color]
+              )}
             >
-              <Skeleton className="h-4 w-4 rounded" />
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Main panels skeleton */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Fleet panel skeleton */}
-          <div className="md:col-span-2 rounded-2xl border border-foreground/[0.06] bg-card/80 backdrop-blur-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-foreground/[0.04]">
-              <Skeleton className="h-4 w-4 rounded" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl border border-foreground/[0.06] p-3"
-                >
-                  <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-48" />
-                  </div>
-                  <Skeleton className="h-7 w-12 rounded-lg" />
-                </div>
-              ))}
+              <Icon className="h-5 w-5" />
             </div>
           </div>
-
-          {/* Quick actions panel skeleton */}
-          <div className="rounded-2xl border border-foreground/[0.06] bg-card/80 backdrop-blur-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-foreground/[0.04]">
-              <Skeleton className="h-4 w-4 rounded" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-            <div className="p-4 space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl border border-foreground/[0.04] p-3"
-                >
-                  <Skeleton className="h-4 w-4 rounded shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3.5 w-20" />
-                    <Skeleton className="h-2.5 w-28" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent conversations skeleton */}
-        <div className="rounded-2xl border border-foreground/[0.06] bg-card/80 backdrop-blur-xl overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-foreground/[0.04]">
-            <Skeleton className="h-4 w-4 rounded" />
-            <Skeleton className="h-4 w-36" />
-          </div>
-          <div className="p-4">
-            <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl border border-foreground/[0.04] p-3"
-                >
-                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3.5 w-24" />
-                    <Skeleton className="h-2.5 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + "M";
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + "K";
+  }
+  return num.toString();
 }

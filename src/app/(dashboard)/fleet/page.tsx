@@ -17,32 +17,32 @@ import { getInitials, getAvatarColor, cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 function healthColor(score: number) {
-  if (score > 80) return "text-emerald-500";
-  if (score > 50) return "text-amber-500";
-  return "text-red-500";
+  if (score > 80) return "text-[var(--status-online)]";
+  if (score > 50) return "text-[var(--status-warning)]";
+  return "text-[var(--status-danger)]";
 }
 
 function healthBg(score: number) {
-  if (score > 80) return "bg-emerald-500";
-  if (score > 50) return "bg-amber-500";
-  return "bg-red-500";
+  if (score > 80) return "bg-[var(--status-online)]";
+  if (score > 50) return "bg-[var(--status-warning)]";
+  return "bg-[var(--status-danger)]";
 }
 
 function statusDot(status: AgentWithStatus["status"]) {
   switch (status) {
-    case "online": return "bg-emerald-500";
+    case "online": return "bg-[var(--status-online)]";
     case "offline": return "bg-gray-400";
-    case "busy": return "bg-amber-500";
-    case "error": return "bg-red-500";
+    case "busy": return "bg-[var(--status-warning)]";
+    case "error": return "bg-[var(--status-danger)]";
     default: return "bg-gray-400";
   }
 }
 
 function severityBadge(severity: AnomalyEvent["severity"]) {
   switch (severity) {
-    case "critical": return "bg-red-500/10 text-red-600 border-red-500/30";
-    case "warning": return "bg-amber-500/10 text-amber-600 border-amber-500/30";
-    case "info": return "bg-blue-500/10 text-blue-600 border-blue-500/30";
+    case "critical": return "bg-[var(--status-danger)]/10 text-[var(--status-danger)] border-[var(--status-danger)]/30";
+    case "warning": return "bg-[var(--status-warning)]/10 text-[var(--status-warning)] border-[var(--status-warning)]/30";
+    case "info": return "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30";
     default: return "";
   }
 }
@@ -131,9 +131,9 @@ export default function FleetPage() {
       score,
     ];
     return bars.map((v, i) => {
-      let color = "bg-emerald-500";
-      if (v <= 50) color = "bg-red-500";
-      else if (v <= 80) color = "bg-amber-500";
+      let color = "bg-[var(--status-online)]";
+      if (v <= 50) color = "bg-[var(--status-danger)]";
+      else if (v <= 80) color = "bg-[var(--status-warning)]";
       return (
         <div
           key={i}
@@ -261,7 +261,7 @@ export default function FleetPage() {
               <Separator />
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertTriangle className="h-4 w-4 text-[var(--status-warning)]" />
                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Incident Timeline
                   </h2>
@@ -311,7 +311,7 @@ export default function FleetPage() {
               <Separator />
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Link2 className="h-4 w-4 text-blue-500" />
+                  <Link2 className="h-4 w-4 text-[var(--accent-blue)]" />
                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Fallback Chains
                   </h2>

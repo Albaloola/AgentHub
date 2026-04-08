@@ -148,7 +148,7 @@ export function CommandsMenu({ onSelect, triggerValue, disabled }: CommandsMenuP
                 }}
                 onMouseEnter={() => setSelectedIndex(i)}
               >
-                <span className="font-mono text-sm font-medium text-blue-400 shrink-0 w-24">{cmd.name}</span>
+                <span className="font-mono text-sm font-medium text-[var(--theme-accent)] shrink-0 w-24">{cmd.name}</span>
                 <span className="text-sm truncate">{cmd.description}</span>
               </button>
             ))

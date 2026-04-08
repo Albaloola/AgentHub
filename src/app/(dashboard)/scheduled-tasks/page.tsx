@@ -15,6 +15,16 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStore } from "@/lib/store";
 import {
   getScheduledTasks, createScheduledTask, updateScheduledTask,
@@ -32,6 +42,7 @@ export default function ScheduledTasksPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
+  const [deletingTask, setDeletingTask] = useState<(ScheduledTask & { agent_name?: string }) | null>(null);
 
   useEffect(() => {
     loadData();
@@ -142,7 +153,7 @@ export default function ScheduledTasksPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Calendar className="h-5 w-5 text-blue-500" />
+            <Calendar className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{tasks.length}</div>
               <div className="text-xs text-muted-foreground">Total Tasks</div>
@@ -151,7 +162,7 @@ export default function ScheduledTasksPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Activity className="h-5 w-5 text-emerald-500" />
+            <Activity className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">{activeTasks.length}</div>
               <div className="text-xs text-muted-foreground">Active Tasks</div>
@@ -160,7 +171,7 @@ export default function ScheduledTasksPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Timer className="h-5 w-5 text-amber-500" />
+            <Timer className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalRuns}</div>
               <div className="text-xs text-muted-foreground">Total Runs</div>
@@ -221,14 +232,14 @@ export default function ScheduledTasksPage() {
                         className={cn(
                           "text-[0.625rem]",
                           task.is_active
-                            ? "border-emerald-500/30 text-emerald-600"
+                            ? "border-[var(--status-online)]/30 text-[var(--status-online)]"
                             : "border-muted-foreground/30 text-muted-foreground",
                         )}
                       >
                         {task.is_active ? "active" : "paused"}
                       </Badge>
                       {task.last_status === "error" && (
-                        <Badge variant="outline" className="text-[0.625rem] border-red-500/30 text-red-600">
+                        <Badge variant="outline" className="text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
                           error
                         </Badge>
                       )}
@@ -275,7 +286,7 @@ export default function ScheduledTasksPage() {
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(task.id);
+                        setDeletingTask(task);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -320,11 +331,11 @@ export default function ScheduledTasksPage() {
 
                     {task.last_error && (
                       <div>
-                        <div className="flex items-center gap-1.5 text-xs text-red-600 mb-1">
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--status-danger)] mb-1">
                           <AlertTriangle className="h-3.5 w-3.5" />
                           <span className="font-medium">Last Error</span>
                         </div>
-                        <pre className="text-xs bg-red-500/5 text-red-600 rounded-md p-3 whitespace-pre-wrap border border-red-500/20">
+                        <pre className="text-xs bg-[var(--status-danger)]/5 text-[var(--status-danger)] rounded-md p-3 whitespace-pre-wrap border border-[var(--status-danger)]/20">
                           {task.last_error}
                         </pre>
                       </div>
@@ -336,6 +347,30 @@ export default function ScheduledTasksPage() {
           })}
         </div>
       )}
+      <AlertDialog open={!!deletingTask} onOpenChange={(open) => { if (!open) setDeletingTask(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deletingTask?.name}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (deletingTask) {
+                  handleDelete(deletingTask.id);
+                  setDeletingTask(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

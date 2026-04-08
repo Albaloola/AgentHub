@@ -20,6 +20,10 @@ export async function POST(
   const { id } = await params;
   const { content } = await request.json();
 
+  if (content === undefined || content === null) {
+    return NextResponse.json({ error: "content is required" }, { status: 400 });
+  }
+
   const existing = db.prepare("SELECT id FROM whiteboards WHERE conversation_id = ?").get(id) as { id: string } | undefined;
 
   if (existing) {

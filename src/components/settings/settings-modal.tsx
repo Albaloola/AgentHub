@@ -15,6 +15,7 @@ import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { DARK_THEMES, LIGHT_THEMES, resolveThemePreference, type ThemeDefinition } from "@/lib/themes";
 
 type UiPrefs = ReturnType<typeof useStore.getState>["uiPrefs"];
 type SetUiPref = ReturnType<typeof useStore.getState>["setUiPref"];
@@ -34,18 +35,36 @@ const DENSITY_OPTIONS = [
   { value: "spacious" as const, label: "Spacious", desc: "Relaxed, airy layout" },
 ];
 
-const ACCENT_COLORS = [
-  { value: "blue-violet", label: "Blue Violet", swatch: "from-blue-500 to-violet-600" },
-  { value: "cyan-blue", label: "Cyan Blue", swatch: "from-cyan-500 to-blue-600" },
-  { value: "emerald-teal", label: "Emerald", swatch: "from-emerald-500 to-teal-600" },
-  { value: "amber-orange", label: "Amber", swatch: "from-amber-500 to-orange-600" },
-  { value: "rose-pink", label: "Rose", swatch: "from-rose-500 to-pink-600" },
-  { value: "indigo-purple", label: "Indigo", swatch: "from-indigo-500 to-purple-600" },
-];
-
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
+}
+
+function selectionCardClass(active: boolean, className?: string) {
+  return cn(
+    "selection-card relative overflow-hidden rounded-[1rem] border p-3 transition-all duration-200",
+    active && "selection-card-active",
+    className,
+  );
+}
+
+function selectionIndicatorClass(active: boolean) {
+  return cn(
+    "flex h-5 w-5 items-center justify-center rounded-full border text-white transition-all",
+    active
+      ? "border-[var(--theme-accent)] bg-[var(--theme-accent)] shadow-[var(--theme-accent-shadow)]"
+      : "border-[var(--panel-border-strong)] bg-transparent"
+  );
+}
+
+function chipClass(active: boolean, className?: string) {
+  return cn(
+    "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200",
+    active
+      ? "selection-card-active text-[var(--theme-accent-text)]"
+      : "selection-card text-muted-foreground hover:text-foreground",
+    className,
+  );
 }
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
@@ -105,7 +124,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       first?.focus();
     }, 100);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, hasUnsavedPrefs]);
 
   if (!open) return null;
 
@@ -117,10 +136,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       />
 
       {/* Modal */}
-      <div ref={modalRef} className="relative z-10 w-[90vw] max-h-[85vh] rounded-2xl border border-foreground/[0.08] glass-strong animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)] overflow-hidden" style={{ maxWidth: "clamp(600px, 55vw, 900px)" }}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.06]">
+      <div ref={modalRef} className="surface-panel-strong relative z-10 w-[90vw] max-h-[85vh] overflow-hidden rounded-[1.2rem] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)]" style={{ maxWidth: "clamp(600px, 55vw, 900px)" }}>
+        <div className="flex items-center justify-between border-b border-[var(--panel-border)] px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_12px_oklch(0.55_0.24_264/0.3)]">
+            <div className="brand-chip flex h-9 w-9 items-center justify-center rounded-[0.9rem]">
               <Settings2 className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -130,20 +149,14 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           </div>
           <div className="flex items-center gap-2">
             {hasUnsavedPrefs && (
-              <Button
-                size="sm"
-                className="h-8 text-sm rounded-lg bg-blue-500 hover:bg-blue-600 animate-fade-in transition-all duration-300"
-                onClick={handleSave}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 12px rgba(59,130,246,0.5), 0 0 25px rgba(59,130,246,0.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; }}
-              >
+              <Button size="sm" className="h-8 text-sm rounded-lg animate-fade-in" onClick={handleSave}>
                 Save
               </Button>
             )}
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-lg hover:bg-foreground/[0.06]"
+              size="icon-sm"
+              className="rounded-lg"
               onClick={handleClose}
             >
               <X className="h-4 w-4" />
@@ -153,7 +166,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         {/* Exit confirmation floating popup */}
         {showExitConfirm && (
-          <div className="absolute top-16 right-4 z-50 w-72 rounded-xl border border-foreground/[0.12] glass-strong p-4 space-y-3 animate-fade-in shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="surface-panel-strong absolute right-4 top-16 z-50 w-72 space-y-3 rounded-[1rem] p-4 animate-fade-in">
             <p className="text-sm text-foreground font-medium">You have unsaved changes</p>
             <p className="text-xs text-muted-foreground">Your changes will be lost if you close without saving.</p>
             <div className="flex gap-2">
@@ -167,7 +180,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               </Button>
               <Button
                 size="sm"
-                className="flex-1 h-8 text-xs rounded-lg bg-blue-500 hover:bg-blue-600"
+                className="flex-1 h-8 text-xs rounded-lg"
                 onClick={handleKeepEditing}
               >
                 Keep Editing
@@ -177,7 +190,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         )}
 
         <div className="flex h-[calc(85vh-80px)]">
-          <div className="w-44 shrink-0 border-r border-foreground/[0.06] p-3 space-y-1">
+          <div className="w-44 shrink-0 border-r border-[var(--panel-border)] p-3 space-y-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -186,34 +199,19 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium",
+                    "relative flex w-full items-center gap-2.5 rounded-[0.9rem] px-3 py-2.5 text-sm font-medium transition-all duration-300",
                     isActive
                       ? "text-foreground"
-                      : "text-muted-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                  style={{ transition: "all 0.3s ease" }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = "#60a5fa";
-                      e.currentTarget.style.background = "rgba(59,130,246,0.08)";
-                      e.currentTarget.style.boxShadow = "0 0 10px rgba(59,130,246,0.15)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = "";
-                      e.currentTarget.style.background = "";
-                      e.currentTarget.style.boxShadow = "";
-                    }
-                  }}
                 >
                   {isActive && (
-                    <div className="absolute inset-0 rounded-xl bg-oklch(0.55_0.24_264_/0.08) animate-[luminance-pulse_3s_ease-in-out_infinite]" />
+                    <div className="selection-card-active absolute inset-0 rounded-[0.9rem] animate-[luminance-pulse_3s_ease-in-out_infinite]" />
                   )}
-                  <Icon className={cn("h-4 w-4 shrink-0 relative z-10", isActive && "text-oklch(0.55_0.24_264)")} />
+                  <Icon className={cn("relative z-10 h-4 w-4 shrink-0", isActive && "text-[var(--theme-accent-text)]")} />
                   <span className="relative z-10 font-medium">{tab.label}</span>
                   {isActive && (
-                    <ChevronRight className="h-3 w-3 ml-auto relative z-10 text-oklch(0.55_0.24_264)" />
+                    <ChevronRight className="relative z-10 ml-auto h-3 w-3 text-[var(--theme-accent-text)]" />
                   )}
                 </button>
               );
@@ -223,7 +221,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
             <button
               onClick={() => { resetUiPrefs(); }}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:text-red-400 transition-all duration-200 hover:bg-foreground/[0.03]"
+              className="flex w-full items-center gap-2.5 rounded-[0.9rem] px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-foreground/[0.03] hover:text-[var(--status-danger)]"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Reset All</span>
@@ -290,19 +288,9 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           <button
             key={opt.value}
             onClick={() => setPref("density", opt.value)}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all duration-200",
-              prefs.density === opt.value
-                ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
-                : "border-foreground/[0.08] hover:border-foreground/[0.15] hover:bg-foreground/[0.03]"
-            )}
+            className={selectionCardClass(prefs.density === opt.value, "flex items-center gap-3 text-left")}
           >
-            <div className={cn(
-              "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all",
-              prefs.density === opt.value
-                ? "border-oklch(0.55_0.24_264) bg-oklch(0.55_0.24_264)"
-                : "border-foreground/[0.15]"
-            )}>
+            <div className={selectionIndicatorClass(prefs.density === opt.value)}>
               {prefs.density === opt.value && <Check className="h-3 w-3 text-white" />}
             </div>
             <div>
@@ -356,7 +344,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
         />
         <div
-          className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-4 text-center transition-all duration-200"
+          className="surface-subtle rounded-[1rem] p-4 text-center transition-all duration-200"
           style={{ fontFamily: currentFontFamily, fontSize: `${fontPreview}px` }}
         >
           <span className="text-foreground/70">The quick brown fox jumps over the lazy dog</span>
@@ -381,20 +369,10 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
           <button
             key={font.value}
             onClick={() => setPref("fontFamily", font.value)}
-            className={cn(
-              "flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all duration-200",
-              prefs.fontFamily === font.value
-                ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
-                : "border-foreground/[0.08] hover:border-foreground/[0.15] hover:bg-foreground/[0.03]"
-            )}
+            className={selectionCardClass(prefs.fontFamily === font.value, "flex flex-col gap-1 text-left")}
           >
             <div className="flex items-center gap-2">
-              <div className={cn(
-                "flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all",
-                prefs.fontFamily === font.value
-                  ? "border-oklch(0.55_0.24_264) bg-oklch(0.55_0.24_264)"
-                  : "border-foreground/[0.15]"
-              )}>
+              <div className={selectionIndicatorClass(prefs.fontFamily === font.value)}>
                 {prefs.fontFamily === font.value && <Check className="h-2.5 w-2.5 text-white" />}
               </div>
               <span className="text-xs font-medium">{font.label}</span>
@@ -460,12 +438,7 @@ function FontPicker({ value, onChange }: { value: string; onChange: (v: string) 
           <button
             key={f.value}
             onClick={() => onChange(f.value)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200",
-              value === f.value
-                ? "border-blue-400/50 bg-blue-500/10 text-blue-400"
-                : "border-foreground/[0.08] text-muted-foreground hover:border-foreground/[0.15] hover:text-foreground",
-            )}
+            className={chipClass(value === f.value)}
             style={{ fontFamily: FONT_PICKER_FAMILIES[f.value] }}
           >
             {f.label}
@@ -474,7 +447,7 @@ function FontPicker({ value, onChange }: { value: string; onChange: (v: string) 
       </div>
       {/* Live preview */}
       <div
-        className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-4 transition-all duration-300"
+        className="surface-subtle rounded-[1rem] p-4 transition-all duration-300"
         style={{ fontFamily: FONT_PICKER_FAMILIES[value] || FONT_PICKER_FAMILIES.geist }}
       >
         <p className="text-base text-foreground/80">The quick brown fox jumps over the lazy dog</p>
@@ -484,62 +457,157 @@ function FontPicker({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
+function ThemePreviewCard({
+  theme,
+  selected,
+  onSelect,
+}: {
+  theme: ThemeDefinition;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={selectionCardClass(selected, "p-0 text-left")}
+    >
+      <div className="p-3">
+        <div
+          className="overflow-hidden rounded-[0.95rem] border p-3"
+          style={{ background: theme.preview.canvas, borderColor: theme.preview.border }}
+        >
+          <div className="mb-3 flex items-center gap-1.5">
+            <div className="h-2 w-2 rounded-full" style={{ background: theme.preview.accent }} />
+            <div className="h-2 w-2 rounded-full" style={{ background: theme.preview.accentAlt, opacity: 0.8 }} />
+            <div className="h-2 w-2 rounded-full" style={{ background: theme.preview.border, opacity: 0.8 }} />
+            <div className="ml-auto h-1.5 w-12 rounded-full" style={{ background: theme.preview.border, opacity: 0.65 }} />
+          </div>
+          <div className="grid grid-cols-[0.9fr_1.4fr] gap-2">
+            <div
+              className="flex min-h-24 flex-col gap-2 rounded-[0.8rem] border p-2"
+              style={{ background: theme.preview.surfaceAlt, borderColor: theme.preview.border }}
+            >
+              <div className="h-2.5 w-14 rounded-full" style={{ background: theme.preview.accent, opacity: 0.9 }} />
+              <div className="h-2 w-full rounded-full" style={{ background: theme.preview.border, opacity: 0.75 }} />
+              <div className="h-2 w-5/6 rounded-full" style={{ background: theme.preview.border, opacity: 0.55 }} />
+              <div className="mt-auto flex gap-1">
+                <div className="h-5 w-5 rounded-md" style={{ background: theme.preview.surface, border: `1px solid ${theme.preview.border}` }} />
+                <div className="h-5 w-5 rounded-md" style={{ background: theme.preview.surface, border: `1px solid ${theme.preview.border}` }} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div
+                className="flex items-center justify-between rounded-[0.8rem] border p-2"
+                style={{ background: theme.preview.surface, borderColor: theme.preview.border }}
+              >
+                <div className="space-y-1">
+                  <div className="h-2.5 w-16 rounded-full" style={{ background: theme.preview.accent, opacity: 0.88 }} />
+                  <div className="h-2 w-12 rounded-full" style={{ background: theme.preview.border, opacity: 0.65 }} />
+                </div>
+                <div className="h-7 w-7 rounded-[0.75rem]" style={{ background: `linear-gradient(135deg, ${theme.preview.accent}, ${theme.preview.accentAlt})` }} />
+              </div>
+              <div
+                className="rounded-[0.8rem] border p-2"
+                style={{ background: theme.preview.surface, borderColor: theme.preview.border }}
+              >
+                <div className="mb-2 h-2.5 w-24 rounded-full" style={{ background: theme.preview.border, opacity: 0.8 }} />
+                <div className="space-y-1.5">
+                  <div className="h-2 rounded-full" style={{ background: theme.preview.border, opacity: 0.55 }} />
+                  <div className="h-2 rounded-full" style={{ background: theme.preview.border, opacity: 0.4 }} />
+                  <div className="h-2 w-5/6 rounded-full" style={{ background: theme.preview.accent, opacity: 0.72 }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 flex items-start gap-3">
+          <div className={selectionIndicatorClass(selected)}>
+            {selected && <Check className="h-3 w-3 text-white" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">{theme.label}</span>
+              <span className={chipClass(false, "px-2 py-0.5 text-[0.625rem]")}>
+                {theme.accentLabel}
+              </span>
+            </div>
+            <p className="mt-1 text-[0.6875rem] leading-5 text-muted-foreground">{theme.description}</p>
+          </div>
+          {theme.mode === "dark" ? <Moon className="h-4 w-4 text-muted-foreground" /> : <Sun className="h-4 w-4 text-muted-foreground" />}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
+  const systemTheme =
+    typeof window !== "undefined"
+      ? resolveThemePreference("system", window.matchMedia("(prefers-color-scheme: dark)").matches).resolvedTheme
+      : LIGHT_THEMES[0];
+
   return (
     <>
-      <SectionTitle icon={Palette} title="Appearance" />
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { value: "dark", label: "Dark", icon: Moon },
-          { value: "light", label: "Light", icon: Sun },
-          { value: "system", label: "System", icon: Monitor },
-        ].map((theme) => {
-          const Icon = theme.icon;
-          return (
-              <button
-                key={theme.value}
-                onClick={() => setPref("theme", theme.value)}
-                className={cn(
-                  "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200",
-                  prefs.theme === theme.value
-                    ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
-                    : "border-foreground/[0.08] hover:border-foreground/[0.15] hover:bg-foreground/[0.03]"
-                )}
-              >
-              <Icon className={cn("h-5 w-5", prefs.theme === theme.value && "text-oklch(0.55_0.24_264)")} />
-              <span className="text-xs font-medium">{theme.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <SectionTitle icon={Palette} title="Theme Gallery" />
+      <p className="text-sm text-muted-foreground">
+        Each theme defines its own surfaces, borders, typography contrast, chart palette, glass treatment, and accent energy.
+      </p>
 
-      <Separator />
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <SectionTitle icon={Moon} title="Dark Themes" />
+          <div className="grid gap-3 md:grid-cols-3">
+            {DARK_THEMES.map((theme) => (
+              <ThemePreviewCard
+                key={theme.id}
+                theme={theme}
+                selected={prefs.theme === theme.id}
+                onSelect={() => setPref("theme", theme.id)}
+              />
+            ))}
+          </div>
+        </div>
 
-      <SectionTitle icon={Palette} title="Accent Color" />
-      <div className="grid grid-cols-3 gap-2">
-        {ACCENT_COLORS.map((color) => (
-              <button
-                key={color.value}
-                onClick={() => setPref("accentColor", color.value)}
-                className={cn(
-                  "flex items-center gap-2 rounded-xl border-2 p-3 transition-all duration-200",
-                  prefs.accentColor === color.value
-                    ? "border-oklch(0.55_0.24_264_/0.6) bg-oklch(0.55_0.24_264_/0.12) shadow-[0_0_12px_oklch(0.55_0.24_264_/0.15)]"
-                    : "border-foreground/[0.08] hover:border-foreground/[0.15] hover:bg-foreground/[0.03]"
-                )}
-              >
-            <div className={cn("h-4 w-4 rounded-full bg-gradient-to-br", color.swatch)} />
-            <span className="text-xs font-medium">{color.label}</span>
-            {prefs.accentColor === color.value && (
-              <Check className="h-3 w-3 ml-auto text-oklch(0.55_0.24_264)" />
-            )}
+        <div className="space-y-3">
+          <SectionTitle icon={Sun} title="Light Themes" />
+          <div className="grid gap-3 md:grid-cols-3">
+            {LIGHT_THEMES.map((theme) => (
+              <ThemePreviewCard
+                key={theme.id}
+                theme={theme}
+                selected={prefs.theme === theme.id}
+                onSelect={() => setPref("theme", theme.id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <SectionTitle icon={Monitor} title="System Theme" />
+          <button
+            onClick={() => setPref("theme", "system")}
+            className={selectionCardClass(prefs.theme === "system", "flex items-center gap-4")}
+          >
+            <div className="brand-chip flex h-12 w-12 items-center justify-center rounded-[0.95rem] text-white">
+              <Monitor className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Follow system appearance</span>
+                <span className={chipClass(false, "px-2 py-0.5 text-[0.625rem]")}>
+                  {systemTheme.label}
+                </span>
+              </div>
+              <p className="mt-1 text-[0.6875rem] leading-5 text-muted-foreground">
+                AgentHub will switch between {resolveThemePreference("system", true).resolvedTheme.label} and {resolveThemePreference("system", false).resolvedTheme.label} based on your OS theme.
+              </p>
+            </div>
+            <div className={selectionIndicatorClass(prefs.theme === "system")}>
+              {prefs.theme === "system" && <Check className="h-3 w-3 text-white" />}
+            </div>
           </button>
-        ))}
+        </div>
       </div>
-
-      <Separator />
-
-      <Separator />
 
       <SectionTitle icon={Sparkles} title="Glass Glow" />
 
@@ -564,13 +632,16 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
             <span className="text-xs text-muted-foreground">Glow Spread</span>
             <span className="text-[0.625rem] text-muted-foreground">{prefs.glowSpread}px</span>
           </div>
-          <input
-            type="range"
+          <Slider
             min={0}
             max={60}
-            value={prefs.glowSpread}
-            onChange={(e) => setPref("glowSpread", parseInt(e.target.value))}
-            className="w-full h-2 bg-foreground/[0.15] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-400 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+            step={1}
+            milestones={[0, 10, 20, 30, 45, 60]}
+            snapOnRelease
+            unit="px"
+            value={[prefs.glowSpread]}
+            onValueChange={(v) => setPref("glowSpread", Array.isArray(v) ? v[0] : v)}
+            onValueCommitted={(v) => setPref("glowSpread", Array.isArray(v) ? v[0] : v)}
           />
           <div className="flex justify-between text-[0.5625rem] text-muted-foreground mt-1">
             <span>None</span>
@@ -642,28 +713,23 @@ function SidebarTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
           <button
             key={opt.value}
             onClick={() => setPref("navStyle", opt.value)}
-            className={cn(
-              "flex flex-col items-center gap-2 rounded-xl border p-4 text-left transition-all duration-200",
-              prefs.navStyle === opt.value
-                ? "border-oklch(0.55_0.24_264_/0.4) bg-oklch(0.55_0.24_264_/0.08)"
-                : "border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.02]"
-            )}
+            className={selectionCardClass(prefs.navStyle === opt.value, "flex flex-col items-center gap-2 text-left")}
           >
             <div className={cn(
               "flex h-10 w-full items-center justify-center rounded-lg border transition-all",
               prefs.navStyle === opt.value
-                ? "border-oklch(0.55_0.24_264_/0.3) bg-oklch(0.55_0.24_264_/0.1)"
-                : "border-foreground/[0.08]"
+                ? "border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)]"
+                : "border-[var(--panel-border)]"
             )}>
               {opt.value === "pills" ? (
                 <div className="flex gap-1">
-                  <div className="h-2 w-6 rounded-full bg-oklch(0.55_0.24_264_/0.4)" />
+                  <div className="h-2 w-6 rounded-full bg-[var(--theme-accent-line)]" />
                   <div className="h-2 w-4 rounded-full bg-foreground/[0.08]" />
                   <div className="h-2 w-5 rounded-full bg-foreground/[0.08]" />
                 </div>
               ) : (
                 <div className="flex flex-col gap-1 w-full px-2">
-                  <div className="h-1.5 w-full rounded-sm bg-oklch(0.55_0.24_264_/0.4)" />
+                  <div className="h-1.5 w-full rounded-sm bg-[var(--theme-accent-line)]" />
                   <div className="h-1.5 w-3/4 rounded-sm bg-foreground/[0.08]" />
                   <div className="h-1.5 w-5/6 rounded-sm bg-foreground/[0.08]" />
                 </div>
@@ -763,7 +829,7 @@ function GlowColorPicker({ label, value, onChange }: { label: string; value: str
             !isPreset && !customOpen
               ? "border-foreground/30 bg-foreground/[0.08]"
               : customOpen
-                ? "border-blue-400/40 bg-blue-500/10"
+                ? "selection-card-active"
                 : "border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.03]",
           )}
         >

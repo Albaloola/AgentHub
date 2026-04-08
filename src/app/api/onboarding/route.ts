@@ -64,8 +64,11 @@ export async function POST(request: Request) {
     completedSteps.push(body.step);
   }
 
-  const newCurrentStep = state.current_step + 1;
-  const isComplete = body.step >= 4 ? 1 : 0;
+  // current_step = highest completed step + 1 (derived, not blindly incremented)
+  const newCurrentStep = completedSteps.length > 0 ? Math.max(...completedSteps) + 1 : 0;
+  // Complete when all expected steps (0-4) are done
+  const TOTAL_STEPS = 5;
+  const isComplete = completedSteps.length >= TOTAL_STEPS ? 1 : 0;
 
   db.prepare(
     `UPDATE onboarding_state

@@ -4,13 +4,13 @@ import Link from "next/link";
 
 export default function ChatError({ error, reset }: { error: Error; reset: () => void }) {
   return (
-    <div className="min-h-full flex items-center justify-center bg-[#050507] starfield p-6">
-      <div className="w-full max-w-md rounded-2xl border border-[#3d3a39] bg-[#101010]/80 backdrop-blur-xl shadow-[0_0_40px_rgba(251,86,91,0.08)] p-8 space-y-6">
+    <div className="min-h-full flex items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-[0_0_40px_rgba(251,86,91,0.08)] p-8 space-y-6">
         {/* Error icon */}
         <div className="flex justify-center">
-          <div className="h-12 w-12 rounded-full bg-[#fb565b]/10 border border-[#fb565b]/20 flex items-center justify-center">
+          <div className="h-12 w-12 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center">
             <svg
-              className="h-6 w-6 text-[#fb565b]"
+              className="h-6 w-6 text-destructive"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -27,8 +27,8 @@ export default function ChatError({ error, reset }: { error: Error; reset: () =>
 
         {/* Heading */}
         <div className="text-center space-y-2">
-          <h2 className="text-lg font-semibold text-[#f2f2f2]">Conversation error</h2>
-          <p className="text-sm text-[#f2f2f2]/50 leading-relaxed">
+          <h2 className="text-lg font-semibold text-foreground">Conversation error</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {error.message || "Failed to load this conversation."}
           </p>
         </div>
@@ -37,13 +37,13 @@ export default function ChatError({ error, reset }: { error: Error; reset: () =>
         <div className="flex flex-col gap-3">
           <button
             onClick={reset}
-            className="w-full rounded-xl bg-[#fb565b] px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-[#fb565b]/90 hover:shadow-[0_0_20px_rgba(251,86,91,0.3)] active:scale-[0.98]"
+            className="w-full rounded-xl bg-destructive px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-destructive/90 hover:shadow-[0_0_20px_rgba(251,86,91,0.3)] active:scale-[0.98]"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="w-full rounded-xl border border-[#3d3a39] bg-[#101010] px-4 py-2.5 text-sm font-medium text-[#f2f2f2]/70 text-center transition-all duration-200 hover:bg-[#1a1a1c] hover:text-[#f2f2f2] hover:border-[#f2f2f2]/10"
+            className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground text-center transition-all duration-200 hover:bg-secondary hover:text-foreground hover:border-foreground/10"
           >
             Back to Dashboard
           </Link>

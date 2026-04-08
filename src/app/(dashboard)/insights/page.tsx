@@ -96,7 +96,7 @@ export default function InsightsPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Brain className="h-5 w-5 text-violet-500" />
+            <Brain className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">{topics.length}</div>
               <div className="text-xs text-muted-foreground">Topic Clusters</div>
@@ -105,7 +105,7 @@ export default function InsightsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <MessageSquareHeart className="h-5 w-5 text-emerald-500" />
+            <MessageSquareHeart className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">{feedback.length}</div>
               <div className="text-xs text-muted-foreground">Feedback Insights</div>
@@ -114,7 +114,7 @@ export default function InsightsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertTriangle className="h-5 w-5 text-[var(--status-warning)]" />
             <div>
               <div className="text-2xl font-bold">
                 {anomalies.filter((a) => !a.is_resolved).length}
@@ -125,7 +125,7 @@ export default function InsightsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <DollarSign className="h-5 w-5 text-cyan-500" />
+            <DollarSign className="h-5 w-5 text-[var(--accent-cyan)]" />
             <div>
               <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
               <div className="text-xs text-muted-foreground">Total Cost</div>
@@ -312,24 +312,24 @@ export default function InsightsPage() {
                             </div>
                             {/* Sentiment bar */}
                             <div className="flex items-center gap-2 mb-2">
-                              <ThumbsUp className="h-3.5 w-3.5 text-emerald-500" />
+                              <ThumbsUp className="h-3.5 w-3.5 text-[var(--status-online)]" />
                               <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden flex">
                                 <div
-                                  className="h-full bg-emerald-500 transition-all"
+                                  className="h-full bg-[var(--status-online)] transition-all"
                                   style={{ width: `${posPct}%` }}
                                 />
                                 <div
-                                  className="h-full bg-red-500 transition-all"
+                                  className="h-full bg-[var(--status-danger)] transition-all"
                                   style={{ width: `${100 - posPct}%` }}
                                 />
                               </div>
-                              <ThumbsDown className="h-3.5 w-3.5 text-red-500" />
+                              <ThumbsDown className="h-3.5 w-3.5 text-[var(--status-danger)]" />
                             </div>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mb-1">
-                              <span className="text-emerald-600 font-medium">
+                              <span className="text-[var(--status-online)] font-medium">
                                 {fb.positive_count} positive
                               </span>
-                              <span className="text-red-600 font-medium">
+                              <span className="text-[var(--status-danger)] font-medium">
                                 {fb.negative_count} negative
                               </span>
                             </div>
@@ -366,10 +366,10 @@ export default function InsightsPage() {
                   const agentName = getAgentName(anomaly.agent_id);
                   const severityColor =
                     anomaly.severity === "critical"
-                      ? "border-red-500/30 text-red-600 bg-red-500/10"
+                      ? "border-[var(--status-danger)]/30 text-[var(--status-danger)] bg-[var(--status-danger)]/10"
                       : anomaly.severity === "warning"
-                        ? "border-yellow-500/30 text-yellow-600 bg-yellow-500/10"
-                        : "border-blue-500/30 text-blue-600 bg-blue-500/10";
+                        ? "border-[var(--status-warning)]/30 text-[var(--status-warning)] bg-[var(--status-warning)]/10"
+                        : "border-[var(--accent-blue)]/30 text-[var(--accent-blue)] bg-[var(--accent-blue)]/10";
                   return (
                     <Card
                       key={anomaly.id}
@@ -400,7 +400,7 @@ export default function InsightsPage() {
                                 {anomaly.severity}
                               </Badge>
                               {anomaly.is_resolved && (
-                                <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
+                                <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
                                   resolved
                                 </Badge>
                               )}
@@ -457,7 +457,7 @@ export default function InsightsPage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <DollarSign className="h-5 w-5 text-cyan-500" />
+                    <DollarSign className="h-5 w-5 text-[var(--accent-cyan)]" />
                     <div>
                       <div className="text-xs text-muted-foreground">Total Estimated Cost</div>
                       <div className="text-2xl font-bold">${totalCost.toFixed(4)}</div>
@@ -498,7 +498,7 @@ export default function InsightsPage() {
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2.5 bg-foreground/[0.05] rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-cyan-500 rounded-full transition-all"
+                                  className="h-full bg-[var(--accent-cyan)] rounded-full transition-all"
                                   style={{ width: `${Math.max(pct, 2)}%` }}
                                 />
                               </div>

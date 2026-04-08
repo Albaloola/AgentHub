@@ -30,9 +30,9 @@ import { BEHAVIOR_MODES } from "@/lib/types";
 import { toast } from "sonner";
 
 const ENV_COLORS: Record<string, string> = {
-  dev: "bg-blue-500/10 text-blue-600 border-blue-500/30",
-  staging: "bg-amber-500/10 text-amber-600 border-amber-500/30",
-  production: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+  dev: "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30",
+  staging: "bg-[var(--accent-amber)]/10 text-[var(--accent-amber)] border-[var(--accent-amber)]/30",
+  production: "bg-[var(--accent-emerald)]/10 text-[var(--accent-emerald)] border-[var(--accent-emerald)]/30",
 };
 
 const ENV_ICONS: Record<string, typeof Code2> = {
@@ -59,6 +59,7 @@ export default function PlaygroundPage() {
   const [response, setResponse] = useState("");
   const [running, setRunning] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const playgroundConvRef = useRef<Map<string, string>>(new Map()); // agentId -> convId
 
   // Version management
   const [createVersionOpen, setCreateVersionOpen] = useState(false);
@@ -166,12 +167,17 @@ export default function PlaygroundPage() {
     abortRef.current = abortController;
 
     try {
-      // Create a temporary conversation for this test
-      const { id: convId } = await createConversation({
-        agent_id: selectedAgentId,
-        name: `Playground test ${new Date().toLocaleTimeString()}`,
-        type: "single",
-      });
+      // Reuse existing playground conversation for this agent, or create one
+      let convId = playgroundConvRef.current.get(selectedAgentId);
+      if (!convId) {
+        const result = await createConversation({
+          agent_id: selectedAgentId,
+          name: `Playground — ${agents.find((a) => a.id === selectedAgentId)?.name ?? "test"}`,
+          type: "single",
+        });
+        convId = result.id;
+        playgroundConvRef.current.set(selectedAgentId, convId);
+      }
 
       streamChat(convId, testInput, {
         onContent: (content) => {
@@ -345,12 +351,12 @@ export default function PlaygroundPage() {
                 <CardTitle className="text-sm flex items-center gap-2">
                   System Prompt
                   {selectedVersion && (
-                    <Badge variant="outline" className={cn("text-[0.625rem]", selectedVersion.is_active ? "border-emerald-500/30 text-emerald-500" : "border-border")}>
+                    <Badge variant="outline" className={cn("text-[0.625rem]", selectedVersion.is_active ? "border-[var(--status-online)]/30 text-[var(--status-online)]" : "border-border")}>
                       v{selectedVersion.version}
                     </Badge>
                   )}
                   {selectedVersionId === "custom" && (
-                    <Badge variant="outline" className="text-[0.625rem] border-violet-500/30 text-violet-500">
+                    <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-violet)]/30 text-[var(--accent-violet)]">
                       custom
                     </Badge>
                   )}
@@ -417,9 +423,9 @@ export default function PlaygroundPage() {
 
           {/* Auto-diff against active version */}
           {autoDiff && (
-            <Card className="border-amber-500/20">
+            <Card className="border-[var(--status-warning)]/20">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs flex items-center gap-2 text-amber-500">
+                <CardTitle className="text-xs flex items-center gap-2 text-[var(--status-warning)]">
                   <GitCompare className="h-3 w-3" />
                   {autoDiff.changeCount} line{autoDiff.changeCount !== 1 ? "s" : ""} differ from active v{activeVersion?.version}
                 </CardTitle>
@@ -432,15 +438,15 @@ export default function PlaygroundPage() {
                         <tr
                           key={i}
                           className={cn(
-                            line.status === "changed" && "bg-yellow-500/10",
-                            line.status === "added" && "bg-emerald-500/10",
-                            line.status === "removed" && "bg-red-500/10",
+                            line.status === "changed" && "bg-[var(--status-warning)]/10",
+                            line.status === "added" && "bg-[var(--status-online)]/10",
+                            line.status === "removed" && "bg-[var(--status-danger)]/10",
                           )}
                         >
                           <td className="px-2 py-0.5 w-1 select-none text-center">
-                            {line.status === "changed" && <span className="text-yellow-600">~</span>}
-                            {line.status === "added" && <span className="text-emerald-600">+</span>}
-                            {line.status === "removed" && <span className="text-red-600">-</span>}
+                            {line.status === "changed" && <span className="text-[var(--status-warning)]">~</span>}
+                            {line.status === "added" && <span className="text-[var(--status-online)]">+</span>}
+                            {line.status === "removed" && <span className="text-[var(--status-danger)]">-</span>}
                           </td>
                           <td className="px-2 py-0.5 whitespace-pre-wrap">
                             {line.status === "removed" ? line.lineA : line.lineB}
@@ -499,7 +505,7 @@ export default function PlaygroundPage() {
           </CardHeader>
           <CardContent className="flex-1 min-h-[18.75rem]">
             {response ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
+              <div className="prose prose-sm max-w-none text-sm">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -627,18 +633,18 @@ export default function PlaygroundPage() {
                           key={i}
                           className={cn(
                             line.status === "same" && "",
-                            line.status === "changed" && "bg-yellow-500/10",
-                            line.status === "added" && "bg-emerald-500/10",
-                            line.status === "removed" && "bg-red-500/10",
+                            line.status === "changed" && "bg-[var(--status-warning)]/10",
+                            line.status === "added" && "bg-[var(--status-online)]/10",
+                            line.status === "removed" && "bg-[var(--status-danger)]/10",
                           )}
                         >
                           <td className="px-2 py-0.5 text-muted-foreground w-8 text-right select-none border-r border-border">
                             {i + 1}
                           </td>
                           <td className="px-2 py-0.5 w-1 select-none text-center">
-                            {line.status === "changed" && <span className="text-yellow-600">~</span>}
-                            {line.status === "added" && <span className="text-emerald-600">+</span>}
-                            {line.status === "removed" && <span className="text-red-600">-</span>}
+                            {line.status === "changed" && <span className="text-[var(--status-warning)]">~</span>}
+                            {line.status === "added" && <span className="text-[var(--status-online)]">+</span>}
+                            {line.status === "removed" && <span className="text-[var(--status-danger)]">-</span>}
                           </td>
                           <td className="px-2 py-0.5 whitespace-pre-wrap">
                             {line.status === "removed" ? line.lineA : line.lineB}
@@ -675,7 +681,7 @@ export default function PlaygroundPage() {
               .map((version) => {
                 const EnvIcon = ENV_ICONS[version.environment] || Code2;
                 return (
-                  <Card key={version.id} className={cn("overflow-hidden transition-all duration-300", version.is_active && "shadow-[0_0_16px_oklch(0.55_0.24_155/0.15)] border-emerald-500/30")}>
+                  <Card key={version.id} className={cn("overflow-hidden transition-all duration-300", version.is_active && "shadow-[0_0_16px_oklch(0.55_0.24_155/0.15)] border-[var(--status-online)]/30")}>
                     <div className="flex items-center gap-3 p-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
                         <EnvIcon className="h-4 w-4 text-muted-foreground" />
@@ -697,7 +703,7 @@ export default function PlaygroundPage() {
                             {version.environment}
                           </Badge>
                           {version.is_active && (
-                            <Badge variant="outline" className="text-[0.625rem] border-emerald-500/30 text-emerald-600">
+                            <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
                               active
                             </Badge>
                           )}

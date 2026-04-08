@@ -30,9 +30,16 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50",
+        "data-open:animate-in data-open:fade-in-0 data-open:duration-250",
+        "data-closed:animate-out data-closed:fade-out-0 data-closed:duration-200",
         className
       )}
+      style={{
+        backgroundColor: "color-mix(in srgb, var(--background) 50%, transparent)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+      }}
       {...props}
     />
   )
@@ -41,17 +48,28 @@ function AlertDialogOverlay({
 function AlertDialogContent({
   className,
   children,
+  variant,
   ...props
-}: AlertDialogPrimitive.Popup.Props) {
+}: AlertDialogPrimitive.Popup.Props & {
+  variant?: "destructive" | "default"
+}) {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
+        data-variant={variant}
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm text-popover-foreground outline-none sm:max-w-sm",
+          "glass-strong",
+          "data-open:animation-[alert-panel-in_0.35s_cubic-bezier(0.16,1,0.3,1)_both]",
+          "data-closed:animation-[dialog-panel-out_0.2s_cubic-bezier(0.4,0,0.2,1)_both]",
+          variant === "destructive" && "data-open:animation-[alert-panel-in_0.35s_cubic-bezier(0.16,1,0.3,1)_both,destructive-glow_2s_ease-in-out_0.35s_infinite]",
           className
         )}
+        style={{
+          transform: "translate(-50%, -50%)",
+        }}
         {...props}
       >
         {children}

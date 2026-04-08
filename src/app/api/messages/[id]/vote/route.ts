@@ -9,6 +9,10 @@ export async function POST(
   const { id } = await params;
   const { vote_type } = await request.json();
 
+  if (vote_type !== "up" && vote_type !== "down") {
+    return NextResponse.json({ error: "vote_type must be 'up' or 'down'" }, { status: 400 });
+  }
+
   const existing = db.prepare(
     "SELECT id FROM response_votes WHERE message_id = ? AND vote_type = ?",
   ).get(id, vote_type) as { id: string } | undefined;

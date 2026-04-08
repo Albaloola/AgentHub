@@ -24,11 +24,22 @@ export async function POST(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const { name, description, response_mode, system_prompt, max_responses_per_turn, stop_on_completion } = body;
 
-  db.prepare(
-    "UPDATE templates SET name = COALESCE(?, name), description = COALESCE(?, description), response_mode = COALESCE(?, response_mode), system_prompt = COALESCE(?, system_prompt), max_responses_per_turn = COALESCE(?, max_responses_per_turn), stop_on_completion = COALESCE(?, stop_on_completion) WHERE id = ?",
-  ).run(name, description, response_mode, system_prompt, max_responses_per_turn, stop_on_completion ? 1 : 0, id);
+  // Build dynamic UPDATE to only modify fields that were explicitly provided
+  const updates: string[] = [];
+  const values: unknown[] = [];
+
+  if (body.name !== undefined) { updates.push("name = ?"); values.push(body.name); }
+  if (body.description !== undefined) { updates.push("description = ?"); values.push(body.description); }
+  if (body.response_mode !== undefined) { updates.push("response_mode = ?"); values.push(body.response_mode); }
+  if (body.system_prompt !== undefined) { updates.push("system_prompt = ?"); values.push(body.system_prompt); }
+  if (body.max_responses_per_turn !== undefined) { updates.push("max_responses_per_turn = ?"); values.push(body.max_responses_per_turn); }
+  if (body.stop_on_completion !== undefined) { updates.push("stop_on_completion = ?"); values.push(body.stop_on_completion ? 1 : 0); }
+
+  if (updates.length > 0) {
+    values.push(id);
+    db.prepare(`UPDATE templates SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+  }
 
   return NextResponse.json({ message: "Template updated" });
 }
@@ -38,6 +49,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  db.prepare("DELETE FROM templates WHERE id = ?").run(id);
+  const result = db.prepare("DELETE FROM templates WHERE id = ?").run(id);
+  if (result.changes === 0) return NextResponse.json({ error: "Template not found" }, { status: 404 });
   return NextResponse.json({ message: "Template deleted" });
 }

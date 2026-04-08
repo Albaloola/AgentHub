@@ -326,7 +326,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
           <div className="flex items-center gap-2">
             <div className={cn(
               "flex items-center justify-center h-5 w-5 rounded-md",
-              currentData.agent_id ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400",
+              currentData.agent_id ? "bg-[var(--accent-emerald)]/20 text-[var(--accent-emerald)]" : "bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]",
             )}>
               {currentData.agent_id ? <Bot className="h-3 w-3" /> : <User className="h-3 w-3" />}
             </div>
@@ -390,7 +390,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
                   isCurrent
                     ? "h-2.5 w-2.5 ring-1 ring-white/50 opacity-100"
                     : "h-1.5 w-1.5 opacity-40 hover:scale-150",
-                  isUser ? "bg-blue-400" : "bg-emerald-400",
+                  isUser ? "bg-[var(--accent-blue)]" : "bg-[var(--accent-emerald)]",
                   i < currentIndex && "opacity-70",
                 )}
                 onClick={() => {

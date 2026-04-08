@@ -138,7 +138,7 @@ export default function MonitoringPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Wifi className="h-5 w-5 text-emerald-500" />
+            <Wifi className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">{onlineCount}</div>
               <div className="text-xs text-muted-foreground">Online</div>
@@ -147,7 +147,7 @@ export default function MonitoringPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <WifiOff className="h-5 w-5 text-red-500" />
+            <WifiOff className="h-5 w-5 text-[var(--status-danger)]" />
             <div>
               <div className="text-2xl font-bold">{errorCount}</div>
               <div className="text-xs text-muted-foreground">Errors</div>
@@ -156,7 +156,7 @@ export default function MonitoringPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Clock className="h-5 w-5 text-blue-500" />
+            <Clock className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{Math.round(avgLatency)}ms</div>
               <div className="text-xs text-muted-foreground">Avg Latency</div>
@@ -240,12 +240,12 @@ export default function MonitoringPage() {
                       className={cn(
                         "h-3 w-3 rounded-full",
                         agent.status === "online"
-                          ? "bg-emerald-500"
+                          ? "bg-[var(--status-online)]"
                           : agent.status === "busy"
-                            ? "bg-yellow-500"
+                            ? "bg-[var(--status-warning)]"
                             : agent.status === "error"
-                              ? "bg-red-500"
-                              : "bg-gray-500",
+                              ? "bg-[var(--status-danger)]"
+                              : "bg-[var(--status-offline)]",
                       )}
                     />
                     <span className="text-xs capitalize">{agent.status}</span>
@@ -305,14 +305,14 @@ export default function MonitoringPage() {
               <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
                 <div className="rounded-lg border border-border bg-foreground/[0.05] p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <Database className="h-3.5 w-3.5 text-blue-500" />
+                    <Database className="h-3.5 w-3.5 text-[var(--accent-blue)]" />
                     <p className="text-xs text-muted-foreground">Total Entries</p>
                   </div>
                   <p className="text-lg font-semibold">{cacheStats.total_entries}</p>
                 </div>
                 <div className="rounded-lg border border-border bg-foreground/[0.05] p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-amber-500" />
+                    <Zap className="h-3.5 w-3.5 text-[var(--accent-amber)]" />
                     <p className="text-xs text-muted-foreground">Hit Rate</p>
                   </div>
                   <p className="text-lg font-semibold">
@@ -326,21 +326,21 @@ export default function MonitoringPage() {
                 </div>
                 <div className="rounded-lg border border-border bg-foreground/[0.05] p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <HardDrive className="h-3.5 w-3.5 text-violet-500" />
+                    <HardDrive className="h-3.5 w-3.5 text-[var(--accent-violet)]" />
                     <p className="text-xs text-muted-foreground">Total Size</p>
                   </div>
                   <p className="text-lg font-semibold">{formatCacheSize(cacheStats.total_size_bytes)}</p>
                 </div>
                 <div className="rounded-lg border border-border bg-foreground/[0.05] p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <Hash className="h-3.5 w-3.5 text-emerald-500" />
+                    <Hash className="h-3.5 w-3.5 text-[var(--accent-emerald)]" />
                     <p className="text-xs text-muted-foreground">Tokens Cached</p>
                   </div>
                   <p className="text-lg font-semibold">
                     {cacheStats.total_tokens.toLocaleString()}
                   </p>
                   {cacheStats.expired_count > 0 && (
-                    <p className="text-xs text-amber-500">
+                    <p className="text-xs text-[var(--status-warning)]">
                       {cacheStats.expired_count} expired
                     </p>
                   )}
@@ -375,7 +375,7 @@ export default function MonitoringPage() {
                                 {entry.hit_count} hits
                               </Badge>
                               {isExpired && (
-                                <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600 shrink-0">
+                                <Badge variant="outline" className="text-[0.625rem] border-[var(--status-warning)]/30 text-[var(--status-warning)] shrink-0">
                                   expired
                                 </Badge>
                               )}

@@ -21,11 +21,11 @@ import type { Notification } from "@/lib/types";
 import { toast } from "sonner";
 
 const NOTIFICATION_ICONS: Record<string, { icon: typeof Bell; className: string }> = {
-  agent_error: { icon: AlertTriangle, className: "text-red-500" },
-  task_complete: { icon: CheckCircle, className: "text-emerald-500" },
-  webhook_trigger: { icon: Zap, className: "text-amber-500" },
-  agent_online: { icon: Wifi, className: "text-emerald-500" },
-  system: { icon: Bell, className: "text-blue-500" },
+  agent_error: { icon: AlertTriangle, className: "text-[var(--status-danger)]" },
+  task_complete: { icon: CheckCircle, className: "text-[var(--status-online)]" },
+  webhook_trigger: { icon: Zap, className: "text-[var(--accent-amber)]" },
+  agent_online: { icon: Wifi, className: "text-[var(--status-online)]" },
+  system: { icon: Bell, className: "text-[var(--accent-blue)]" },
 };
 
 function getNotificationIcon(type: string) {
@@ -127,7 +127,7 @@ export function NotificationCenter() {
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.5625rem] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--status-danger)] px-1 text-[0.5625rem] font-bold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -199,7 +199,7 @@ export function NotificationCenter() {
                             {notification.title}
                           </span>
                           {!notification.is_read && (
-                            <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                            <span className="h-2 w-2 rounded-full bg-[var(--accent-blue)] shrink-0" />
                           )}
                         </div>
                         {notification.body && (

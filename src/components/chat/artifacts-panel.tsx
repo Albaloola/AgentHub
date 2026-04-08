@@ -45,15 +45,28 @@ function extractArtifacts(messages: MessageWithToolCalls[]): Artifact[] {
   return artifacts;
 }
 
+function getPreviewColors(): { bg: string; fg: string; muted: string; surface: string; border: string } {
+  if (typeof window === "undefined") return { bg: "#09090b", fg: "#e4e4e7", muted: "#a1a1aa", surface: "#18181b", border: "#27272a" };
+  const s = getComputedStyle(document.documentElement);
+  return {
+    bg: s.getPropertyValue("--background").trim() || "#09090b",
+    fg: s.getPropertyValue("--foreground").trim() || "#e4e4e7",
+    muted: s.getPropertyValue("--muted-foreground").trim() || "#a1a1aa",
+    surface: s.getPropertyValue("--card").trim() || "#18181b",
+    border: s.getPropertyValue("--border").trim() || "#27272a",
+  };
+}
+
 function buildPreviewHtml(artifact: Artifact): string {
   const { language, code } = artifact;
+  const c = getPreviewColors();
 
   if (language === "html") {
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#e4e4e7;background:#09090b}</style></head><body>${code}</body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:${c.fg};background:${c.bg}}</style></head><body>${code}</body></html>`;
   }
 
   if (language === "svg") {
-    return `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#09090b}</style></head><body>${code}</body></html>`;
+    return `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:${c.bg}}</style></head><body>${code}</body></html>`;
   }
 
   if (language === "css") {
@@ -63,12 +76,12 @@ function buildPreviewHtml(artifact: Artifact): string {
   // JSX/TSX/React — wrap in a basic React scaffold
   return `<!DOCTYPE html><html><head>
 <meta charset="utf-8">
-<style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#e4e4e7;background:#09090b}*{box-sizing:border-box}</style>
+<style>body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:${c.fg};background:${c.bg}}*{box-sizing:border-box}</style>
 <script>
 // Minimal React-like rendering for simple JSX
 document.addEventListener('DOMContentLoaded', function() {
   var root = document.getElementById('root');
-  root.innerHTML = \`<div style="padding:16px"><pre style="color:#a1a1aa;font-size:12px">JSX/TSX artifact detected.\\nRendering requires a React runtime.\\n\\nCode preview:</pre><pre style="color:#e4e4e7;font-size:11px;white-space:pre-wrap;background:#18181b;padding:12px;border-radius:8px;border:1px solid #27272a;margin-top:8px">${code.replace(/`/g, "\\`").replace(/\\/g, "\\\\").replace(/\$/g, "\\$")}</pre></div>\`;
+  root.innerHTML = \`<div style="padding:16px"><pre style="color:${c.muted};font-size:12px">JSX/TSX artifact detected.\\nRendering requires a React runtime.\\n\\nCode preview:</pre><pre style="color:${c.fg};font-size:11px;white-space:pre-wrap;background:${c.surface};padding:12px;border-radius:8px;border:1px solid ${c.border};margin-top:8px">${code.replace(/`/g, "\\`").replace(/\\/g, "\\\\").replace(/\$/g, "\\$")}</pre></div>\`;
 });
 </script>
 </head><body><div id="root"></div></body></html>`;
@@ -147,7 +160,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
         )}
 
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopy} title="Copy code" aria-label="Copy code">
-          {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+          {copied ? <Check className="h-3 w-3 text-[var(--accent-emerald)]" /> : <Copy className="h-3 w-3" />}
         </Button>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)} title={expanded ? "Shrink" : "Expand"} aria-label={expanded ? "Shrink panel" : "Expand panel"}>
           {expanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
@@ -158,7 +171,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
       </div>
 
       {/* Preview iframe */}
-      <div className="flex-1 overflow-hidden bg-[#09090b]">
+      <div className="flex-1 overflow-hidden bg-background">
         <iframe
           ref={iframeRef}
           srcDoc={buildPreviewHtml(current)}

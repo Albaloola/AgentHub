@@ -95,29 +95,29 @@ export default function AnalyticsPage() {
           icon={MessageSquare}
           label="Total Messages"
           value={formatNumber(totalMessages)}
-          accent="text-blue-500"
-          bgAccent="bg-blue-600/10"
+          accent="text-[var(--accent-blue)]"
+          bgAccent="bg-[var(--accent-blue)]/10"
         />
         <OverviewCard
           icon={Zap}
           label="Total Tokens"
           value={formatNumber(totalTokens)}
-          accent="text-violet-500"
-          bgAccent="bg-violet-600/10"
+          accent="text-[var(--accent-violet)]"
+          bgAccent="bg-[var(--accent-violet)]/10"
         />
         <OverviewCard
           icon={Clock}
           label="Avg Response"
           value={`${Math.round(avgResponseTime)}ms`}
-          accent="text-amber-500"
-          bgAccent="bg-amber-600/10"
+          accent="text-[var(--accent-amber)]"
+          bgAccent="bg-[var(--accent-amber)]/10"
         />
         <OverviewCard
           icon={AlertTriangle}
           label="Total Errors"
           value={totalErrors.toString()}
-          accent={totalErrors > 0 ? "text-red-500" : "text-emerald-500"}
-          bgAccent={totalErrors > 0 ? "bg-red-600/10" : "bg-emerald-600/10"}
+          accent={totalErrors > 0 ? "text-[var(--status-danger)]" : "text-[var(--status-online)]"}
+          bgAccent={totalErrors > 0 ? "bg-[var(--status-danger)]/10" : "bg-[var(--status-online)]/10"}
         />
       </div>
 
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm">Online</span>
-              <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">{onlineCount}</Badge>
+              <Badge variant="outline" className="border-[var(--status-online)]/30 text-[var(--status-online)]">{onlineCount}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm">Offline</span>
@@ -138,14 +138,14 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm">Active Chats</span>
-              <Badge variant="outline" className="border-blue-500/30 text-blue-600">{conversations.length}</Badge>
+              <Badge variant="outline" className="border-[var(--accent-blue)]/30 text-[var(--accent-blue)]">{conversations.length}</Badge>
             </div>
             {/* Status bar */}
             <div className="flex h-2 rounded-full overflow-hidden bg-muted mt-2">
               {agents.length > 0 && (
                 <>
                   <div
-                    className="bg-emerald-500 transition-all"
+                    className="bg-[var(--status-online)] transition-all"
                     style={{ width: `${(onlineCount / agents.length) * 100}%` }}
                   />
                   <div
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
                     <div key={stat.agent_id} className="relative rounded-lg border border-border overflow-hidden">
                       {/* Background bar */}
                       <div
-                        className="absolute inset-y-0 left-0 bg-blue-600/5 transition-all"
+                        className="absolute inset-y-0 left-0 bg-[var(--accent-blue)]/5 transition-all"
                         style={{ width: `${barWidth}%` }}
                       />
                       <div className="relative grid grid-cols-6 gap-2 px-3 py-2.5 items-center">
@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
                         <div className="text-right text-sm">
                           {stat.avg_time > 0 ? `${Math.round(stat.avg_time)}ms` : "-"}
                         </div>
-                        <div className={cn("text-right text-sm", stat.errors > 0 ? "text-red-500 font-medium" : "text-muted-foreground")}>
+                        <div className={cn("text-right text-sm", stat.errors > 0 ? "text-[var(--status-danger)] font-medium" : "text-muted-foreground")}>
                           {stat.errors}
                         </div>
                       </div>
@@ -345,8 +345,8 @@ function formatNumber(n: number): string {
 }
 
 const BAR_COLORS = [
-  "bg-blue-500", "bg-violet-500", "bg-emerald-500", "bg-amber-500",
-  "bg-rose-500", "bg-cyan-500", "bg-fuchsia-500", "bg-lime-500",
+  "bg-[var(--accent-blue)]", "bg-[var(--accent-violet)]", "bg-[var(--accent-emerald)]", "bg-[var(--accent-amber)]",
+  "bg-[var(--accent-rose)]", "bg-[var(--accent-cyan)]", "bg-[var(--accent-violet)]", "bg-[var(--accent-amber)]",
 ];
 
 function getBarColor(id: string): string {

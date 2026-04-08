@@ -26,6 +26,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      className="h-full overflow-auto"
       style={{
         opacity: transitioning ? 0 : 1,
         transform: transitioning ? "translateY(6px)" : "translateY(0)",

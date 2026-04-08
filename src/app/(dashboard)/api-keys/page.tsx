@@ -89,7 +89,7 @@ export default function ApiKeysPage() {
       <div className="grid gap-4 grid-cols-2">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Key className="h-5 w-5 text-blue-500" />
+            <Key className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{keys.length}</div>
               <div className="text-xs text-muted-foreground">Total Keys</div>
@@ -98,7 +98,7 @@ export default function ApiKeysPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Shield className="h-5 w-5 text-green-500" />
+            <Shield className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">{activeCount}</div>
               <div className="text-xs text-muted-foreground">Active Keys</div>
@@ -133,8 +133,8 @@ export default function ApiKeysPage() {
             return (
               <Card key={apiKey.id} className="overflow-hidden">
                 <div className="flex items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10">
-                    <Key className="h-5 w-5 text-blue-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10">
+                    <Key className="h-5 w-5 text-[var(--accent-blue)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -321,10 +321,10 @@ function CreateApiKeyDialog({
           <DialogTitle>API Key Created</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 rounded-md border border-[var(--status-warning)]/30 bg-[var(--status-warning)]/5 p-3">
+            <AlertTriangle className="h-5 w-5 text-[var(--status-warning)] shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-amber-600">Save this key now</p>
+              <p className="font-medium text-[var(--status-warning)]">Save this key now</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 This key will not be shown again. Copy it and store it securely.
               </p>

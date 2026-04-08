@@ -239,7 +239,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                   <button
                     type="button"
                     onClick={() => setAvatarUrl("")}
-                    className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center rounded-full bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center rounded-full bg-[var(--status-danger)]/80 text-white hover:bg-[var(--status-danger)] transition-colors"
                   >
                     <XIcon className="h-3 w-3" />
                   </button>

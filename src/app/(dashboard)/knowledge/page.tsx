@@ -38,11 +38,11 @@ function formatFileSize(bytes: number): string {
 
 function fileTypeBadgeColor(type: string): string {
   switch (type.toLowerCase()) {
-    case "pdf": return "border-red-500/30 text-red-600";
+    case "pdf": return "border-[var(--accent-rose)]/30 text-[var(--accent-rose)]";
     case "md":
-    case "markdown": return "border-blue-500/30 text-blue-600";
-    case "json": return "border-amber-500/30 text-amber-600";
-    case "csv": return "border-green-500/30 text-green-600";
+    case "markdown": return "border-[var(--accent-blue)]/30 text-[var(--accent-blue)]";
+    case "json": return "border-[var(--accent-amber)]/30 text-[var(--accent-amber)]";
+    case "csv": return "border-[var(--status-online)]/30 text-[var(--status-online)]";
     case "txt":
     case "text": return "border-gray-500/30 text-gray-600";
     default: return "";
@@ -219,7 +219,7 @@ export default function KnowledgePage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Database className="h-5 w-5 text-blue-500" />
+            <Database className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{knowledgeBases.length}</div>
               <div className="text-xs text-muted-foreground">Knowledge Bases</div>
@@ -228,7 +228,7 @@ export default function KnowledgePage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <FileText className="h-5 w-5 text-violet-500" />
+            <FileText className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">{totalDocs}</div>
               <div className="text-xs text-muted-foreground">Documents</div>
@@ -237,7 +237,7 @@ export default function KnowledgePage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Hash className="h-5 w-5 text-amber-500" />
+            <Hash className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalChunks}</div>
               <div className="text-xs text-muted-foreground">Chunks</div>
@@ -279,8 +279,8 @@ export default function KnowledgePage() {
                   className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/30 transition-colors"
                   onClick={() => handleExpand(kb.id)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10">
+                    <BookOpen className="h-5 w-5 text-[var(--accent-blue)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -288,7 +288,7 @@ export default function KnowledgePage() {
                       <Badge variant="outline" className="text-[0.625rem]">
                         {kb.document_count} doc{kb.document_count !== 1 ? "s" : ""}
                       </Badge>
-                      <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
+                      <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
                         {kb.total_chunks} chunk{kb.total_chunks !== 1 ? "s" : ""}
                       </Badge>
                     </div>

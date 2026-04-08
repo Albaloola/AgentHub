@@ -30,17 +30,17 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  content_filter: "bg-blue-500/10 text-blue-600 border-blue-500/30",
-  pii_detection: "bg-violet-500/10 text-violet-600 border-violet-500/30",
-  injection_detection: "bg-orange-500/10 text-orange-600 border-orange-500/30",
-  length_limit: "bg-cyan-500/10 text-cyan-600 border-cyan-500/30",
-  custom_regex: "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/30",
+  content_filter: "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30",
+  pii_detection: "bg-[var(--accent-violet)]/10 text-[var(--accent-violet)] border-[var(--accent-violet)]/30",
+  injection_detection: "bg-[var(--accent-amber)]/10 text-[var(--accent-amber)] border-[var(--accent-amber)]/30",
+  length_limit: "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] border-[var(--accent-cyan)]/30",
+  custom_regex: "bg-[var(--accent-rose)]/10 text-[var(--accent-rose)] border-[var(--accent-rose)]/30",
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  block: "bg-red-500/10 text-red-600 border-red-500/30",
-  warn: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-  redact: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  block: "bg-[var(--status-danger)]/10 text-[var(--status-danger)] border-[var(--status-danger)]/30",
+  warn: "bg-[var(--status-warning)]/10 text-[var(--status-warning)] border-[var(--status-warning)]/30",
+  redact: "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/30",
   log: "bg-gray-500/10 text-gray-500 border-gray-500/30",
 };
 
@@ -136,7 +136,7 @@ export default function GuardrailsPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Shield className="h-5 w-5 text-blue-500" />
+            <Shield className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{rules.length}</div>
               <div className="text-xs text-muted-foreground">Total Rules</div>
@@ -145,7 +145,7 @@ export default function GuardrailsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+            <ShieldCheck className="h-5 w-5 text-[var(--status-online)]" />
             <div>
               <div className="text-2xl font-bold">{activeCount}</div>
               <div className="text-xs text-muted-foreground">Active Rules</div>
@@ -154,7 +154,7 @@ export default function GuardrailsPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <ShieldAlert className="h-5 w-5 text-amber-500" />
+            <ShieldAlert className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">{totalTriggers}</div>
               <div className="text-xs text-muted-foreground">Total Triggers</div>
@@ -208,8 +208,8 @@ export default function GuardrailsPage() {
             return (
               <Card key={rule.id} className="overflow-hidden">
                 <div className="flex items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10">
-                    <Shield className="h-5 w-5 text-blue-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10">
+                    <Shield className="h-5 w-5 text-[var(--accent-blue)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

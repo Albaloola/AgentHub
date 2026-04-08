@@ -44,6 +44,10 @@ export async function POST(request: Request) {
     avatar_url?: string;
   };
 
+  if (!body.name?.trim() || !body.gateway_type?.trim() || !body.connection_url?.trim()) {
+    return NextResponse.json({ error: "name, gateway_type, and connection_url are required" }, { status: 400 });
+  }
+
   const id = uuid();
   db.prepare(
     `INSERT INTO agents (id, name, avatar_url, gateway_type, connection_url, connection_config)

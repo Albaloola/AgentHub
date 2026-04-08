@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { getStatusStyle } from "@/lib/status-colors";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   getAgents, getConversations, checkAgentHealth, getCapabilities,
@@ -120,7 +121,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
         // Non-critical — sections will show empty states
       }
     } catch {
-      router.push("/");
+      router.push("/agents");
     } finally {
       setLoading(false);
     }
@@ -201,7 +202,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <h2 className="text-lg font-medium">Agent not found</h2>
-          <Button variant="link" onClick={() => router.push("/")}>
+          <Button variant="link" onClick={() => router.push("/agents")}>
             Go back
           </Button>
         </div>
@@ -213,7 +214,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
     <ScrollArea className="h-full">
       <div className="fluid-narrow-width space-y-6 p-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/agents")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div
@@ -426,13 +427,13 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                       <span className="text-muted-foreground">1d:</span>
                       <span>{Math.round(perfData.stats.avg_latency_1d)}ms</span>
                       {perfData.stats.trend === "improving" && (
-                        <TrendingDown className="h-3 w-3 text-emerald-500" />
+                        <TrendingDown className="h-3 w-3 text-[var(--status-online)]" />
                       )}
                       {perfData.stats.trend === "degrading" && (
-                        <TrendingUp className="h-3 w-3 text-red-500" />
+                        <TrendingUp className="h-3 w-3 text-[var(--status-danger)]" />
                       )}
                       {perfData.stats.trend === "stable" && (
-                        <Minus className="h-3 w-3 text-amber-500" />
+                        <Minus className="h-3 w-3 text-[var(--status-warning)]" />
                       )}
                     </div>
                   </div>
@@ -447,9 +448,9 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       {perfData.stats.error_rate_7d > 0.05 ? (
-                        <AlertTriangle className="h-3 w-3 text-amber-500" />
+                        <AlertTriangle className="h-3 w-3 text-[var(--status-warning)]" />
                       ) : (
-                        <Activity className="h-3 w-3 text-emerald-500" />
+                        <Activity className="h-3 w-3 text-[var(--status-online)]" />
                       )}
                       <span>{perfData.stats.error_rate_7d > 0.05 ? "Above threshold" : "Healthy"}</span>
                     </div>
@@ -491,8 +492,8 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                             className={cn(
                               "flex-1 min-w-[2px] max-w-[6px] rounded-t-sm transition-all",
                               snap.error_occurred
-                                ? "bg-red-500/80"
-                                : "bg-blue-500/60 hover:bg-blue-500/90",
+                                ? "bg-[var(--status-danger)]/80"
+                                : "bg-[var(--accent-blue)]/60 hover:bg-[var(--accent-blue)]/90",
                             )}
                             style={{ height: `${Math.max(heightPct, 4)}%` }}
                             title={`${snap.latency_ms}ms — ${new Date(snap.recorded_at).toLocaleString()}`}
@@ -513,8 +514,8 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                         className={cn(
                           "h-2.5 w-2.5 rounded-full shrink-0",
                           snap.error_occurred
-                            ? "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]"
-                            : "bg-emerald-500/70",
+                            ? "bg-[var(--status-danger)] shadow-[0_0_4px_rgba(239,68,68,0.6)]"
+                            : "bg-[var(--status-online)]/70",
                         )}
                         title={`${snap.error_occurred ? "Error" : "OK"} — ${new Date(snap.recorded_at).toLocaleString()}`}
                       />
@@ -693,10 +694,10 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                               className={cn(
                                 "h-2 w-2 rounded-full",
                                 fbAgent.status === "online"
-                                  ? "bg-emerald-500"
+                                  ? "bg-[var(--status-online)]"
                                   : fbAgent.status === "error"
-                                    ? "bg-red-500"
-                                    : "bg-gray-500",
+                                    ? "bg-[var(--status-danger)]"
+                                    : "bg-[var(--status-offline)]",
                               )}
                             />
                             <span className="text-xs text-muted-foreground capitalize">
@@ -757,10 +758,10 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
                               className={cn(
                                 "h-2 w-2 rounded-full",
                                 a.status === "online"
-                                  ? "bg-emerald-500"
+                                  ? "bg-[var(--status-online)]"
                                   : a.status === "error"
-                                    ? "bg-red-500"
-                                    : "bg-gray-500",
+                                    ? "bg-[var(--status-danger)]"
+                                    : "bg-[var(--status-offline)]",
                               )}
                             />
                             {a.name}

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { resetConversation as apiReset, compactConversation } from "@/lib/api";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -26,6 +26,10 @@ interface ChatHeaderProps {
   onReplay?: () => void;
   replayOpen?: boolean;
   queueCount?: number;
+  searchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
+  searchResultCount?: number;
+  onNavigateSearch?: (direction: "next" | "prev") => void;
 }
 
 export function ChatHeader({
@@ -39,6 +43,10 @@ export function ChatHeader({
   onReplay,
   replayOpen = false,
   queueCount = 0,
+  searchQuery = "",
+  onSearchQueryChange,
+  searchResultCount = 0,
+  onNavigateSearch,
 }: ChatHeaderProps) {
   const [resetOpen, setResetOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -46,9 +54,6 @@ export function ChatHeader({
   const [isCompacting, setIsCompacting] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<number[]>([]);
-  const [searchIndex, setSearchIndex] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,70 +62,17 @@ export function ChatHeader({
     }
   }, [searchOpen]);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setSearchIndex(0);
-      // Clear highlights
-      document.querySelectorAll(".search-highlight").forEach((el) => {
-        const parent = el.parentNode;
-        if (parent) {
-          parent.replaceChild(document.createTextNode(el.textContent || ""), el);
-          parent.normalize();
-        }
-      });
-      return;
-    }
-
-    // Find matching message bubbles
-    const scrollEl = document.getElementById("chat-scroll");
-    if (!scrollEl) return;
-
-    // Clear previous highlights
-    scrollEl.querySelectorAll(".search-highlight").forEach((el) => {
-      const parent = el.parentNode;
-      if (parent) {
-        parent.replaceChild(document.createTextNode(el.textContent || ""), el);
-        parent.normalize();
-      }
-    });
-
-    const messageBubbles = scrollEl.querySelectorAll("[data-message-id]");
-    const indices: number[] = [];
-    const query = searchQuery.toLowerCase();
-
-    messageBubbles.forEach((bubble, i) => {
-      const text = bubble.textContent?.toLowerCase() || "";
-      if (text.includes(query)) {
-        indices.push(i);
-      }
-    });
-
-    setSearchResults(indices);
-    setSearchIndex(0);
-
-    if (indices.length > 0) {
-      messageBubbles[indices[0]]?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [searchQuery]);
-
-  const navigateSearch = useCallback((direction: "next" | "prev") => {
-    if (searchResults.length === 0) return;
-    const newIndex = direction === "next"
-      ? (searchIndex + 1) % searchResults.length
-      : (searchIndex - 1 + searchResults.length) % searchResults.length;
-    setSearchIndex(newIndex);
-    const scrollEl = document.getElementById("chat-scroll");
-    if (!scrollEl) return;
-    const bubbles = scrollEl.querySelectorAll("[data-message-id]");
-    bubbles[searchResults[newIndex]]?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [searchResults, searchIndex]);
-
   function closeSearch() {
     setSearchOpen(false);
-    setSearchQuery("");
-    setSearchResults([]);
-    setSearchIndex(0);
+    onSearchQueryChange?.("");
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      onNavigateSearch?.(e.shiftKey ? "prev" : "next");
+    } else if (e.key === "Escape") {
+      closeSearch();
+    }
   }
 
   async function handleReset() {
@@ -168,7 +120,7 @@ export function ChatHeader({
           />
           <span className="text-sm font-medium">{agent.name}</span>
           {isStreaming && streamingAgentId === agent.id && (
-            <span className="text-[0.625rem] text-blue-400 animate-pulse" aria-live="polite">generating...</span>
+            <span className="text-[0.625rem] text-[var(--accent-blue)] animate-pulse" aria-live="polite">generating...</span>
           )}
         </div>
       ))}
@@ -178,7 +130,7 @@ export function ChatHeader({
       )}
 
       {queueCount > 0 && (
-        <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0 text-amber-400 border-amber-500/30">
+        <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0 text-[var(--accent-amber)] border-[var(--accent-amber)]/30">
           {queueCount} queued
         </Badge>
       )}
@@ -193,23 +145,28 @@ export function ChatHeader({
             ref={searchInputRef}
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") navigateSearch(e.shiftKey ? "prev" : "next");
-              if (e.key === "Escape") closeSearch();
-            }}
+            onChange={(e) => onSearchQueryChange?.(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Search messages..."
             className="bg-transparent text-xs outline-none w-32 placeholder:text-muted-foreground/40"
           />
-          {searchResults.length > 0 && (
+          {searchResultCount > 0 && (
             <span className="text-[0.625rem] text-muted-foreground/50 tabular-nums shrink-0">
-              {searchIndex + 1}/{searchResults.length}
+              {searchResultCount} results
             </span>
           )}
-          <button onClick={() => navigateSearch("prev")} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Previous search result">
+          <button 
+            onClick={() => onNavigateSearch?.("prev")} 
+            className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" 
+            aria-label="Previous search result"
+          >
             <ChevronUp className="h-3 w-3" />
           </button>
-          <button onClick={() => navigateSearch("next")} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Next search result">
+          <button 
+            onClick={() => onNavigateSearch?.("next")} 
+            className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" 
+            aria-label="Next search result"
+          >
             <ChevronDown className="h-3 w-3" />
           </button>
           <button onClick={closeSearch} className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground/50 hover:text-foreground transition-colors" aria-label="Close search">
@@ -237,7 +194,7 @@ export function ChatHeader({
           size="sm"
           className={cn(
             "h-6 gap-1 rounded-md text-[0.625rem] px-2",
-            replayOpen ? "text-blue-400" : "text-muted-foreground",
+            replayOpen ? "text-[var(--accent-blue)]" : "text-muted-foreground",
           )}
           onClick={onReplay}
           disabled={isStreaming}

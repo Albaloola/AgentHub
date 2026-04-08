@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { getConversations, getMessages, getAgents } from "@/lib/api";
 import type { ConversationWithDetails, MessageWithToolCalls, AgentWithStatus } from "@/lib/types";
@@ -102,25 +103,27 @@ export function GlobalSearch() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          <select
-            className="rounded-md border border-input bg-transparent px-2 py-1 text-xs"
-            value={filterAgent}
-            onChange={(e) => setFilterAgent(e.target.value)}
-          >
-            <option value="">All agents</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-          <select
-            className="rounded-md border border-input bg-transparent px-2 py-1 text-xs"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-          >
-            <option value="all">All messages</option>
-            <option value="user">User only</option>
-            <option value="agent">Agent only</option>
-          </select>
+          <Select value={filterAgent || "__all__"} onValueChange={(v) => setFilterAgent(v === "__all__" ? "" : (v ?? ""))}>
+            <SelectTrigger className="h-7 w-[140px] text-xs">
+              <SelectValue placeholder="All agents" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All agents</SelectItem>
+              {agents.map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterType} onValueChange={(v) => v && setFilterType(v as typeof filterType)}>
+            <SelectTrigger className="h-7 w-[120px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All messages</SelectItem>
+              <SelectItem value="user">User only</SelectItem>
+              <SelectItem value="agent">Agent only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -188,11 +191,15 @@ export function GlobalSearch() {
   );
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function highlightText(text: string, query: string): string {
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text;
-  const before = text.slice(0, idx);
-  const match = text.slice(idx, idx + query.length);
-  const after = text.slice(idx + query.length);
-  return `${before}<mark class="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">${match}</mark>${after}`;
+  if (idx === -1) return escapeHtml(text);
+  const before = escapeHtml(text.slice(0, idx));
+  const match = escapeHtml(text.slice(idx, idx + query.length));
+  const after = escapeHtml(text.slice(idx + query.length));
+  return `${before}<mark class="rounded px-0.5" style="background: var(--theme-accent-softer, rgba(59,130,246,0.15)); color: var(--theme-accent-text, var(--foreground))">${match}</mark>${after}`;
 }

@@ -90,7 +90,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     } catch {
       // Silently fail
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (open) {

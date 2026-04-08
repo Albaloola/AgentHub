@@ -141,7 +141,7 @@ export default function GroupsPage() {
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors",
                     selectedAgents.has(agent.id)
-                      ? "border-blue-500 bg-blue-500/10"
+                      ? "border-[var(--accent-blue)] bg-[var(--accent-blue)]/10"
                       : "border-border hover:bg-accent/50",
                   )}
                 >
@@ -162,7 +162,7 @@ export default function GroupsPage() {
                     </div>
                   </div>
                   {selectedAgents.has(agent.id) && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-blue)]">
                       <Check className="h-4 w-4 text-white" />
                     </div>
                   )}
@@ -174,7 +174,7 @@ export default function GroupsPage() {
                   No active agents available.
                   <br />
                   <button
-                    className="text-blue-500 hover:underline mt-1"
+                    className="text-[var(--accent-blue)] hover:underline mt-1"
                     onClick={() => router.push("/agents")}
                   >
                     Register agents first

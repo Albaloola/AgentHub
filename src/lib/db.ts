@@ -812,3 +812,21 @@ function seed(db: Database.Database) {
 }
 
 export const db = getDb();
+
+// SQLite returns INTEGER 0/1 for boolean columns. This helper converts them to proper booleans.
+const BOOLEAN_FIELDS = new Set([
+  "is_active", "is_available", "is_pinned", "is_summary", "is_handoff", "is_edited",
+  "is_read", "is_resolved", "is_published", "is_builtin", "is_complete", "is_autonomous",
+  "adaptive_timeout_enabled", "auto_compact_enabled", "stop_on_completion", "error_occurred",
+]);
+
+export function toBooleans<T extends Record<string, unknown>>(row: T): T {
+  const result = { ...row };
+  for (const key of Object.keys(result)) {
+    if (BOOLEAN_FIELDS.has(key)) {
+      (result as Record<string, unknown>)[key] = !!(result as Record<string, unknown>)[key];
+    }
+  }
+  return result;
+}
+

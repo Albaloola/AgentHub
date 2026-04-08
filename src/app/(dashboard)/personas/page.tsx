@@ -122,7 +122,7 @@ export default function PersonasPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Sparkles className="h-5 w-5 text-violet-500" />
+            <Sparkles className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">{personas.length}</div>
               <div className="text-xs text-muted-foreground">Total Personas</div>
@@ -131,7 +131,7 @@ export default function PersonasPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Tag className="h-5 w-5 text-blue-500" />
+            <Tag className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{uniqueCategories.size}</div>
               <div className="text-xs text-muted-foreground">Categories</div>
@@ -140,7 +140,7 @@ export default function PersonasPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <BarChart3 className="h-5 w-5 text-emerald-500" />
+            <BarChart3 className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
               <div className="text-2xl font-bold">{totalApplications}</div>
               <div className="text-xs text-muted-foreground">Total Applications</div>
@@ -250,7 +250,7 @@ function PersonaCard({
     <Card className="overflow-hidden">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-600/10 text-violet-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-violet)]/10 text-[var(--accent-violet)]">
             {CATEGORY_ICONS[persona.category] || <User className="h-5 w-5" />}
           </div>
           <div className="flex-1 min-w-0">
@@ -264,7 +264,7 @@ function PersonaCard({
               <Badge variant="outline" className="text-[0.625rem]">{persona.category}</Badge>
               <Badge
                 variant="outline"
-                className="text-[0.625rem] border-blue-500/30 text-blue-600"
+                className="text-[0.625rem] border-[var(--accent-blue)]/30 text-[var(--accent-blue)]"
               >
                 {persona.behavior_mode}
               </Badge>
@@ -304,6 +304,7 @@ function PersonaCard({
                   <Select
                     value={applyAgentId ?? ""}
                     onValueChange={(v) => v && setApplyAgentId(v)}
+                    items={Object.fromEntries(agents.filter((a) => a.is_active).map((a) => [a.id, a.name]))}
                   >
                     <SelectTrigger><SelectValue placeholder="Choose an agent..." /></SelectTrigger>
                     <SelectContent>

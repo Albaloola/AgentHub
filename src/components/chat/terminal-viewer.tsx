@@ -39,9 +39,9 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
       {/* macOS terminal header */}
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/20 bg-black/30">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/70 hover:bg-yellow-500 transition-colors" />
-          <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors" />
+          <div className="w-3 h-3 rounded-full transition-colors" style={{ background: "var(--code-dot-red)" }} />
+          <div className="w-3 h-3 rounded-full transition-colors" style={{ background: "var(--code-dot-amber)" }} />
+          <div className="w-3 h-3 rounded-full transition-colors" style={{ background: "var(--code-dot-green)" }} />
         </div>
         <div className="flex items-center gap-2 ml-2">
           <Terminal className="h-3 w-3 text-muted-foreground/50" />
@@ -75,18 +75,18 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
                 {/* Status indicator */}
                 <div className="shrink-0 mt-0.5">
                   {tc.status === "pending" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-yellow-400" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--status-warning)]" />
                   ) : tc.status === "success" ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[var(--accent-emerald)]" />
                   ) : (
-                    <XCircle className="h-3.5 w-3.5 text-red-400" />
+                    <XCircle className="h-3.5 w-3.5 text-[var(--status-danger)]" />
                   )}
                 </div>
 
                 {/* Command */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-emerald-400/80 select-none">$ </span>
-                  <span className="text-cyan-300 font-semibold">{tc.tool_name}</span>
+                  <span className="text-[var(--accent-emerald)]/80 select-none">$ </span>
+                  <span className="text-[var(--accent-cyan)] font-semibold">{tc.tool_name}</span>
                   {inputPreview && (
                     <span className="text-muted-foreground/60 ml-2 truncate inline-block max-w-[60%] align-bottom">
                       {inputPreview}
@@ -112,7 +112,7 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
                   <TerminalBlock
                     label="input"
                     content={formatJSON(tc.input)}
-                    labelColor="text-blue-400/60"
+                    labelColor="text-[var(--accent-blue)]/60"
                   />
 
                   {/* Output */}
@@ -120,7 +120,7 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
                     <TerminalBlock
                       label={tc.status === "error" ? "stderr" : "output"}
                       content={formatJSON(tc.output)}
-                      labelColor={tc.status === "error" ? "text-red-400/60" : "text-emerald-400/60"}
+                      labelColor={tc.status === "error" ? "text-[var(--status-danger)] opacity-60" : "text-[var(--accent-emerald)] opacity-60"}
                     />
                   )}
 
@@ -137,9 +137,9 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
         {/* Streaming cursor */}
         {isStreaming && (
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-yellow-400" />
-            <span className="text-emerald-400/80 select-none">$ </span>
-            <span className="w-2 h-4 bg-emerald-400/60 animate-pulse rounded-sm" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--status-warning)]" />
+            <span className="text-[var(--accent-emerald)]/80 select-none">$ </span>
+            <span className="w-2 h-4 animate-pulse rounded-sm" style={{ background: "color-mix(in srgb, var(--accent-emerald) 60%, transparent)" }} />
           </div>
         )}
       </div>
@@ -177,7 +177,7 @@ function TerminalBlock({
           aria-label={`Copy ${label}`}
         >
           {copied ? (
-            <Check className="h-2.5 w-2.5 text-emerald-400" />
+            <Check className="h-2.5 w-2.5 text-[var(--accent-emerald)]" />
           ) : (
             <Copy className="h-2.5 w-2.5 text-muted-foreground/40" />
           )}

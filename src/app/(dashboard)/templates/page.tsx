@@ -111,7 +111,7 @@ export default function TemplatesPage() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <FileText className="h-5 w-5 text-blue-500" />
+            <FileText className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
               <div className="text-2xl font-bold">{templates.length}</div>
               <div className="text-xs text-muted-foreground">Templates</div>
@@ -120,7 +120,7 @@ export default function TemplatesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Users className="h-5 w-5 text-violet-500" />
+            <Users className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
               <div className="text-2xl font-bold">
                 {templates.filter((t) => t.response_mode === "discussion").length}
@@ -131,7 +131,7 @@ export default function TemplatesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <Settings2 className="h-5 w-5 text-amber-500" />
+            <Settings2 className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
               <div className="text-2xl font-bold">
                 {templates.filter((t) => t.stop_on_completion).length}
@@ -171,8 +171,8 @@ export default function TemplatesPage() {
                   className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/30 transition-colors"
                   onClick={() => setExpandedId(isExpanded ? null : template.id)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10">
-                    <FileText className="h-5 w-5 text-blue-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10">
+                    <FileText className="h-5 w-5 text-[var(--accent-blue)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function TemplatesPage() {
                         {template.response_mode}
                       </Badge>
                       {template.stop_on_completion && (
-                        <Badge variant="outline" className="text-[0.625rem] border-amber-500/30 text-amber-600">
+                        <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
                           auto-stop
                         </Badge>
                       )}
