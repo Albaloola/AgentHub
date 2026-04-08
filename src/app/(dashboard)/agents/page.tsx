@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Bot,
   Plus,
@@ -396,16 +397,28 @@ function AgentCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Button variant="outline" size="sm" className="h-11 flex-1 min-w-[7rem] transition-all duration-300 neon-blue hover:text-[var(--accent-blue)] hover:scale-105" onClick={onStartChat} disabled={!agent.is_active}>
-              <MessageSquare className="h-4 w-4 mr-1.5" />
-              Chat
-            </Button>
-            <Button variant="outline" className="h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 neon-emerald hover:text-[var(--accent-emerald)] hover:scale-105" onClick={onHealthCheck} disabled={isCheckingHealth}>
-              {isCheckingHealth ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" className="h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 neon-violet hover:text-[var(--accent-violet)] hover:scale-105" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
-            <Button variant="outline" className="h-11 w-11 p-0 flex-shrink-0 transition-all duration-300 neon-rose hover:text-[var(--accent-rose)] hover:scale-105" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
+          <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} className="flex-1 min-w-[7rem]">
+              <Button variant="outline" size="sm" className="w-full h-10 px-4 rounded-xl transition-all duration-300 neon-blue hover:text-[var(--accent-blue)]" onClick={onStartChat} disabled={!agent.is_active}>
+                <MessageSquare className="h-4 w-4 mr-1.5" />
+                Chat
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
+              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-emerald hover:text-[var(--accent-emerald)]" onClick={onHealthCheck} disabled={isCheckingHealth}>
+                {isCheckingHealth ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
+              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-violet hover:text-[var(--accent-violet)]" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
+              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-rose hover:text-[var(--accent-rose)]" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </motion.div>
           </div>
 
           {/* Detail panel — expands inside the card */}

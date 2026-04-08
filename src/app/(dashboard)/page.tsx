@@ -67,7 +67,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
+    <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-rounded p-4 md:p-6 space-y-8">
       <FadeIn direction="up" distance={16}>
         <div className="flex items-start justify-between">
           <div>
@@ -90,7 +90,7 @@ export default function DashboardPage() {
       </FadeIn>
 
       <FadeIn direction="up" distance={16} delay={0.1}>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Agents"
             value={agents.length}
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               ) : (
-                <MotionList className="space-y-2">
+                <MotionList className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded pr-2">
                   {agents.slice(0, 6).map((agent) => (
                     <MotionItem key={agent.id}>
                       <div

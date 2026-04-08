@@ -72,7 +72,7 @@ export function ChatInput({
     if (textareaRef.current && !expanded) {
       textareaRef.current.style.height = "auto";
       const scrollHeight = textareaRef.current.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 120), 300);
+      const newHeight = Math.min(Math.max(scrollHeight, 72), 300);
       textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [content, expanded]);
@@ -158,15 +158,23 @@ export function ChatInput({
         disabled={isStreaming}
       />
 
+      <div 
+        className="absolute inset-0 pointer-events-none rounded-2xl blur-3xl transition-opacity duration-300"
+        style={{
+          background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 70%)",
+          opacity: isFocused ? 0.3 : 0.15
+        }}
+      />
+
       <motion.div
         className={cn(
           "relative rounded-2xl backdrop-blur-xl",
         )}
         style={{
           background: "var(--glass-bg)",
-          border: `1px solid ${isFocused ? "var(--ring)" : "var(--panel-border)"}`,
+          border: `1px solid var(--panel-border)`,
           boxShadow: isFocused
-            ? `var(--panel-shadow), 0 0 0 3px var(--theme-accent-soft)`
+            ? `var(--panel-shadow), 0 0 0 1px var(--theme-accent), 0 0 20px var(--theme-accent-soft)`
             : "var(--panel-shadow)",
           transition: "border-color 0.2s, box-shadow 0.2s",
         }}
@@ -211,7 +219,7 @@ export function ChatInput({
         )}
 
         <div className="flex items-center gap-3 p-4">
-          <div className="flex flex-col items-center gap-2 shrink-0 self-stretch justify-end pb-1">
+          <div className="flex flex-col items-center gap-2 shrink-0 self-center">
             <input
               ref={fileInputRef}
               type="file"
@@ -223,7 +231,7 @@ export function ChatInput({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-violet shrink-0 text-muted-foreground hover:text-foreground"
+              className="h-10 w-10 aspect-square rounded-xl transition-all duration-200 shrink-0 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
               disabled={disabled || uploading || isStreaming}
               onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
@@ -234,7 +242,7 @@ export function ChatInput({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-xl transition-all duration-200 hover-glow-cyan shrink-0 text-muted-foreground hover:text-foreground"
+              className="h-10 w-10 aspect-square rounded-xl transition-all duration-200 shrink-0 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
               onClick={() => setExpanded(!expanded)}
               title={expanded ? "Minimize" : "Expand"}
               aria-label={expanded ? "Minimize input" : "Expand input"}
@@ -263,7 +271,7 @@ export function ChatInput({
                 lineHeight: "1.6",
                 resize: "none",
                 overflowY: "auto",
-                minHeight: expanded ? "300px" : "120px",
+                minHeight: expanded ? "300px" : "72px",
                 maxHeight: expanded ? "none" : "300px",
               }}
               rows={expanded ? 12 : 4}

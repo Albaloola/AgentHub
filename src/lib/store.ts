@@ -197,9 +197,15 @@ interface AppState {
     markdownEnabled: boolean;
     autoScroll: boolean;
     notificationsEnabled: boolean;
+    notifyAgentErrors: boolean;
+    notifyTasks: boolean;
+    notifyWebhooks: boolean;
+    dateFormat: "system" | "MM/DD/YYYY" | "DD/MM/YYYY";
     soundEffects: boolean;
     titleFont: string;
+    titleFontSize: number;
     chatFont: string;
+    chatFontSize: number;
     glowColor: string;
     agentGlowColor: string;
     glowIntensity: number;
@@ -218,7 +224,9 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   zoom: 100,
   fontFamily: "geist",
   titleFont: "geist",
+  titleFontSize: 18,
   chatFont: "geist",
+  chatFontSize: 14,
   sidebarCollapsed: false,
   ambientBackground: true,
   animationsEnabled: true,
@@ -233,6 +241,10 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   markdownEnabled: true,
   autoScroll: true,
   notificationsEnabled: true,
+  notifyAgentErrors: true,
+  notifyTasks: true,
+  notifyWebhooks: true,
+  dateFormat: "DD/MM/YYYY",
   soundEffects: false,
   glowColor: "rgba(59,130,246,0.3)",
   agentGlowColor: "rgba(16,185,129,0.3)",

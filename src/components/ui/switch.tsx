@@ -85,45 +85,20 @@ function Switch({
         "rounded-full border transition-[border-color,box-shadow] duration-300",
         "h-[24px] w-[44px]",
         "bg-[var(--muted)] border-[var(--panel-border)]",
-        "data-checked:bg-[var(--theme-accent-softer)] data-checked:border-[var(--theme-accent-border)]",
+        "data-checked:bg-[var(--muted)] data-checked:border-[var(--theme-accent-border)]",
         "focus-visible:ring-2 focus-visible:ring-ring/30",
         "data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}
     >
-      {/* Track fill — animated gradient sweep using background-position */}
-      <div
-        className="absolute inset-0 rounded-full overflow-hidden"
-        style={{
-          margin: THUMB_INSET,
-          width: TRACK_WIDTH - THUMB_INSET * 2,
-          height: TRACK_HEIGHT - THUMB_INSET * 2,
-        }}
-      >
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background: "var(--switch-trail)",
-            backgroundSize: "200% 100%",
-            backgroundPosition: "right center",
-          }}
-          animate={{
-            backgroundPosition: trailActive ? "left center" : "right center",
-            opacity: checked ? 1 : 0,
-          }}
-          transition={{
-            backgroundPosition: {
-              duration: prefersReducedMotion ? 0 : 0.25,
-              ease: [0.4, 0, 0.2, 1],
-            },
-            opacity: {
-              duration: 0.2,
-              ease: "easeOut",
-            },
-          }}
-        />
-      </div>
+      {/* Colored portion tracking the thumb */}
+      <motion.div
+        className="absolute bottom-0 left-0 top-0 pointer-events-none rounded-full bg-[var(--theme-accent-softer)] ring-1 ring-inset ring-[var(--theme-accent-soft)]"
+        style={{ margin: THUMB_INSET }}
+        animate={{ width: checked ? travel + THUMB_SIZE : THUMB_SIZE, opacity: checked ? 1 : 0.2 }}
+        transition={prefersReducedMotion ? { duration: 0 } : spring.bouncy}
+      />
 
       {/* Thumb — spring-animated position with absolute positioning */}
       <motion.span

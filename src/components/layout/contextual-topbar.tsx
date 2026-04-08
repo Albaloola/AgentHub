@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
+import { useEffect, useState } from "react";
+import { useStore } from "@/lib/store";
 
 interface ContextualTopBarProps {
   onOpenSettings: () => void;
@@ -11,8 +13,38 @@ interface ContextualTopBarProps {
 
 export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
   const pathname = usePathname();
-  
-  console.log('[ContextualTopBar] Rendering, pathname:', pathname);
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState(new Date());
+  const dateFormat = useStore(s => s.uiPrefs.dateFormat || 'system');
+
+  useEffect(() => {
+    setMounted(true);
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  function formatDateTime(date: Date) {
+    if (dateFormat === "system") {
+      return date.toLocaleDateString(undefined, {
+        month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+      });
+    }
+    
+    const h = date.getHours();
+    const m = date.getMinutes().toString().padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = (h % 12 || 12).toString();
+    const timeStr = `${h12}:${m} ${ampm}`;
+    
+    const mo = (date.getMonth() + 1).toString().padStart(2, "0");
+    const d = date.getDate().toString().padStart(2, "0");
+    const y = date.getFullYear();
+    
+    if (dateFormat === "MM/DD/YYYY") {
+      return `${mo}/${d}/${y} ${timeStr}`;
+    }
+    return `${d}/${mo}/${y} ${timeStr}`;
+  }
 
   // Simple page title mapping
   const titles: Record<string, string> = {
@@ -50,14 +82,12 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
       className="relative flex h-10 shrink-0 items-center justify-between px-4"
       style={{
         backgroundColor: "var(--background)",
-        clipPath: "polygon(0 0, calc(50% - 60px) 0, 50% 10px, calc(50% + 60px) 0, 100% 0, 100% 100%, 0 100%)",
       }}
     >
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          clipPath: "polygon(0 0, calc(50% - 60px) 0, 50% 10px, calc(50% + 60px) 0, 100% 0, 100% 1px, calc(50% + 60px) 1px, 50% 11px, calc(50% - 60px) 1px, 0 1px)",
-          background: "var(--topbar-line)",
+          background: "linear-gradient(to bottom, var(--topbar-line) 0%, transparent 1px)",
           opacity: 0.6,
         }}
       />
@@ -69,11 +99,19 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
         }}
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-1">
         <span className="text-sm font-semibold">{title}</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex justify-center flex-1">
+        {mounted && (
+          <span className="text-xs font-mono text-muted-foreground tabular-nums">
+            {formatDateTime(now)}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-2 flex-1">
         <Button
           variant="ghost"
           size="icon"

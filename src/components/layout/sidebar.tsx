@@ -806,8 +806,32 @@ export function Sidebar() {
             collapsed ? "justify-center px-2 py-3" : "px-4 py-3 gap-2",
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_12px_oklch(0.55_0.24_264_/0.2)]">
-            <Bot className="h-5 w-5 text-white" />
+          <div 
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-lg"
+            style={{ 
+              background: "linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-alt) 100%)",
+              boxShadow: "0 4px 12px var(--theme-accent-shadow-strong)"
+            }}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+              <path d="M12 9V4" />
+              <path d="M12 20v-5" />
+              <path d="M9 12H4" />
+              <path d="M20 12h-5" />
+              <path d="M9.879 9.879L6.343 6.343" />
+              <path d="M17.657 6.343l-3.536 3.536" />
+              <path d="M9.879 14.121l-3.536 3.536" />
+              <path d="M17.657 17.657l-3.536-3.536" />
+              <circle cx="12" cy="3" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="12" cy="21" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="21" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="19" cy="5" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="19" cy="19" r="1.5" fill="currentColor" stroke="none" />
+            </svg>
           </div>
           {!collapsed && (
             <>
@@ -859,21 +883,14 @@ export function Sidebar() {
             <button
               onClick={() => setEditNavMode(!editNavMode)}
               className={cn(
-                "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-all duration-300",
+                "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition-all duration-300",
                 editNavMode
-                  ? "text-blue-400 bg-blue-500/10"
+                  ? "text-[var(--theme-accent-text)] bg-[var(--theme-accent-softer)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]",
               )}
             >
               <GripVertical className="h-3 w-3" />
-              {editNavMode ? "Done" : "Reorder"}
-            </button>
-            <button
-              onClick={() => setConfigOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-all duration-300"
-            >
-              <SlidersHorizontal className="h-3 w-3" />
-              Configure
+              {editNavMode ? "Done" : "Edit"}
             </button>
           </div>
         )}
@@ -883,7 +900,7 @@ export function Sidebar() {
           ref={navRef}
           role="navigation"
           aria-label="Main navigation"
-          className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-1.5 py-1", collapsed && "flex-1")}
+          className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-3 py-1", collapsed && "flex-1")}
           style={collapsed ? undefined : { height: navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (

@@ -217,15 +217,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               );
             })}
 
-            <Separator className="my-2" />
 
-            <button
-              onClick={() => { resetUiPrefs(); }}
-              className="flex w-full items-center gap-2.5 rounded-[0.9rem] px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-foreground/[0.03] hover:text-[var(--status-danger)]"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>Reset All</span>
-            </button>
           </div>
 
           <ScrollArea className="flex-1">
@@ -325,24 +317,59 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
 
       <Separator />
 
-      <SectionTitle icon={Type} title="Font Size" />
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">12px</span>
-          <span className="text-lg font-bold text-foreground tabular-nums">{fontPreview}px</span>
-          <span className="text-sm text-muted-foreground">24px</span>
+      <SectionTitle icon={Type} title="Font Sizes" />
+      <div className="space-y-6">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">UI Elements</span>
+            <span className="text-sm text-muted-foreground tabular-nums">{fontPreview}px</span>
+          </div>
+          <Slider
+            min={12}
+            max={24}
+            step={1}
+            milestones={[12, 14, 16, 18, 20, 24]}
+            snapOnRelease
+            unit="px"
+            value={[fontPreview]}
+            onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
+            onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
+          />
         </div>
-        <Slider
-          min={12}
-          max={24}
-          step={1}
-          milestones={[12, 14, 16, 18, 20, 24]}
-          snapOnRelease
-          unit="px"
-          value={[fontPreview]}
-          onValueChange={(v) => setFontPreview(Array.isArray(v) ? v[0] : v)}
-          onValueCommitted={(v) => setPref("fontSize", Array.isArray(v) ? v[0] : v)}
-        />
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Headings & Titles</span>
+            <span className="text-sm text-muted-foreground tabular-nums">{prefs.titleFontSize || 18}px</span>
+          </div>
+          <Slider
+            min={14}
+            max={32}
+            step={1}
+            milestones={[14, 16, 18, 24, 32]}
+            snapOnRelease
+            unit="px"
+            value={[prefs.titleFontSize || 18]}
+            onValueChange={(v) => setPref("titleFontSize", Array.isArray(v) ? v[0] : v)}
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Chat Content</span>
+            <span className="text-sm text-muted-foreground tabular-nums">{prefs.chatFontSize || 14}px</span>
+          </div>
+          <Slider
+            min={12}
+            max={24}
+            step={1}
+            milestones={[12, 14, 16, 18, 20, 24]}
+            snapOnRelease
+            unit="px"
+            value={[prefs.chatFontSize || 14]}
+            onValueChange={(v) => setPref("chatFontSize", Array.isArray(v) ? v[0] : v)}
+          />
+        </div>
         <div
           className="surface-subtle rounded-[1rem] p-4 text-center transition-all duration-200"
           style={{ fontFamily: currentFontFamily, fontSize: `${fontPreview}px` }}
@@ -469,7 +496,7 @@ function ThemePreviewCard({
   return (
     <button
       onClick={onSelect}
-      className={selectionCardClass(selected, "p-0 text-left")}
+      className={selectionCardClass(selected, "p-0 text-left h-full flex flex-col")}
     >
       <div className="p-3">
         <div
@@ -556,7 +583,7 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
       <div className="space-y-5">
         <div className="space-y-3">
           <SectionTitle icon={Moon} title="Dark Themes" />
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 items-stretch md:grid-cols-3">
             {DARK_THEMES.map((theme) => (
               <ThemePreviewCard
                 key={theme.id}
@@ -570,7 +597,7 @@ function ThemeTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
 
         <div className="space-y-3">
           <SectionTitle icon={Sun} title="Light Themes" />
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 items-stretch md:grid-cols-3">
             {LIGHT_THEMES.map((theme) => (
               <ThemePreviewCard
                 key={theme.id}
@@ -755,11 +782,23 @@ function SidebarTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
 
 function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
   const resetUiPrefs = useStore((s) => s.resetUiPrefs);
+  const [confirmReset, setConfirmReset] = useState(false);
   return (
     <>
       <SectionTitle icon={Globe} title="Language & Region" />
       <SettingRow label="Language" desc="Interface language">
         <span className="text-sm text-muted-foreground">English</span>
+      </SettingRow>
+      <SettingRow label="Date Format" desc="How dates and times appear">
+        <select
+          className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-md px-2 py-1 text-sm outline-none min-w-[120px]"
+          value={prefs.dateFormat || "system"}
+          onChange={(e) => setPref("dateFormat", e.target.value as any)}
+        >
+          <option value="system">System Default</option>
+          <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+          <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+        </select>
       </SettingRow>
 
       <Separator />
@@ -768,6 +807,17 @@ function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
       <SettingRow label="Enable notifications" desc="Show system notifications">
         <Switch checked={prefs.notificationsEnabled} onCheckedChange={(v) => setPref("notificationsEnabled", v)} />
       </SettingRow>
+      <div className={cn("space-y-0 pl-4 border-l-2 border-foreground/[0.06] ml-4 transition-opacity", !prefs.notificationsEnabled && "opacity-50 pointer-events-none")}>
+        <SettingRow label="Agent Errors" desc="Notify when agents fail">
+          <Switch checked={prefs.notifyAgentErrors} onCheckedChange={(v) => setPref("notifyAgentErrors", v)} />
+        </SettingRow>
+        <SettingRow label="Task Updates" desc="Notify when scheduled tasks finish">
+          <Switch checked={prefs.notifyTasks} onCheckedChange={(v) => setPref("notifyTasks", v)} />
+        </SettingRow>
+        <SettingRow label="Webhooks" desc="Notify on incoming webhooks">
+          <Switch checked={prefs.notifyWebhooks} onCheckedChange={(v) => setPref("notifyWebhooks", v)} />
+        </SettingRow>
+      </div>
       <SettingRow label="Sound effects" desc="Play sounds for events">
         <Switch checked={prefs.soundEffects} onCheckedChange={(v) => setPref("soundEffects", v)} />
       </SettingRow>
@@ -775,12 +825,22 @@ function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
       <Separator />
 
       <SectionTitle icon={Settings2} title="Data" />
-      <SettingRow label="Reset all settings" desc="Restore everything to defaults">
-        <Button variant="outline" size="sm" onClick={() => { resetUiPrefs(); }} className="text-xs">
-          <RotateCcw className="h-3 w-3 mr-1" />
-          Reset
-        </Button>
-      </SettingRow>
+      <div className="space-y-4 rounded-[1rem] border border-[var(--status-danger)]/20 p-4 relative overflow-hidden bg-[var(--status-danger)]/5">
+        <div>
+          <h4 className="text-sm font-semibold text-[var(--status-danger)]">Danger Zone</h4>
+          <p className="text-xs text-muted-foreground mt-1">Resetting all settings will permanently clear your layout, theme, chat preferences, and effect settings. They will revert immediately to their factory defaults.</p>
+        </div>
+        {confirmReset ? (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setConfirmReset(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={() => { resetUiPrefs(); setConfirmReset(false); }}>Yes, Reset Settings</Button>
+          </div>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => setConfirmReset(true)} className="text-[var(--status-danger)] hover:bg-[var(--status-danger)]/10 hover:text-[var(--status-danger)]">
+            Reset all settings
+          </Button>
+        )}
+      </div>
     </>
   );
 }
