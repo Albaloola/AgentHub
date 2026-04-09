@@ -2,6 +2,7 @@ import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } fro
 import type { GatewayAdapter, AdapterMeta } from "./base";
 import { registerAdapter } from "./base";
 import { spawn } from "child_process";
+import { getChildProcessEnv } from "@/lib/runtime-paths";
 
 /**
  * Hermes Adapter - connects to a local Hermes Agent installation via CLI.
@@ -72,7 +73,7 @@ export class HermesAdapter implements GatewayAdapter {
 
         const proc = spawn(pythonPath, args, {
           cwd: process.env.HOME,
-          env: { ...process.env },
+          env: getChildProcessEnv(),
           timeout,
         });
 
@@ -123,6 +124,7 @@ export class HermesAdapter implements GatewayAdapter {
       await new Promise<void>((resolve, reject) => {
         const proc = spawn(pythonPath, ["-m", "hermes_cli.main", "status"], {
           cwd: process.env.HOME,
+          env: getChildProcessEnv(),
           timeout: 10000,
         });
         let output = "";

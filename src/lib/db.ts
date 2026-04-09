@@ -1,23 +1,29 @@
 import Database from "better-sqlite3";
-import path from "path";
 import { v4 as uuid } from "uuid";
+import { getDbPath } from "@/lib/runtime-paths";
 
-const DB_PATH = path.join(process.cwd(), "data", "agenthub.db");
+const DB_PATH = getDbPath();
 
 function getDb(): Database.Database {
   const g = globalThis as unknown as { __agenthub_db?: Database.Database };
   if (g.__agenthub_db) return g.__agenthub_db;
 
-  const fs = require("fs");
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
+  db.pragma("busy_timeout = 5000");
   db.pragma("foreign_keys = ON");
   g.__agenthub_db = db;
 
-  initSchema(db);
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    initSchema(db);
+    db.exec("COMMIT");
+  } catch (error) {
+    try {
+      db.exec("ROLLBACK");
+    } catch {}
+    throw error;
+  }
   return db;
 }
 
@@ -823,7 +829,18 @@ function seed(db: Database.Database) {
   db.prepare(`INSERT OR IGNORE INTO onboarding_state (id) VALUES ('default')`).run();
 }
 
-export const db = getDb();
+export const db = new Proxy({} as Database.Database, {
+  get(_target, property, receiver) {
+    const instance = getDb();
+    const value = Reflect.get(instance as object, property, receiver);
+
+    if (typeof value === "function") {
+      return value.bind(instance);
+    }
+
+    return value;
+  },
+}) as Database.Database;
 
 // SQLite returns INTEGER 0/1 for boolean columns. This helper converts them to proper booleans.
 const BOOLEAN_FIELDS = new Set([
@@ -841,4 +858,3 @@ export function toBooleans<T extends Record<string, unknown>>(row: T): T {
   }
   return result;
 }
-

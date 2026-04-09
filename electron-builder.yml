@@ -1,0 +1,25 @@
+appId: com.agenthub.desktop
+productName: AgentHub
+directories:
+  output: release
+files:
+  - dist/desktop/**/*
+  - package.json
+  - public/**/*
+extraResources:
+  - from: .next/standalone
+    to: app
+    filter:
+      - "**/*"
+asar: true
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+linux:
+  target:
+    - AppImage
+  category: Utility
+mac:
+  category: public.app-category.developer-tools
+  hardenedRuntime: true
+win:
+  target: nsis
