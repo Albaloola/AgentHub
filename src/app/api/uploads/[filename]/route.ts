@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { getUploadsDir } from "@/lib/runtime-paths";
 import fs from "fs";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
+const UPLOAD_DIR = getUploadsDir();
 
 const MIME_TYPES: Record<string, string> = {
   ".png": "image/png",

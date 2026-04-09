@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getUploadsDir } from "@/lib/runtime-paths";
 import { v4 as uuid } from "uuid";
 import fs from "fs";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
+const UPLOAD_DIR = getUploadsDir();
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: Request) {

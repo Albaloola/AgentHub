@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Bot,
   MessageSquare,
   Users,
   Settings,
   Activity,
-  Plus,
   ChevronRight,
   ChevronDown,
   Trash2,
@@ -45,7 +44,6 @@ import {
   FolderPlus,
   MessageSquarePlus,
   X,
-  SlidersHorizontal,
   Pencil,
   GripVertical,
   Pin,
@@ -62,7 +60,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { stagger, duration, ease } from "@/lib/animation";
+import { stagger, ease } from "@/lib/animation";
 import {
   getConversations,
   deleteConversation,
@@ -75,7 +73,7 @@ import {
   exportConversation,
   moveConversationToFolder,
 } from "@/lib/api";
-import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
+import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { NavConfigPanel, loadNavConfig, saveNavConfig } from "./nav-config-panel";
 import type { NavGroupConfig } from "./nav-config-panel";
 import type { ConversationWithDetails, ConversationFolder } from "@/lib/types";
@@ -180,6 +178,21 @@ const NAV_CATEGORIES: NavCategory[] = [
 
 const ALL_NAV_ITEMS = NAV_CATEGORIES.flatMap((c) => c.items);
 
+const NAV_ICON_MAP = new Map<string, LucideIcon>();
+const NAV_GROUP_META_MAP = new Map<string, { icon: LucideIcon; neon: string; activeColor: string }>();
+
+for (const cat of NAV_CATEGORIES) {
+  NAV_GROUP_META_MAP.set(cat.label.toLowerCase(), {
+    icon: cat.icon,
+    neon: cat.neon,
+    activeColor: cat.activeColor,
+  });
+
+  for (const item of cat.items) {
+    NAV_ICON_MAP.set(item.href, item.icon);
+  }
+}
+
 // Glow colors per category for neon lighting
 const CATEGORY_GLOW: Record<string, string> = {
   Core: "#3b82f6",        // blue
@@ -214,6 +227,11 @@ const navItemVariants = {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const { agents, conversations, setConversations, sidebarOpen, setSidebarOpen, setAgents, uiPrefs } =
     useStore(useShallow((s) => ({ agents: s.agents, conversations: s.conversations, setConversations: s.setConversations, sidebarOpen: s.sidebarOpen, setSidebarOpen: s.setSidebarOpen, setAgents: s.setAgents, uiPrefs: s.uiPrefs })));
   const [hoveredConv, setHoveredConv] = useState<string | null>(null);
@@ -227,9 +245,19 @@ export function Sidebar() {
     },
   );
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
 
+    try {
+      const stored = localStorage.getItem("agenthub-ui-prefs-v2");
+      if (!stored) return false;
+
+      const prefs = JSON.parse(stored);
+      return Boolean(prefs.sidebarCollapsed);
+    } catch {
+      return false;
+    }
+  });
   // Resizable sidebar width (px)
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
@@ -286,19 +314,7 @@ export function Sidebar() {
     };
   }, [isResizingSplit]);
 
-  useEffect(() => {
-    setHydrated(true);
-    loadData();
-    try {
-      const stored = localStorage.getItem("agenthub-ui-prefs-v2");
-      if (stored) {
-        const prefs = JSON.parse(stored);
-        if (prefs.sidebarCollapsed) setCollapsed(true);
-      }
-    } catch {}
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       const [convs, agents, flds] = await Promise.all([
         getConversations(),
@@ -311,7 +327,15 @@ export function Sidebar() {
     } catch (err) {
       console.error("Failed to load data:", err);
     }
-  }
+  }, [setAgents, setConversations]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadData]);
 
   function handleDeleteConversation(id: string, e: React.MouseEvent) {
     e.preventDefault();
@@ -575,22 +599,12 @@ export function Sidebar() {
   const [dragNavGroup, setDragNavGroup] = useState<string | null>(null); // group id being dragged
   const [navDropTarget, setNavDropTarget] = useState<{ type: "item"; groupId: string; href: string; pos: "before" | "after" } | { type: "group"; groupId: string; pos: "before" | "after" } | null>(null);
 
-  // Icon lookup from static NAV_CATEGORIES
-  const navIconMap = useRef(new Map<string, LucideIcon>());
-  const navGroupIconMap = useRef(new Map<string, { icon: LucideIcon; neon: string; activeColor: string }>());
-  if (navIconMap.current.size === 0) {
-    for (const cat of NAV_CATEGORIES) {
-      navGroupIconMap.current.set(cat.label.toLowerCase(), { icon: cat.icon, neon: cat.neon, activeColor: cat.activeColor });
-      for (const item of cat.items) navIconMap.current.set(item.href, item.icon);
-    }
-  }
-
   function getNavIcon(href: string): LucideIcon {
-    return navIconMap.current.get(href) || Activity;
+    return NAV_ICON_MAP.get(href) || Activity;
   }
 
   function getGroupMeta(groupId: string) {
-    return navGroupIconMap.current.get(groupId) || { icon: Layers, neon: "neon-blue", activeColor: "text-neon-blue" };
+    return NAV_GROUP_META_MAP.get(groupId) || { icon: Layers, neon: "neon-blue", activeColor: "text-neon-blue" };
   }
 
   function getGroupGlow(groupId: string): string {
@@ -640,7 +654,7 @@ export function Sidebar() {
     e.preventDefault();
     if (!navDropTarget) { cleanupNavDrag(); return; }
 
-    let updated = navGroups.map((g) => ({ ...g, items: [...g.items] }));
+    const updated = navGroups.map((g) => ({ ...g, items: [...g.items] }));
 
     if (dragNavItem && navDropTarget.type === "item") {
       // Move item within or between groups
@@ -900,7 +914,7 @@ export function Sidebar() {
           ref={navRef}
           role="navigation"
           aria-label="Main navigation"
-          className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-3 py-1", collapsed && "flex-1")}
+          className={cn("min-h-0 overflow-y-auto scrollbar-hidden px-4 py-1", collapsed && "flex-1")}
           style={collapsed ? undefined : { height: navHeight ? `${navHeight}px` : "55%", flexShrink: 0 }}
         >
           {collapsed ? (
@@ -1003,7 +1017,7 @@ export function Sidebar() {
                       }}
                       className="overflow-hidden"
                     >
-                      <div className="flex flex-wrap gap-1 py-1">
+                      <div className="flex flex-wrap gap-1 py-1 pl-1">
                         {visibleItems.map((item) => {
                           const isActive = pathname === item.href;
                           const ItemIcon = getNavIcon(item.href);
@@ -1024,7 +1038,7 @@ export function Sidebar() {
                                 onDragOver={(e) => onNavItemDragOver(e, group.id, item.href)}
                                 onDragEnd={cleanupNavDrag}
                                 className={cn(
-                                  "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border",
+                                  "relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium border",
                                   isActive
                                     ? cn("border-current", meta.activeColor)
                                     : "border-transparent text-muted-foreground",
@@ -1056,7 +1070,7 @@ export function Sidebar() {
                                 }}
                               >
                                 {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
-                                <ItemIcon className="relative h-3.5 w-3.5 shrink-0" />
+                                <ItemIcon className="relative h-3.5 w-3.5 min-w-3.5 shrink-0" />
                                 <span className="relative truncate">{item.label}</span>
                               </Link>
                             </div>
@@ -1130,7 +1144,7 @@ export function Sidebar() {
                       }}
                       className="overflow-hidden"
                     >
-                      <div className="space-y-0.5 py-0.5">
+                      <div className="space-y-0.5 py-0.5 pl-1">
                         {visibleItems.map((item) => {
                           const isActive = pathname === item.href;
                           const ItemIcon = getNavIcon(item.href);
@@ -1148,7 +1162,7 @@ export function Sidebar() {
                                 onDragOver={(e) => onNavItemDragOver(e, group.id, item.href)}
                                 onDragEnd={cleanupNavDrag}
                                 className={cn(
-                                  "relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm",
+                                  "relative flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm",
                                   isActive
                                     ? cn("text-foreground", meta.activeColor)
                                     : "text-muted-foreground",
@@ -1178,12 +1192,12 @@ export function Sidebar() {
                                 }}
                               >
                                 {editNavMode && <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
-                                <ItemIcon className="h-4 w-4 shrink-0" />
+                                <ItemIcon className="h-4 w-4 min-w-4 shrink-0" />
                                 <span className="truncate">{item.label}</span>
                                 {isActive && !editNavMode && (
                                   <motion.div
                                     layoutId="activeNavIndicator"
-                                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--sidebar-primary)]"
+                                    className="absolute left-1 top-1 bottom-1 w-[3px] rounded-r-full bg-[var(--sidebar-primary)]"
                                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                   />
                                 )}

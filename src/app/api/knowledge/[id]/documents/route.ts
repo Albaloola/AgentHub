@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getKnowledgeDir } from "@/lib/runtime-paths";
 import { v4 as uuid } from "uuid";
 import fs from "fs";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "data", "knowledge");
+const UPLOAD_DIR = getKnowledgeDir();
 
 export async function GET(
   _request: Request,
