@@ -97,6 +97,20 @@ function resolveServerScript(appPath: string) {
     return path.join(process.resourcesPath, "app", "server.js");
   }
 
+  // Unpackaged: appPath is typically <repo>/dist/desktop when the app is
+  // launched as `electron dist/desktop/main.js`, or <repo> when launched as
+  // `electron .`. Walk up until we find the repo root that contains
+  // .next/standalone/server.js instead of hardcoding a fixed depth.
+  let dir = appPath;
+  for (let i = 0; i < 5; i += 1) {
+    const candidate = path.join(dir, ".next", "standalone", "server.js");
+    if (require("fs").existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  // Last-resort fallback so the error message is clearer than ENOENT on cwd.
   return path.join(appPath, ".next", "standalone", "server.js");
 }
 
