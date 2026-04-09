@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, shell } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, session, shell } from "electron";
 import path from "path";
 import log from "electron-log/main";
 import { startBackend, type BackendHandle } from "./backend";
@@ -82,6 +82,45 @@ function registerIpc(logsDir: string) {
   ipcMain.handle("desktop:open-logs-dir", async () => shell.openPath(logsDir));
 }
 
+/**
+ * Inject a Content-Security-Policy header on every response handled by the
+ * renderer's session. We only ever load the local backend, so restrict
+ * everything to http://127.0.0.1:* plus the inline styles / blob URLs that
+ * Next.js emits for hot module chunks and streaming.
+ *
+ * If this ever breaks a renderer feature it will show up as a blocked
+ * resource in devtools — loosen a single directive at a time rather than
+ * reverting wholesale.
+ */
+function installContentSecurityPolicy() {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const headers = { ...details.responseHeaders };
+    const policy = [
+      "default-src 'self' http://127.0.0.1:* ws://127.0.0.1:*",
+      "script-src 'self' http://127.0.0.1:* 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' http://127.0.0.1:* 'unsafe-inline'",
+      "img-src 'self' http://127.0.0.1:* data: blob:",
+      "font-src 'self' http://127.0.0.1:* data:",
+      "connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*",
+      "media-src 'self' http://127.0.0.1:* blob:",
+      "worker-src 'self' http://127.0.0.1:* blob:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self' http://127.0.0.1:*",
+    ].join("; ");
+
+    // Strip any CSP the Next server may have set so ours is authoritative.
+    for (const key of Object.keys(headers)) {
+      if (key.toLowerCase() === "content-security-policy") {
+        delete headers[key];
+      }
+    }
+    headers["Content-Security-Policy"] = [policy];
+
+    callback({ responseHeaders: headers });
+  });
+}
+
 async function bootstrap() {
   const lock = app.requestSingleInstanceLock();
   if (!lock) {
@@ -113,6 +152,7 @@ async function bootstrap() {
         logsDir,
       });
 
+  installContentSecurityPolicy();
   createMainWindow(backend.url);
   createAppMenu();
   registerIpc(logsDir);
