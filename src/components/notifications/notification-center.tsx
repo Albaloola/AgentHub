@@ -6,7 +6,6 @@ import {
   Loader2, CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStore } from "@/lib/store";
@@ -47,6 +46,7 @@ export function NotificationCenter() {
 
   useEffect(() => {
     loadNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredNotifications = notifications.filter(n => {

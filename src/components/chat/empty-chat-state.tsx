@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Code2, Lightbulb, Search, FileText, Rocket, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
-import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 const ALL_SUGGESTIONS = [
@@ -61,7 +60,9 @@ export function EmptyChatState({
   const [greetingIdx, setGreetingIdx] = useState(() => Math.floor(Math.random() * GREETINGS.length));
   const [greetingFade, setGreetingFade] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => { setMounted(true); }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Rotate greeting every 8 seconds
   useEffect(() => {
@@ -77,6 +78,7 @@ export function EmptyChatState({
 
   // Auto-rotate suggestions with resettable timer
   const autoRotateRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startAutoRotateFnRef = useRef<((delay: number) => void) | null>(null);
   const defaultDelay = 6000;
   const userInteractDelay = 10000;
 
@@ -87,10 +89,14 @@ export function EmptyChatState({
       setTimeout(() => {
         setActiveSet((prev) => (prev + 1) % TOTAL_SETS);
         setTransitioning(false);
-        startAutoRotate(defaultDelay);
+        startAutoRotateFnRef.current?.(defaultDelay);
       }, 400);
     }, delay);
   }, []);
+
+  useEffect(() => {
+    startAutoRotateFnRef.current = startAutoRotate;
+  });
 
   useEffect(() => {
     startAutoRotate(defaultDelay);

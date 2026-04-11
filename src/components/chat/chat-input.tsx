@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2, Type } from "lucide-react";
+import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,15 +17,6 @@ import { FileChips, UploadedFile } from "./file-chips";
 import { toast } from "sonner";
 import { spring } from "@/lib/animation";
 
-const CHAT_FONTS = [
-  { value: "", label: "Default" },
-  { value: "geist", label: "Geist" },
-  { value: "inter", label: "Inter" },
-  { value: "nunito", label: "Nunito" },
-  { value: "lexend", label: "Lexend" },
-  { value: "caveat", label: "Caveat" },
-  { value: "comic-neue", label: "Comic Neue" },
-];
 
 interface ChatInputProps {
   onSend: (content: string, targetAgentId?: string, attachmentIds?: string[]) => void;
@@ -46,10 +37,14 @@ export function ChatInput({
   isStreaming, 
   agents, 
   disabled, 
-  conversationId, 
-  onFontChange, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  conversationId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onFontChange,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   chatFont,
   isCentered = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   hasStartedChat = false,
 }: ChatInputProps) {
   const [content, setContent] = useState("");

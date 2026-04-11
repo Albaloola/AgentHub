@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Plus, Webhook as WebhookIcon, Trash2, Copy, Loader2,
-  ChevronDown, ChevronUp, Zap, Activity, ToggleLeft,
+  ChevronDown, ChevronUp, Zap, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,6 +49,7 @@ export default function WebhooksPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

@@ -42,11 +42,13 @@ function SliderControl({
   const currentValue = controlledValue?.[0] ?? internalValue
   const percent = ((currentValue - min) / (max - min)) * 100
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (controlledValue?.[0] !== undefined) {
       setInternalValue(controlledValue[0])
     }
   }, [controlledValue])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const getValueFromPosition = useCallback((clientX: number): number => {
     if (!trackRef.current) return currentValue

@@ -29,7 +29,7 @@ export default function ChatPage() {
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<number[]>([]);
-  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
+  const [, setCurrentSearchIndex] = useState(-1);
   
   // Store state
   const {
@@ -45,8 +45,6 @@ export default function ChatPage() {
     setThinkingContent,
     setThinkingStartTime,
     agents,
-    setAgents,
-    conversations,
     setConversations,
   } = useStore();
 
@@ -104,7 +102,7 @@ export default function ChatPage() {
   }, [messages, prefersReducedMotion]);
 
   // Handle sending a message
-  const handleSendMessage = useCallback(async (content: string, targetAgentId?: string, attachmentIds?: string[]) => {
+  const handleSendMessage = useCallback(async (content: string, targetAgentId?: string) => {
     if (!conversationId || !content.trim()) return;
     
     // Mark chat as started (triggers animation)
@@ -143,7 +141,6 @@ export default function ChatPage() {
     }
     abortControllerRef.current = new AbortController();
     
-    let assistantMessageId: string | null = null;
     let hasReceivedContent = false;
     
     streamChat(
@@ -157,10 +154,10 @@ export default function ChatPage() {
           }
           updateLastAssistantMessage(chunk);
         },
-        onToolCall: (data) => {
+        onToolCall: () => {
           // Tool calls are handled in the message bubble
         },
-        onToolResult: (data) => {
+        onToolResult: () => {
           // Tool results are handled in the message bubble
         },
         onError: (error) => {
@@ -168,8 +165,7 @@ export default function ChatPage() {
           setIsStreaming(false);
           setStreamingAgentId(null);
         },
-        onDone: (data) => {
-          assistantMessageId = data.message_id;
+        onDone: () => {
           setIsStreaming(false);
           setStreamingAgentId(null);
           setThinkingContent("", false);
@@ -227,12 +223,13 @@ export default function ChatPage() {
       const msgsData = await getMessages(conversationId);
       setMessages(msgsData);
       setHasStartedChat(msgsData.length > 0);
-    } catch (error) {
+    } catch {
       toast.error("Failed to refresh messages");
     }
   }, [conversationId, setMessages]);
 
   // Handle regenerate
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRegenerate = useCallback(async (messageId: string, agentId?: string) => {
     // Implementation would call the regenerate API
     toast.info("Regenerate feature coming soon");
@@ -286,23 +283,6 @@ export default function ChatPage() {
       opacity: 0, 
       scale: 0.95,
       y: -20,
-    },
-  };
-
-  const inputContainerVariants = {
-    centered: {
-      y: 0,
-      transition: {
-        ...spring.gentle,
-        duration: 0.4,
-      },
-    },
-    bottom: {
-      y: 0,
-      transition: {
-        ...spring.gentle,
-        duration: 0.4,
-      },
     },
   };
 

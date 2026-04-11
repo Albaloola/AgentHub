@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import {
   getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase,
@@ -103,7 +102,8 @@ export default function KnowledgePage() {
       await deleteKnowledgeBase(id);
       setKnowledgeBases((prev) => prev.filter((kb) => kb.id !== id));
       if (expandedId === id) setExpandedId(null);
-      const { [id]: _, ...rest } = documents;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [id]: _removed, ...rest } = documents;
       setDocuments(rest);
       toast.success("Knowledge base deleted");
     } catch {

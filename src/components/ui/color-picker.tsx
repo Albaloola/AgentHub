@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { cn } from "@/lib/utils";
 
 interface ColorPickerProps {
   color: string;
@@ -60,6 +59,7 @@ export function ColorPicker({ color, onChange, onClose }: ColorPickerProps) {
 
   useEffect(() => {
     onChange(currentColor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hue, sat, light, alpha]);
 
   const handleCanvasInteraction = useCallback((clientX: number, clientY: number) => {

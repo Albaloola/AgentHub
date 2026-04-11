@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const buildCpuLimit = process.env.AGENTHUB_BUILD_CPUS
+  ? Number(process.env.AGENTHUB_BUILD_CPUS)
+  : undefined;
+
 const nextConfig: NextConfig = {
   output: "standalone",
   // Force Next.js to use this directory as the tracing root regardless of
@@ -11,6 +15,7 @@ const nextConfig: NextConfig = {
   // Electron backend spawn path resolution.
   outputFileTracingRoot: path.resolve(__dirname),
   serverExternalPackages: ["better-sqlite3"],
+  experimental: buildCpuLimit ? { cpus: buildCpuLimit } : undefined,
 };
 
 export default nextConfig;

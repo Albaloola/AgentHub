@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogTrigger,
@@ -57,6 +56,7 @@ export default function MemoryPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

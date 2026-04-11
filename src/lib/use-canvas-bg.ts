@@ -44,8 +44,11 @@ export function useCanvasBg(draw: DrawFn, init?: InitFn) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef(draw);
   const initRef = useRef(init);
-  drawRef.current = draw;
-  initRef.current = init;
+
+  useEffect(() => {
+    drawRef.current = draw;
+    initRef.current = init;
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;

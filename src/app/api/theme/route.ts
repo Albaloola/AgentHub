@@ -2,18 +2,16 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function GET() {
-  let prefs = db
+  const prefs = db
     .prepare("SELECT * FROM theme_preferences WHERE id = 'default'")
-    .get();
-
-  if (!prefs) {
+    .get() ?? (() => {
     db.prepare(
       "INSERT INTO theme_preferences (id) VALUES ('default')",
     ).run();
-    prefs = db
+    return db
       .prepare("SELECT * FROM theme_preferences WHERE id = 'default'")
       .get();
-  }
+  })();
 
   return NextResponse.json(prefs);
 }
@@ -29,7 +27,7 @@ export async function PATCH(request: Request) {
   }>;
 
   // Ensure default row exists
-  let prefs = db
+  const prefs = db
     .prepare("SELECT * FROM theme_preferences WHERE id = 'default'")
     .get();
   if (!prefs) {

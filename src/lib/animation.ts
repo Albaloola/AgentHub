@@ -1,4 +1,4 @@
-import type { Variants, Transition } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 // Framer-motion expects a 4-tuple for cubic-bezier easing
 type CubicBezier = [number, number, number, number];

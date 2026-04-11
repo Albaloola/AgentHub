@@ -32,6 +32,7 @@ const CRYSTAL_COUNT = 44;
 export function ArcticBackground() {
   const crystalsRef = useRef<Crystal[]>([]);
   const breathRef = useRef<BreathBlob | null>(null);
+  // eslint-disable-next-line react-hooks/purity
   const nextBreathRef = useRef(8 + Math.random() * 4);
   const colorsRef = useRef({ accent: "", accentAlt: "" });
   const lastColorRead = useRef(0);

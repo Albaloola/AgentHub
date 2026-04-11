@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Plus, Shield, Trash2, Loader2, Search,
-  ShieldAlert, ShieldCheck, Eye, AlertTriangle,
+  ShieldAlert, ShieldCheck, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +62,7 @@ export default function GuardrailsPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

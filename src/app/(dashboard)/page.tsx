@@ -174,6 +174,7 @@ export default function DashboardPage() {
                       >
                         <div className="relative">
                           {agent.avatar_url ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img
                               src={agent.avatar_url}
                               alt={agent.name}

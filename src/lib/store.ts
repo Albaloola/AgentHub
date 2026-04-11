@@ -2,9 +2,7 @@
 
 import { create } from "zustand";
 import type {
-  Agent,
   AgentWithStatus,
-  Conversation,
   ConversationWithDetails,
   MessageWithToolCalls,
   ToolCall,

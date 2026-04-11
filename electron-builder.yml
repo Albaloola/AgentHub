@@ -2,25 +2,18 @@ appId: com.agenthub.desktop
 productName: AgentHub
 directories:
   output: release
-afterPack: ./scripts/electron-after-pack.js
-# Keep the Electron main shell in app.asar but nothing else — the Next.js
-# standalone server lives entirely in resources/app as unpackaged files so
-# (1) Next can write to .next/cache at runtime, (2) the better-sqlite3 native
-# binding can be dlopen-ed directly without the asarUnpack glob needing to
-# match nested paths, and (3) the standalone's internal require resolution
-# works without Electron's asar fs patch.
 files:
   - dist/desktop/**/*
   - package.json
-# Everything under extraResources is copied verbatim (no filtering that
-# would strip out the standalone's bundled node_modules).
+  - public/**/*
 extraResources:
   - from: .next/standalone
     to: app
     filter:
       - "**/*"
-      - "**/.*"
 asar: true
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
 linux:
   target:
     - AppImage

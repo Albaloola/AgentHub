@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useStore } from "@/lib/store";
 import { resolveThemePreference, type ThemeId } from "@/lib/themes";
@@ -26,8 +26,13 @@ export function ThemeBackground() {
   const animationsEnabled = useStore((s) => s.uiPrefs.animationsEnabled);
   const prefersReduced = useReducedMotion();
 
-  const [resolvedId, setResolvedId] = useState<ThemeId>("midnight");
+  const [resolvedId, setResolvedId] = useState<ThemeId>(() => {
+    if (typeof window === 'undefined') return "midnight";
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return resolveThemePreference(theme, prefersDark).id;
+  });
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     setResolvedId(resolveThemePreference(theme, prefersDark).id);
@@ -42,6 +47,7 @@ export function ThemeBackground() {
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, [theme]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Static fallback when animations off or reduced-motion preferred
   if (!animationsEnabled || prefersReduced) {

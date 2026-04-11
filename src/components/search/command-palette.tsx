@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getConversations, getAgents } from "@/lib/api";
-import type { ConversationWithDetails, AgentWithStatus } from "@/lib/types";
-
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -98,6 +96,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       setQuery("");
       setSelectedIndex(0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const filtered = query
@@ -153,7 +152,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <div className="p-2">
             {filtered.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                No results for "{query}"
+                No results for &quot;{query}&quot;
               </div>
             ) : (
               filtered.map((cmd, i) => (

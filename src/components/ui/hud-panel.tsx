@@ -6,7 +6,7 @@ import { X, Minus, Maximize2, Minimize2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { spring, duration, ease, stagger as staggerPresets } from "@/lib/animation";
+import { spring, duration, stagger as staggerPresets } from "@/lib/animation";
 
 interface HudPanelProps {
   title: string;

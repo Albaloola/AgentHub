@@ -12,10 +12,6 @@ interface CacheRow {
   expires_at: string | null;
 }
 
-interface AgentRow {
-  name: string;
-}
-
 export async function GET() {
   try {
     // Get cache stats
@@ -75,7 +71,7 @@ export async function GET() {
         expires_at: e.expires_at,
       })),
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch cache stats" },
       { status: 500 }
@@ -90,7 +86,7 @@ export async function DELETE() {
       message: "Cache cleared",
       deleted_count: result.changes,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to clear cache" },
       { status: 500 }

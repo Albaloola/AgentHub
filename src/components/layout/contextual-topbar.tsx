@@ -17,11 +17,13 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
   const [now, setNow] = useState(new Date());
   const dateFormat = useStore(s => s.uiPrefs.dateFormat || 'system');
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function formatDateTime(date: Date) {
     if (dateFormat === "system") {

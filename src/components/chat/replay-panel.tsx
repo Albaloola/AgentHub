@@ -94,6 +94,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
   const speed = PLAYBACK_SPEEDS[speedIndex];
 
   // Load snapshots
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -115,6 +116,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
 
     return () => { cancelled = true; };
   }, [conversationId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Auto-play logic
   useEffect(() => {

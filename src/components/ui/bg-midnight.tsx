@@ -158,6 +158,7 @@ export function MidnightBackground() {
   const rngRef = useRef(seededRandom(7919));
 
   /* ---- init: called on mount + resize ---- */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const init = (_w: number, _h: number) => {
     /* Reset spawn timers on resize so nothing looks stuck */
     nextMeteorRef.current = 0;
@@ -170,6 +171,7 @@ export function MidnightBackground() {
   };
 
   /* ---- draw: called every frame ---- */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const draw = ({ ctx, w, h, time, dt }: CanvasHandle) => {
     const rand = rngRef.current;
 

@@ -208,7 +208,6 @@ export function FloatingStats({
                   <span className="text-xs font-medium">Auto-approve</span>
                 </div>
                 <Switch
-                  size="sm"
                   checked={autoApprove}
                   onCheckedChange={onToggleAutoApprove}
                 />

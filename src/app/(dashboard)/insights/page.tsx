@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   Brain, MessageSquareHeart, AlertTriangle, Loader2, Hash,
-  ThumbsUp, ThumbsDown, CheckCircle2, XCircle, DollarSign,
+  ThumbsUp, ThumbsDown, DollarSign,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +26,7 @@ export default function InsightsPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

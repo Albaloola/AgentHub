@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  Code2, X, Maximize2, Minimize2, ExternalLink, Copy, Check,
+  Code2, X, Maximize2, Minimize2, Copy, Check,
   ChevronLeft, ChevronRight, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,6 +95,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
   const [copied, setCopied] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     if (artifacts.length > 0 && activeIndex >= artifacts.length) {
       setActiveIndex(artifacts.length - 1);
@@ -108,6 +109,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
       setActiveIndex(artifacts.length - 1);
     }
   }, [artifacts.length]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   if (artifacts.length === 0) return null;
 

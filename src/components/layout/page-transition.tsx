@@ -9,6 +9,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const [transitioning, setTransitioning] = useState(false);
   const prevPathRef = useRef(pathname);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (pathname !== prevPathRef.current) {
       prevPathRef.current = pathname;
@@ -23,6 +24,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       setDisplayChildren(children);
     }
   }, [pathname, children]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
     <div

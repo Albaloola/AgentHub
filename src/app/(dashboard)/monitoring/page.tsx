@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
-import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
+import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { GATEWAY_LABELS } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -39,6 +39,7 @@ export default function MonitoringPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

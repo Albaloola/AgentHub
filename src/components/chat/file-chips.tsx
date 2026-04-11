@@ -15,6 +15,7 @@ interface FileChipsProps {
 }
 
 function getFileIcon(type: string) {
+  // eslint-disable-next-line jsx-a11y/alt-text
   if (type.startsWith("image/")) return <Image className="h-3 w-3" />;
   if (type.startsWith("text/") || type.includes("code")) return <FileCode className="h-3 w-3" />;
   if (type.includes("pdf") || type.includes("document")) return <FileText className="h-3 w-3" />;

@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Wrench, Square, Search, X, ChevronUp, ChevronDown, Minimize2, Loader2, History, Share2 } from "lucide-react";
+import { RotateCcw, Square, Search, X, ChevronUp, ChevronDown, Minimize2, Loader2, History, Share2 } from "lucide-react";
 import { LivingAvatar } from "@/components/ui/living-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,9 @@ export function ChatHeader({
   conversation,
   isStreaming,
   streamingAgentId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toolPanelOpen,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onToggleToolPanel,
   onReset,
   onStop,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { v4 as uuid } from "uuid";
 import { createAdapter } from "@/lib/adapters";
-import type { Webhook, Agent, Message } from "@/lib/types";
+import type { Webhook, Agent } from "@/lib/types";
 
 export async function POST(
   request: Request,

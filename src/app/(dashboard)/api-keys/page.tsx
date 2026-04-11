@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  Plus, Key, Trash2, Copy, Loader2, Shield, Clock,
+  Plus, Key, Trash2, Copy, Loader2, Shield,
   CheckCircle2, Eye, EyeOff, AlertTriangle, Terminal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

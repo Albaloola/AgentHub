@@ -31,6 +31,7 @@ export default function A2APage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {
@@ -83,8 +84,6 @@ export default function A2APage() {
       return jsonStr;
     }
   }
-
-  const previewCard = previewId ? cards.find((c) => c.id === previewId) : null;
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -154,7 +153,7 @@ export default function A2APage() {
             <p className="font-medium text-foreground mb-1">About A2A Protocol</p>
             <p>
               Agent-to-Agent (A2A) is a protocol that enables AI agents to discover and
-              communicate with each other. An Agent Card describes an agent's capabilities,
+              communicate with each other. An Agent Card describes an agent&apos;s capabilities,
               endpoint, and supported interaction patterns. Published cards are discoverable
               by other agents in the network.
             </p>

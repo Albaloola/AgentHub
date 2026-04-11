@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { LivingAvatar } from "@/components/ui/living-avatar";
-import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import { editMessage, voteMessage, pinMessage } from "@/lib/api";
 import type { MessageWithToolCalls } from "@/lib/types";
 import { toast } from "sonner";
@@ -52,6 +52,7 @@ export function MessageBubble({
       editRef.current.focus();
       editRef.current.setSelectionRange(editContent.length, editContent.length);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
 
   async function handleSaveEdit() {

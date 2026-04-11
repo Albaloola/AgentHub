@@ -330,6 +330,7 @@ export function RootStarfield() {
     []
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const lensFlares = useMemo(
     () =>
       Array.from({ length: 4 }, (_, i) => ({
@@ -342,6 +343,7 @@ export function RootStarfield() {
     []
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const lightnings = useMemo(
     () =>
       Array.from({ length: 3 }, (_, i) => ({

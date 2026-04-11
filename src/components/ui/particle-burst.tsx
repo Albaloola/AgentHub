@@ -45,6 +45,7 @@ export function ParticleBurst({
   const [particles, setParticles] = useState<Particle[]>([])
   const [isActive, setIsActive] = useState(false)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (trigger && !isActive) {
       setIsActive(true)
@@ -58,6 +59,7 @@ export function ParticleBurst({
       return () => clearTimeout(timer)
     }
   }, [trigger, isActive, particleCount])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
     <AnimatePresence>

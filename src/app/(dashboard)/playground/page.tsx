@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
-  Play, Loader2, Plus, Trash2, Check, Copy,
+  Play, Loader2, Plus, Trash2, Check,
   FlaskConical, GitCompare, RotateCcw, Sparkles,
   FileText, Rocket, Code2,
 } from "lucide-react";
@@ -69,6 +69,7 @@ export default function PlaygroundPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

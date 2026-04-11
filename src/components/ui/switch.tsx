@@ -6,9 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { spring } from "@/lib/animation"
 
-interface SwitchProps extends SwitchPrimitive.Root.Props {
-  size?: "sm" | "default"
-}
+type SwitchProps = SwitchPrimitive.Root.Props
 
 interface Particle {
   id: number
@@ -23,18 +21,15 @@ const TRACK_WIDTH = 44
 const TRACK_HEIGHT = 24
 const THUMB_SIZE = 20
 const THUMB_INSET = 2
-const THUMB_TRAVEL = TRACK_WIDTH - THUMB_SIZE - THUMB_INSET * 2
 
 function Switch({
   className,
-  size = "default",
   checked,
   onCheckedChange,
   ...props
 }: SwitchProps) {
   const prefersReducedMotion = useReducedMotion()
   const [particles, setParticles] = useState<Particle[]>([])
-  const [trailActive, setTrailActive] = useState(false)
   const prevChecked = useRef(checked)
 
   // Calculate thumb travel distance
@@ -42,12 +37,9 @@ function Switch({
   // travel = 44 - 20 - 4 = 20px
   const travel = TRACK_WIDTH - THUMB_SIZE - THUMB_INSET * 2
 
-  // Spawn particles and trigger trail animation on toggle ON
+  // Spawn particles on toggle ON
   useEffect(() => {
     if (checked && !prevChecked.current) {
-      // Activate trail sweep
-      setTrailActive(true)
-
       // Spawn particles if motion is not reduced
       if (!prefersReducedMotion) {
         const particleCount = 4 + Math.floor(Math.random() * 3) // 4-6 particles
@@ -63,9 +55,6 @@ function Switch({
         const timer = setTimeout(() => setParticles([]), 400)
         return () => clearTimeout(timer)
       }
-    } else if (!checked && prevChecked.current) {
-      // Deactivate trail when turning off
-      setTrailActive(false)
     }
 
     prevChecked.current = checked

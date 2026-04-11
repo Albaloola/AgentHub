@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 export interface NavItemConfig {
@@ -51,9 +50,11 @@ export function NavConfigPanel({ open, onClose, groups: initialGroups, onSave }:
   const [dragItem, setDragItem] = useState<{ groupIdx: number; itemIdx: number } | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<{ groupIdx: number; itemIdx: number } | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) setGroups(initialGroups);
   }, [open, initialGroups]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!open) return null;
 

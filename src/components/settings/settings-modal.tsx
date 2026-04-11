@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
   X, Monitor, Moon, Sun, Type, Layout, Palette, MessageSquare,
-  Settings2, Sparkles, Zap, RotateCcw, ChevronRight, Check,
-  Sidebar, Eye, Bell, Globe, Info, Bot
+  Settings2, Sparkles, Zap, ChevronRight, Check,
+  Sidebar, Bell, Globe, Info, Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -67,7 +67,7 @@ function chipClass(active: boolean, className?: string) {
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<string>("layout");
-  const { uiPrefs, setUiPref, commitUiPrefs, revertUiPrefs, resetUiPrefs, hasUnsavedPrefs } = useStore(useShallow((s) => ({ uiPrefs: s.uiPrefs, setUiPref: s.setUiPref, commitUiPrefs: s.commitUiPrefs, revertUiPrefs: s.revertUiPrefs, resetUiPrefs: s.resetUiPrefs, hasUnsavedPrefs: s.hasUnsavedPrefs })));
+  const { uiPrefs, setUiPref, commitUiPrefs, revertUiPrefs, hasUnsavedPrefs } = useStore(useShallow((s) => ({ uiPrefs: s.uiPrefs, setUiPref: s.setUiPref, commitUiPrefs: s.commitUiPrefs, revertUiPrefs: s.revertUiPrefs, hasUnsavedPrefs: s.hasUnsavedPrefs })));
   const modalRef = useRef<HTMLDivElement>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
@@ -122,6 +122,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       first?.focus();
     }, 100);
     return () => document.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, onClose, hasUnsavedPrefs]);
 
   if (!open) return null;
@@ -354,6 +355,7 @@ function LayoutTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TypographySection({ title, desc, prefKey, prefSizeKey, prefs, setPref, fallbackKey, minSize, maxSize, defaultSize, previewText, isTitle }: any) {
   const currentFont = prefs[prefKey] || (fallbackKey ? prefs[fallbackKey] : "geist");
   const currentSize = prefs[prefSizeKey] || defaultSize;
@@ -679,6 +681,7 @@ function GeneralTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }) 
         <select
           className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-md px-2 py-1 text-sm outline-none min-w-[120px]"
           value={prefs.dateFormat || "system"}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onChange={(e) => setPref("dateFormat", e.target.value as any)}
         >
           <option value="system">System Default</option>

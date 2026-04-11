@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
-import { getStatusStyle } from "@/lib/status-colors";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   getAgents, getConversations, checkAgentHealth, getCapabilities,
@@ -66,6 +65,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     loadAgent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function loadAgent() {

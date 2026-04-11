@@ -105,8 +105,6 @@ export default function AdminPage() {
   }
 
   // Rough estimates for stats
-  const totalMessages = auditLog.filter((e) => e.resource_type === "message").length;
-
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>

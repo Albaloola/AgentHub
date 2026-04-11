@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Check, Plus } from "lucide-react";
+import { Users, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ export default function GroupsPage() {
 
   useEffect(() => {
     getAgents().then(setAgents).catch(() => toast.error("Failed to load agents"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function toggleAgent(id: string) {

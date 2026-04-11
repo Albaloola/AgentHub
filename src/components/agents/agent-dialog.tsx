@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -231,6 +230,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
               {/* Preview */}
               {avatarUrl ? (
                 <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={avatarUrl}
                     alt="Avatar"

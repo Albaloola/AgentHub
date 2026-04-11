@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { v4 as uuid } from "uuid";
 import { createAdapter } from "@/lib/adapters";
 import type { Agent, Message } from "@/lib/types";
 

@@ -17,7 +17,7 @@ export async function POST(
 
     db.prepare("INSERT OR IGNORE INTO conversation_tags (conversation_id, tag_id) VALUES (?, ?)").run(id, tagId);
     return NextResponse.json({ conversation_id: id, tag_id: tagId });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to add tag" }, { status: 500 });
   }
 }
@@ -31,7 +31,7 @@ export async function DELETE(
   try {
     db.prepare("DELETE FROM conversation_tags WHERE conversation_id = ? AND tag_id = ?").run(id, tagId);
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to remove tag" }, { status: 500 });
   }
 }

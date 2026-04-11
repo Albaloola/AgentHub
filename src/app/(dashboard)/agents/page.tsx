@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -38,7 +38,7 @@ import {
   createConversation,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
-import { FadeIn, MotionList, MotionItem } from "@/components/ui/motion-primitives";
+import { FadeIn } from "@/components/ui/motion-primitives";
 import { GATEWAY_LABELS } from "@/lib/types";
 import type { Agent, AgentWithStatus, GatewayType } from "@/lib/types";
 import { AgentDialog } from "@/components/agents/agent-dialog";
@@ -72,6 +72,7 @@ export default function AgentsPage() {
 
   useEffect(() => {
     loadAgents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadAgents() {
@@ -321,6 +322,7 @@ function AgentCard({
     if (!isExpanded) {
       setCardHeight(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isExpanded]);
 
   return (
@@ -366,6 +368,7 @@ function AgentCard({
           <div className="flex items-start gap-3">
             <div className="relative">
               {agent.avatar_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={agent.avatar_url} alt={agent.name} className="h-12 w-12 rounded-full object-cover" />
               ) : (
                 <div className={cn("flex h-12 w-12 items-center justify-center rounded-full text-lg font-medium text-white", getAvatarColor(agent.id))}>

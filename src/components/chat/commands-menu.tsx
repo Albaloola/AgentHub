@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Command, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCapabilities } from "@/lib/api";
-import type { AgentCapabilities } from "@/lib/api";
 
 // Built-in commands that always work
 const BUILTIN_COMMANDS = [

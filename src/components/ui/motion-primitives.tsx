@@ -6,7 +6,6 @@ import {
   AnimatePresence,
   useReducedMotion,
   useInView,
-  type Variants,
   type Transition,
   type HTMLMotionProps,
 } from "framer-motion";
@@ -103,7 +102,7 @@ export function MotionList({
 // MotionItem — individual item for stagger-compatible lists
 // ============================================================
 
-interface MotionItemProps extends HTMLMotionProps<"div"> {}
+type MotionItemProps = HTMLMotionProps<"div">;
 
 export function MotionItem({ children, className, ...props }: MotionItemProps) {
   const prefersReduced = useReducedMotion();
