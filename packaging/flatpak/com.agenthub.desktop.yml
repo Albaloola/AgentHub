@@ -1,0 +1,41 @@
+app-id: com.agenthub.desktop
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node20
+
+command: agenthub
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+  - --device=dri
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: agenthub
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node20/bin
+      env:
+        NPM_CONFIG_LOGLEVEL: info
+    build-commands:
+      - npm ci --offline
+      - npm run build
+      - npm run desktop:build-main
+      - mkdir -p /app/lib/agenthub
+      - cp -r .next/standalone/* /app/lib/agenthub/
+      - cp -r .next/static /app/lib/agenthub/.next/static
+      - cp -r public /app/lib/agenthub/public
+      - cp -r dist/desktop /app/lib/agenthub/desktop
+      - install -Dm755 packaging/flatpak/agenthub-wrapper.sh /app/bin/agenthub
+      - install -Dm644 public/icon.svg /app/share/icons/hicolor/scalable/apps/com.agenthub.desktop.svg
+      - install -Dm644 packaging/flatpak/com.agenthub.desktop.desktop /app/share/applications/com.agenthub.desktop.desktop
+      - install -Dm644 packaging/flatpak/com.agenthub.desktop.metainfo.xml /app/share/metainfo/com.agenthub.desktop.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=AgentHub
+Comment=Multi-agent orchestration dashboard
+Exec=agenthub
+Icon=com.agenthub.desktop
+Type=Application
+Categories=Development;Utility;
+Keywords=ai;agent;llm;chat;orchestration;
+StartupNotify=true
+Terminal=false

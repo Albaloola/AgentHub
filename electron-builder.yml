@@ -1,25 +1,139 @@
 appId: com.agenthub.desktop
 productName: AgentHub
+copyright: Copyright © 2026 AgentHub Contributors
+
 directories:
   output: release
+
 files:
   - dist/desktop/**/*
   - package.json
   - public/**/*
+
 extraResources:
   - from: .next/standalone
     to: app
     filter:
       - "**/*"
+  - from: .next/static
+    to: app/.next/static
+    filter:
+      - "**/*"
+  - from: public
+    to: app/public
+    filter:
+      - "**/*"
+
 asar: true
 asarUnpack:
   - "**/node_modules/better-sqlite3/**"
+
+# --- Linux ---
 linux:
+  icon: packaging/icons
   target:
-    - AppImage
-  category: Utility
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+    - target: deb
+      arch:
+        - x64
+        - arm64
+    - target: rpm
+      arch:
+        - x64
+  category: Development
+  desktop:
+    Name: AgentHub
+    Comment: Multi-agent orchestration dashboard
+    Categories: Development;Utility;
+  synopsis: Multi-agent orchestration dashboard
+  description: >
+    AgentHub is a self-hosted, privacy-first command center for managing
+    multiple AI agents through a unified interface. Features include
+    multi-agent chat, workflows, arena evaluation, knowledge bases,
+    and comprehensive observability.
+
+appImage:
+  artifactName: AgentHub-${version}-${arch}.AppImage
+
+deb:
+  artifactName: agenthub_${version}_${arch}.deb
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
+
+rpm:
+  artifactName: agenthub-${version}-${arch}.rpm
+
+# --- macOS ---
 mac:
+  icon: packaging/icons/icon.icns
   category: public.app-category.developer-tools
   hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: null
+  entitlementsInherit: null
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  artifactName: AgentHub-${version}-${arch}.dmg
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# --- Windows ---
 win:
-  target: nsis
+  icon: packaging/icons/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  artifactName: AgentHub-${version}-Setup-${arch}.exe
+  shortcutName: AgentHub
+
+portable:
+  artifactName: AgentHub-${version}-Portable-${arch}.exe
+
+# --- Snap (Linux) ---
+snap:
+  summary: Multi-agent orchestration dashboard
+  description: >
+    AgentHub is a self-hosted, privacy-first command center for managing
+    multiple AI agents through a unified interface.
+  grade: stable
+  confinement: strict
+  plugs:
+    - default
+    - network
+    - home
