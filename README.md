@@ -1,106 +1,108 @@
-<div align="center">
+<p align="center">
+  <img src="public/icon.svg" alt="AgentHub" width="120" />
+</p>
 
-# AgentHub
+<h1 align="center">AgentHub</h1>
 
-**Mission control for your agent fleet.**
+<p align="center">
+  <strong>Self-hosted command center for your AI agents</strong><br/>
+  Route conversations to specialized agents, build automated workflows,<br/>
+  evaluate models head-to-head, and monitor everything from one dashboard.
+</p>
 
-One desktop app that talks to every gateway, every agent, every protocol — in one chat, on one timeline, with one set of keybindings.
-
-[![Release](https://img.shields.io/github/v/release/Albaloola/AgentHub?color=8b5cf6&labelColor=0a0a0a&logo=github&style=flat-square)](https://github.com/Albaloola/AgentHub/releases)
-[![License](https://img.shields.io/badge/license-Apache--2.0-3b82f6?labelColor=0a0a0a&style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0)
-[![AUR (bin)](https://img.shields.io/aur/version/agenthub-bin?label=aur%20%28bin%29&color=22d3ee&labelColor=0a0a0a&logo=archlinux&logoColor=ffffff&style=flat-square)](https://aur.archlinux.org/packages/agenthub-bin)
-[![AUR (git)](https://img.shields.io/aur/version/agenthub-git?label=aur%20%28git%29&color=22d3ee&labelColor=0a0a0a&logo=archlinux&logoColor=ffffff&style=flat-square)](https://aur.archlinux.org/packages/agenthub-git)
-[![Stars](https://img.shields.io/github/stars/Albaloola/AgentHub?color=facc15&labelColor=0a0a0a&logo=github&style=flat-square)](https://github.com/Albaloola/AgentHub/stargazers)
-
-![AgentHub Mission Control](docs/images/dashboard.png)
-
-</div>
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#developing-adapters">Adapters</a> ·
+  <a href="#contributing">Contributing</a>
+</p>
 
 ---
 
-## What it is
+AgentHub is a **pure presentation and routing layer**. It doesn't run models or handle inference — it connects to agent gateways (Hermes, OpenClaw, OpenAI-compatible APIs, WebSocket endpoints, or any custom adapter) and gives you a unified interface to manage them all.
 
-You have agents. Probably more than you'd like to admit.
+Everything runs locally. Your data stays in a SQLite database on your machine. No cloud dependency, no telemetry, no vendor lock-in.
 
-A Hermes install on your laptop. An OpenClaw gateway in a tab somewhere. A Slack bot a coworker stood up last sprint. An OpenAI-compatible endpoint you keep meaning to try. Each one has its own chat UI, its own auth, its own prompt history — and none of them talk to each other.
-
-**AgentHub is the one shell that talks to all of them.** It's a Next.js + Electron desktop app that connects to any gateway via a small adapter protocol, routes messages, streams responses with SSE, and gives you a single dashboard to see who's online, who's slow, who's burning tokens, and who just fell over.
-
-It does **not** run models. It does **not** manage your LLM keys. It does **not** lock you into one vendor. It's a presentation, routing, and observability layer — and that's the entire point.
+![Dashboard](docs/screenshots/dashboard.png)
 
 ---
 
 ## Install
 
-### For humans
-
-The fastest path on Arch / EndeavourOS / Manjaro / CachyOS:
+### npm / npx (quickest)
 
 ```bash
-yay -S agenthub-bin
+npx agenthub
 ```
 
-That's it. Pulls the prebuilt Linux x86_64 tarball from the [GitHub release](https://github.com/Albaloola/AgentHub/releases), drops it under `/opt/agenthub`, registers a `.desktop` entry, and adds an `agenthub` launcher to your `$PATH`. Open it from your launcher or just run `agenthub`.
-
-If you'd rather build from source on each upgrade (slower, but tracks `main` exactly):
+Or install globally:
 
 ```bash
-yay -S agenthub-git
+npm install -g agenthub
+agenthub --port 3000
 ```
 
-#### Other distros / no AUR
+### Desktop App (Electron)
 
-Download the prebuilt tarball from the latest release and run it directly:
+Download the latest release for your platform from [**GitHub Releases**](https://github.com/0x4F6D6172/agenthub/releases):
+
+| Platform | Downloads |
+|----------|-----------|
+| **Windows** | `.exe` installer (x64, arm64) · Portable `.exe` |
+| **macOS** | `.dmg` (Intel & Apple Silicon) · `.zip` |
+| **Linux** | `.AppImage` · `.deb` · `.rpm` |
+
+### Homebrew (macOS)
 
 ```bash
-curl -L -o agenthub.tar.gz \
-  https://github.com/Albaloola/AgentHub/releases/latest/download/agenthub-0.1.0-linux-x86_64.tar.gz
-tar -xzf agenthub.tar.gz
-./linux-unpacked/agenthub
+brew install --cask agenthub
 ```
 
-#### Docker (web mode)
-
-If you want to run AgentHub as a server and hit it from a browser instead of as a desktop app:
+### AUR (Arch Linux)
 
 ```bash
+yay -S agenthub
+```
+
+### Docker
+
+```bash
+docker run -p 3000:3000 -v agenthub-data:/app/data ghcr.io/0x4f6d6172/agenthub
+```
+
+Or with Docker Compose:
+
+```bash
+git clone https://github.com/0x4F6D6172/agenthub.git
+cd agenthub
 docker compose up
 ```
 
-Then open <http://localhost:3000>.
+### Quick Install Scripts
 
-#### From source
+**Linux / macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/0x4F6D6172/agenthub/main/packaging/install.sh | bash
+```
 
-For development, contributors, or anyone on a platform we don't ship yet:
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/0x4F6D6172/agenthub/main/packaging/install.ps1 | iex
+```
+
+### From Source
 
 ```bash
-git clone https://github.com/Albaloola/AgentHub.git
-cd AgentHub
+git clone https://github.com/0x4F6D6172/agenthub.git
+cd agenthub
 npm install
-npm run desktop:build
-npx electron-builder --linux --dir
-./release/linux-unpacked/agenthub
+cp .env.example .env.local
+npm run dev
 ```
 
-There's also a thinner web-only path: `npm run dev` and open <http://localhost:3000>.
-
-### For LLM agents
-
-If you're an agent (Claude Code, Codex, Cursor, Aider, OpenCode, etc.) running on the user's machine, fetch the agent-facing install guide and follow it:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Albaloola/AgentHub/main/docs/guide/installation.md
-```
-
-Or paste this prompt to your favourite coding agent:
-
-```
-Install AgentHub on this machine by following the instructions here:
-https://raw.githubusercontent.com/Albaloola/AgentHub/main/docs/guide/installation.md
-Detect the OS, pick the right path, and verify the install at the end.
-```
-
-The guide is written for you, not for humans. It tells you exactly which commands to run on each distro, which files to put where, how to verify the install succeeded, and how to roll back if anything goes wrong.
+Open [http://localhost:3000](http://localhost:3000). The app seeds itself with a **Mock Echo Bot** for testing — no external agents required to explore the UI.
 
 ---
 
@@ -108,167 +110,269 @@ The guide is written for you, not for humans. It tells you exactly which command
 
 <table>
 <tr>
-<td width="50%" align="center">
-<img src="docs/images/dashboard.png" alt="Mission Control" />
-<br/><sub><b>Mission Control</b> — every agent, latency, and token flow at a glance.</sub>
+<td width="50%">
+
+**Mission Control Dashboard**
+Overview of agents, recent activity, and system health at a glance.
+
+![Dashboard](docs/screenshots/dashboard.png)
 </td>
-<td width="50%" align="center">
-<img src="docs/images/agents.png" alt="Agents" />
-<br/><sub><b>Agents</b> — register, edit, health-check, and chat with every gateway you've connected.</sub>
+<td width="50%">
+
+**Agent Management**
+Configure agents, adapters, capability weights, and fallback chains.
+
+![Agents](docs/screenshots/agents.png)
 </td>
 </tr>
 <tr>
-<td width="50%" align="center">
-<img src="docs/images/fleet.png" alt="Fleet Overview" />
-<br/><sub><b>Fleet Overview</b> — health score, latency, message and cost counters per agent.</sub>
+<td>
+
+**Visual Workflow Builder**
+Drag-and-drop pipeline builder with agent, condition, delay, and output nodes.
+
+![Workflows](docs/screenshots/workflows.png)
 </td>
-<td width="50%" align="center">
-<img src="docs/images/playground.png" alt="Prompt Playground" />
-<br/><sub><b>Prompt Playground</b> — split-pane prompt editor with versioning, A/B runs, and behavior modes.</sub>
+<td>
+
+**Arena — Head-to-Head Evaluation**
+Compare agent responses side by side with voting and leaderboard.
+
+![Arena](docs/screenshots/arena.png)
+</td>
+</tr>
+<tr>
+<td>
+
+**Execution Traces**
+Span waterfall visualization with thinking panels, tool calls, and subagent trees.
+
+![Traces](docs/screenshots/traces.png)
+</td>
+<td>
+
+**Analytics**
+Agent performance tables, token distribution, and status overview.
+
+![Analytics](docs/screenshots/analytics.png)
+</td>
+</tr>
+<tr>
+<td>
+
+**Knowledge Bases**
+Upload documents (TXT, MD, PDF, JSON, CSV), automatic chunking, RAG management.
+
+![Knowledge](docs/screenshots/knowledge.png)
+</td>
+<td>
+
+**Prompt Playground**
+Split-pane editor with streaming responses and version history.
+
+![Playground](docs/screenshots/playground.png)
+</td>
+</tr>
+<tr>
+<td>
+
+**Personas Library**
+9 specialized personas across engineering, security, creative, and more.
+
+![Personas](docs/screenshots/personas.png)
+</td>
+<td>
+
+**Settings & Themes**
+6 theme presets, accent colors, density settings, custom CSS.
+
+![Settings](docs/screenshots/settings.png)
 </td>
 </tr>
 </table>
 
 ---
 
-## What's inside
+## Features
 
-|       | Feature                       | What it does                                                                                                              |
-| :---: | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------ |
-|  🛰️  | **Multi-gateway adapters**    | Hermes (Python CLI), OpenClaw (HTTP), OpenAI-compatible, WebSocket, and a Mock adapter — drop in your own in ~80 lines.   |
-|  💬  | **Unified chat**              | SSE streaming, markdown, syntax highlighting, copy buttons, message editing, regeneration, threading, pinning, voting.    |
-|  🤝  | **Group chats**               | Multiple agents in one conversation. Discussion (sequential), parallel, or targeted modes. Agent-to-agent handoff baked in.|
-|  🧭  | **Mission Control dashboard** | Total agents, active agents, message volume, token spend, recent activity, agent status, all live.                       |
-|  🛟  | **Fleet Overview**            | Health score per agent, sparkline latency, anomaly timeline, fallback chain map.                                         |
-|  🧪  | **Prompt Playground**         | Split-pane editor. Versioned prompts. Environment labels (dev / staging / prod). One-click activation.                   |
-|  🧠  | **Smart context**             | Pinned messages survive compaction. Auto-compact at configurable thresholds. Conversation summaries on demand.           |
-|  🪪  | **Personas library**          | 9 categories — engineering, devops, research, creative, QA, security, data, management, general. Apply to any agent.    |
-|  🛠️  | **Capability routing**        | Per-agent capability weights. Fallback chains. Adaptive timeouts that learn from history. Canary versioning.             |
-|  🔬  | **Trace viewer**              | Span waterfall, color-coded by routing / adapter / tool / subagent / response / guardrail. Inline tool-call inspection.  |
-|  🪞  | **Extended thinking**         | Anthropic-style reasoning panel, toggleable per response.                                                                |
-|  🔐  | **Guardrails & policies**     | Pre-flight checks, content policies, audit log, scheduled tasks, webhook triggers.                                       |
-|  🖥️  | **Desktop-first**             | Single binary. Single-instance lock. Tray + close-to-hide where supported. OS-native data directory.                     |
-|  📦  | **Cross-platform packaging**  | Linux AppImage primary. Win/macOS scaffolded via `electron-builder`. AUR `-bin` and `-git` packages live today.          |
+### Chat & Communication
 
-For the long form, see [`FEATURE_AUDIT.md`](FEATURE_AUDIT.md).
+- **Streaming chat** with SSE, markdown rendering, syntax highlighting, and copy buttons
+- **Group chat** with discussion, parallel, or targeted response modes
+- **Message editing**, regeneration, threading, pinning, and voting
+- **File attachments** with drag-and-drop upload
+- **Slash commands** per gateway, behavior modes per conversation
+- **Agent handoff protocol** for seamless agent-to-agent transfers
+- **Artifacts panel** — auto-detects HTML/SVG/JSX and renders in a sandboxed iframe
+
+### Agent Management
+
+- **5 adapter protocols:** Hermes, OpenClaw, OpenAI-compatible, WebSocket, Mock
+- **Capability weights** for intelligent content-based routing
+- **Fallback chains**, adaptive timeouts, health checks with latency tracking
+- **Agent versioning** with canary traffic splitting
+- **Fleet dashboard** with health scores, sparkline latency, anomaly timeline
+
+### Observability
+
+- **Trace viewer** with span waterfall (routing → adapter → tool call → response)
+- **Extended thinking panel** showing agent reasoning chains
+- **Subagent tree** visualization and tool call inspection
+- **Anomaly detection** with severity levels and alerting
+
+### Knowledge & Memory
+
+- **Knowledge bases** with document upload, automatic chunking, and RAG
+- **Shared memory** — cross-agent store with categories, confidence, and expiry
+- **Conversation checkpoints** for save/revert/fork with timeline
+- **Context compaction** and intelligent pruning
+
+### Automation
+
+- **Webhooks** with configurable triggers, rate limiting, and event logs
+- **Scheduled tasks** with cron expressions and manual triggers
+- **External API** with key management and programmatic agent messaging
+- **Integrations** for GitHub, GitLab, Jira, Slack, Discord, Telegram, Email
+- **A2A Protocol** support for cross-platform agent discovery
+
+### Security & Governance
+
+- **Guardrails** — content filter, PII detection, injection detection, regex rules
+- **Runtime policies** — action filters, data access controls, rate limits
+- **Audit log** with immutable records
+- **RBAC** with admin, operator, and viewer roles
+
+### Evaluation
+
+- **Arena** for head-to-head comparison with voting and leaderboard
+- **Prompt playground** with version history and environment labels
+- **Response caching** with content hashing and TTL
+
+### UI & Experience
+
+- **Theme engine** with 6 presets (Arctic, Daylight, Emerald, Midnight, Obsidian, Paper)
+- **Command palette** (Ctrl+K), keyboard shortcuts with chord navigation
+- **Chat tabs**, conversation folders, global search
+- **Notification center**, onboarding wizard
+- **Visual workflow builder** with drag-and-drop canvas
+- **Dark theme** with animated backgrounds, fully responsive
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Electron main process  (dist/desktop/main.js)        │
-│  • single-instance lock                              │
-│  • port discovery + health check                     │
-│  • spawns backend as a child:                        │
-│    process.execPath + ELECTRON_RUN_AS_NODE=1         │
-│  • tray, menu, close→hide, quit                      │
-│  • BrowserWindow loads http://127.0.0.1:<port>       │
-└──────────────────────────────────────────────────────┘
-                          │ spawn
-                          ▼
-┌──────────────────────────────────────────────────────┐
-│ Backend  (Next.js standalone)                        │
-│  • .next/standalone/server.js                        │
-│  • runs under Electron's bundled Node                │
-│    (better-sqlite3 rebuilt for Electron's ABI)       │
-│  • reads AGENTHUB_DATA_DIR from env                  │
-│  • Hermes adapter spawns Python child processes      │
-│    with ELECTRON_RUN_AS_NODE scrubbed                │
-└──────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌──────────────────────────────────────────────────────┐
-│ Adapters  (src/lib/adapters/*)                       │
-│  • hermes  — Python CLI subprocess                   │
-│  • openclaw — HTTP gateway                           │
-│  • openai-compat — any /v1/chat/completions endpoint │
-│  • websocket — for streaming gateways                │
-│  • mock — fixture replies for testing                │
-└──────────────────────────────────────────────────────┘
+External Events (GitHub, Jira, Webhooks, Cron, API calls)
+                    │
+                    ▼
+    ┌───────────────────────────────┐
+    │     AgentHub Control Plane    │
+    │                               │
+    │  Routing  │  Guardrails       │
+    │  Tracing  │  Knowledge        │
+    │  Memory   │  Scheduling       │
+    │  Cost     │  Policies         │
+    └───────────────────────────────┘
+        │          │          │
+        ▼          ▼          ▼
+    ┌──────┐   ┌──────┐   ┌──────┐
+    │Hermes│   │OpenCl│   │Custom│ ...
+    └──────┘   └──────┘   └──────┘
+        │          │          │
+        ▼          ▼          ▼
+    (Independent gateways running
+     their own models and inference)
 ```
 
-Web (`npm run dev` / Docker) and desktop (`agenthub-bin`) share the **same Next.js backend**. The only thing that changes is who manages the lifecycle and where the data lives.
+### Tech Stack
 
-| Mode    | Process model                         | Data directory                                  |
-| :------ | :------------------------------------ | :---------------------------------------------- |
-| Dev     | `next dev`                            | `./data` relative to the repo                   |
-| Docker  | `next start` in a container           | `./data` mounted from the host                  |
-| Desktop | Electron main + child Next standalone | OS app-data dir (`~/.config/agenthub` on Linux) |
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) + TypeScript (strict) |
+| Desktop | Electron 35 |
+| Styling | Tailwind CSS 4 + shadcn/ui (base-ui primitives) |
+| State | Zustand |
+| Database | SQLite via better-sqlite3 (WAL mode) |
+| Streaming | Server-Sent Events (SSE) |
+| Markdown | react-markdown + remark-gfm + react-syntax-highlighter |
+| Icons | Lucide React |
+| Animations | Framer Motion |
 
-The runtime path layer lives in [`src/lib/runtime-paths.ts`](src/lib/runtime-paths.ts) and honors `AGENTHUB_DATA_DIR` everywhere — set it once if you want desktop and dev modes to share data.
+### Database
+
+52 tables organized by feature domain:
+
+| Domain | Tables |
+|--------|--------|
+| **Core** | agents, conversations, messages, tool_calls, attachments, subagents, tags, settings |
+| **Templates** | templates, template_agents, workflows, workflow_runs |
+| **Chat** | checkpoints, whiteboards, response_votes, message_threads, conversation_folders |
+| **Knowledge** | knowledge_bases, documents, document_chunks, shared_memory, personas |
+| **Automation** | webhooks, webhook_events, scheduled_tasks, api_keys, integrations |
+| **Analytics** | performance_snapshots, traces, routing_log, arena_rounds, topic_clusters, feedback_insights, anomaly_events |
+| **Governance** | guardrail_rules, policy_rules, notifications, audit_log, a2a_agent_cards, agent_versions |
+| **Users** | users, conversation_permissions, theme_preferences, onboarding_state |
+
+---
+
+## Developing Adapters
+
+AgentHub connects to agents through adapters. To add a new one:
+
+1. Create a file in `src/lib/adapters/`
+2. Implement the `GatewayAdapter` interface:
+
+```typescript
+interface GatewayAdapter {
+  sendMessage(msg: AgentMessage): AsyncGenerator<AgentResponseChunk>;
+  healthCheck(): Promise<{ healthy: boolean; latency: number }>;
+}
+```
+
+3. Register it in `src/lib/adapters/index.ts`
+
+See [docs/ADDING_AN_ADAPTER.md](docs/ADDING_AN_ADAPTER.md) for a detailed guide.
 
 ---
 
 ## Configuration
 
-Most things are configurable via the in-app Settings panel. The handful that are environment variables are documented in [`.env.example`](.env.example):
-
-```bash
-# Override the root data directory (DB, uploads, knowledge, logs)
-# AGENTHUB_DATA_DIR=/absolute/path/to/data
-
-# Server port
-# PORT=3000
-
-# OpenClaw gateway token (required for OpenClaw agents)
-# OPENCLAW_API_KEY=
-```
-
----
-
-## Adding a new adapter
-
-The adapter protocol is small on purpose. Implement `sendMessage`, `healthCheck`, and a tiny config-parser, register it once, and you have a new gateway. Walkthrough in [`docs/ADDING_AN_ADAPTER.md`](docs/ADDING_AN_ADAPTER.md).
-
----
-
-## Development
-
-```bash
-git clone https://github.com/Albaloola/AgentHub.git
-cd AgentHub
-npm install
-
-# web dev — fastest iteration
-npm run dev
-
-# desktop dev — Electron window against next dev
-npm run desktop:dev
-
-# packaged build (production-style, no AppImage wrapping)
-npm run desktop:start
-
-# full AppImage (writes to ./release)
-npm run desktop:package
-```
-
-The first `npm install` runs `electron-rebuild` against `better-sqlite3` so the bundled SQLite binding matches Electron's ABI. That's a tradeoff: web mode (`next dev`) won't be able to load `better-sqlite3` afterwards. Run `npm rebuild better-sqlite3` to flip back if you want to iterate against `next dev`.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_PATH` | `./data/agenthub.db` | SQLite database file location |
+| `PORT` | `3000` | Server port |
+| `AGENTHUB_DATA_DIR` | `./data` | Data directory for uploads and logs |
 
 ---
 
 ## Contributing
 
-Issues and PRs welcome — especially:
+Contributions are welcome. Here's how to get started:
 
-- New adapters (Anthropic Messages API, LiteLLM, custom in-house gateways)
-- Native packaging for Windows and macOS (the `electron-builder` config is scaffolded but unsigned)
-- More personas, more behavior modes, more guardrail templates
-- Translations of the docs
+```bash
+git clone https://github.com/0x4F6D6172/agenthub.git
+cd agenthub
+npm install
+npm run dev
+```
 
-If your change would touch multiple subsystems (auth, scheduling, agent versioning), open an issue first so we can sketch the API together before you write the code.
+Before submitting a PR:
+- `npm run lint` — zero errors, zero warnings
+- `npm run build` — clean production build
+- Test your changes against the Mock Echo Bot
+
+### Project Stats
+
+| Metric | Count |
+|--------|-------|
+| Dashboard Pages | 27 |
+| API Routes | 86 |
+| Components | 58 |
+| Database Tables | 52 |
+| Source Files | 196 |
 
 ---
 
 ## License
 
-Apache License, Version 2.0. See <https://www.apache.org/licenses/LICENSE-2.0>.
-
----
-
-## Acknowledgements
-
-The README and the install split take cues from the wonderful [`oh-my-opencode`](https://github.com/code-yeongyu/oh-my-openagent) — particularly the "for humans / for agents" pattern. The architecture of running a bundled Next.js standalone server inside Electron via `ELECTRON_RUN_AS_NODE` is a quietly common pattern; this project just sweats the details — port discovery, healthcheck, single-instance lock, runtime path abstraction, the setuid bit on `chrome-sandbox`, native rebuild against Electron's ABI, and the asar boundary placement — so you don't have to.
-
-> Built and packaged in real-time with [Claude Code](https://claude.ai/code). Every commit, every fix, every bug found in this repo is a Claude session. The agents helped ship the agent dashboard. Ouroboros, etc.
+Apache License 2.0
