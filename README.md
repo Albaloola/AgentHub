@@ -46,57 +46,57 @@ agenthub --port 3000
 
 ### Desktop App (Electron)
 
-Download the latest release for your platform from [**GitHub Releases**](https://github.com/0x4F6D6172/agenthub/releases):
+Download the latest release for your platform from [**GitHub Releases**](https://github.com/Albaloola/AgentHub/releases/latest):
 
-| Platform | Downloads |
-|----------|-----------|
-| **Windows** | `.exe` installer (x64, arm64) · Portable `.exe` |
-| **macOS** | `.dmg` (Intel & Apple Silicon) · `.zip` |
-| **Linux** | `.AppImage` · `.deb` · `.rpm` |
+| Platform | Package | Arch |
+|----------|---------|------|
+| **Windows** | [Setup Installer (.exe)](https://github.com/Albaloola/AgentHub/releases/latest) | x64, arm64 |
+| **Windows** | [Portable (.exe)](https://github.com/Albaloola/AgentHub/releases/latest) | x64, arm64 |
+| **macOS** | [Disk Image (.dmg)](https://github.com/Albaloola/AgentHub/releases/latest) | Intel (x64), Apple Silicon (arm64) |
+| **macOS** | [ZIP (.zip)](https://github.com/Albaloola/AgentHub/releases/latest) | Intel (x64), Apple Silicon (arm64) |
+| **Linux** | [AppImage](https://github.com/Albaloola/AgentHub/releases/latest) | x64 |
+| **Linux** | [Debian/Ubuntu (.deb)](https://github.com/Albaloola/AgentHub/releases/latest) | x64 |
+| **Linux** | [Fedora/RHEL (.rpm)](https://github.com/Albaloola/AgentHub/releases/latest) | x64 |
+| **Linux** | [Tarball (.tar.gz)](https://github.com/Albaloola/AgentHub/releases/latest) | x64 |
 
-### Homebrew (macOS)
-
-```bash
-brew install --cask agenthub
-```
+> All packages are available on the [Releases page](https://github.com/Albaloola/AgentHub/releases/latest). Pick the one that matches your OS and architecture.
 
 ### AUR (Arch Linux)
 
 ```bash
-yay -S agenthub
+yay -S agenthub-bin     # prebuilt binary
+yay -S agenthub-git     # build from source
 ```
 
 ### Docker
 
 ```bash
-docker run -p 3000:3000 -v agenthub-data:/app/data ghcr.io/0x4f6d6172/agenthub
+docker compose up
 ```
 
-Or with Docker Compose:
+Or standalone:
 
 ```bash
-git clone https://github.com/0x4F6D6172/agenthub.git
-cd agenthub
-docker compose up
+docker run -p 3000:3000 -v agenthub-data:/app/data ghcr.io/albaloola/agenthub
 ```
 
 ### Quick Install Scripts
 
-**Linux / macOS:**
+**Linux / macOS** — auto-detects OS and architecture:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0x4F6D6172/agenthub/main/packaging/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Albaloola/AgentHub/main/packaging/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/0x4F6D6172/agenthub/main/packaging/install.ps1 | iex
+irm https://raw.githubusercontent.com/Albaloola/AgentHub/main/packaging/install.ps1 | iex
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/0x4F6D6172/agenthub.git
-cd agenthub
+git clone https://github.com/Albaloola/AgentHub.git
+cd AgentHub
 npm install
 cp .env.example .env.local
 npm run dev
