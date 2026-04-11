@@ -1,10 +1,18 @@
 class Agenthub < Formula
   desc "AI agent orchestration hub - manage and run AI agents from a unified interface"
-  homepage "https://github.com/0x4F6D6172/agenthub"
-  url "https://github.com/0x4F6D6172/agenthub/releases/download/v0.1.0/AgentHub-0.1.0-arm64.dmg"
-  sha256 "PLACEHOLDER_SHA256"
-  version "0.1.0"
-  license "MIT"
+  homepage "https://github.com/Albaloola/AgentHub"
+  version "0.2.0"
+  license "Apache-2.0"
+
+  on_arm do
+    url "https://github.com/Albaloola/AgentHub/releases/download/v0.2.0/AgentHub-0.2.0-arm64.dmg"
+    sha256 "0d65778e404d8c1095656b62a856026340992770402aa79edefc70214441fb99"
+  end
+
+  on_intel do
+    url "https://github.com/Albaloola/AgentHub/releases/download/v0.2.0/AgentHub-0.2.0-x64.dmg"
+    sha256 "6aa17105424aebffdff4ae5ace983638b8cd5eee26e83076c53e5b953cc0bd45"
+  end
 
   livecheck do
     url :stable

@@ -100,6 +100,10 @@ function resolveServerScript(appPath: string) {
   return path.join(appPath, ".next", "standalone", "server.js");
 }
 
+function isPackagedApp(appPath: string) {
+  return appPath.includes("app.asar");
+}
+
 async function stopProcess(proc: ChildProcessWithoutNullStreams | null) {
   if (!proc || proc.killed || proc.exitCode !== null) return;
 
@@ -119,12 +123,20 @@ async function stopProcess(proc: ChildProcessWithoutNullStreams | null) {
 
 export async function startBackend(options: StartBackendOptions): Promise<BackendHandle> {
   const port = await findPort(options.preferredPort ?? 3000);
+  const packaged = isPackagedApp(options.appPath);
   const serverScript = resolveServerScript(options.appPath);
   const url = `http://127.0.0.1:${port}`;
+  const runtime = packaged ? process.execPath : process.env.NODE_BINARY ?? "node";
 
-  log.info("Starting AgentHub backend", { serverScript, port, dataDir: options.dataDir });
+  log.info("Starting AgentHub backend", {
+    serverScript,
+    port,
+    dataDir: options.dataDir,
+    packaged,
+    runtime,
+  });
 
-  const child = spawn(process.execPath, [serverScript], {
+  const child = spawn(runtime, [serverScript], {
     cwd: path.dirname(serverScript),
     env: {
       ...process.env,
@@ -133,7 +145,7 @@ export async function startBackend(options: StartBackendOptions): Promise<Backen
       AGENTHUB_LOGS_DIR: options.logsDir,
       PORT: String(port),
       HOSTNAME: "127.0.0.1",
-      ELECTRON_RUN_AS_NODE: "1",
+      ...(packaged ? { ELECTRON_RUN_AS_NODE: "1" } : {}),
     },
   });
 
