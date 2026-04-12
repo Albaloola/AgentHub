@@ -1,3 +1,27 @@
+/**
+ * Sidebar — the main left-rail navigation.
+ *
+ * This file is large (1600+ lines). If you're hunting for something, use these
+ * anchors (search for the exact string):
+ *
+ *   "interface NavItem"           → nav data-types
+ *   "const NAV_CATEGORIES"        → nav tree (edit here to add a top-level link)
+ *   "const CATEGORY_GLOW"         → neon glow colours per category
+ *   "export function Sidebar()"   → main component (state, effects, render)
+ *   "function ConversationItem"   → individual conversation row (pin/rename/drag)
+ *
+ * Configuration surface ("what the user sees in the sidebar") is driven by:
+ *   • NAV_CATEGORIES above — the static top-level nav.
+ *   • The nav config panel (./nav-config-panel.tsx) — user reorder/hide of those
+ *     items, persisted to localStorage via loadNavConfig / saveNavConfig.
+ *   • useStore().conversations + folders — the dynamic conversation list.
+ *
+ * For a smaller, decomposed version one day, candidate extractions are:
+ *   1. ConversationItem (already a sibling function — easy win)
+ *   2. The folder tree render pass (search: "renderFolder" below)
+ *   3. The nav config panel is already its own file — that's the pattern.
+ */
+
 "use client";
 
 import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from "react";

@@ -1,4 +1,4 @@
-import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } from "../types";
+import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } from "@/lib/shared/types";
 
 // === Adapter Interface ===
 

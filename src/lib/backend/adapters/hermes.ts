@@ -1,4 +1,4 @@
-import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } from "../types";
+import type { Agent, AgentMessage, AgentResponseChunk, HealthCheckResponse } from "@/lib/shared/types";
 import type { GatewayAdapter, AdapterMeta } from "./base";
 import { registerAdapter } from "./base";
 import { spawn } from "child_process";
