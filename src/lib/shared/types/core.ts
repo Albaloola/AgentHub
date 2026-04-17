@@ -55,6 +55,34 @@ export const GATEWAY_LABELS: Record<string, string> = {
   mock: "Mock",
 };
 
+// --- Channels ---------------------------------------------------------------
+
+/**
+ * A user-facing workspace/channel owned by one agent.
+ *
+ * Channels are the primary shell-level grouping for conversations. They let
+ * the same agent expose multiple operational contexts with different defaults.
+ */
+export interface AgentChannel {
+  id: string;
+  agent_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string;
+  color: string;
+  is_pinned: boolean;
+  sort_order: number;
+  default_model: string | null;
+  default_system_prompt: string | null;
+  default_response_mode: "discussion" | "parallel" | "targeted";
+  enabled_commands_json: string;   // JSON string — string[]
+  notification_prefs_json: string; // JSON string — Record<string, boolean>
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // --- Conversations ----------------------------------------------------------
 
 /** A single- or multi-agent thread. */
@@ -63,6 +91,7 @@ export interface Conversation {
   type: "single" | "group";
   name: string;
   agent_id: string | null;    // null for group conversations
+  channel_id: string | null;
   is_pinned: boolean;
   template_id: string | null;
   parent_conversation_id: string | null;
@@ -93,6 +122,7 @@ export interface ConversationAgent {
 /** Conversation hydrated with its agents, tags, and last message for listing. */
 export interface ConversationWithDetails extends Conversation {
   agents: Agent[];
+  channel?: AgentChannel | null;
   tags: Tag[];
   last_message?: Message;
   message_count: number;

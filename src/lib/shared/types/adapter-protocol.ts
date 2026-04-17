@@ -19,6 +19,11 @@ export interface AgentMessage {
   metadata?: {
     group_mode?: boolean;
     other_agents?: string[];
+    channel_id?: string | null;
+    scheduled_task_id?: string;
+    webhook_id?: string;
+    trigger?: string;
+    [key: string]: unknown;
   };
 }
 

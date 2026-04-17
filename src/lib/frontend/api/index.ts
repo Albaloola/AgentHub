@@ -8,6 +8,7 @@
  *   client.ts         — fetchJSON helper; every other file uses it.
  *   meta.ts           — adapter metadata + per-agent capability discovery.
  *   agents.ts         — agents CRUD, health, behaviour, routing, versions, persona, analytics.
+ *   channels.ts       — agent-owned channels / workspaces.
  *   conversations.ts  — conversations + checkpoints + replay + whiteboard + sharing.
  *   messages.ts       — message CRUD (pin/vote/edit) + thread replies.
  *   chat.ts           — streamChat (SSE) + regenerateMessage.
@@ -24,6 +25,7 @@
 export * from "./client";
 export * from "./meta";
 export * from "./agents";
+export * from "./channels";
 export * from "./conversations";
 export * from "./messages";
 export * from "./chat";

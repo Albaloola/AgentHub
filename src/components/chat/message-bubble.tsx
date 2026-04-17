@@ -18,6 +18,7 @@ import { LivingAvatar } from "@/components/ui/living-avatar";
 import { cn, timeAgo } from "@/lib/utils";
 import { editMessage, voteMessage, pinMessage } from "@/lib/api";
 import type { MessageWithToolCalls } from "@/lib/types";
+import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 
 interface MessageBubbleProps {
@@ -46,6 +47,9 @@ export function MessageBubble({
   const [votes, setVotes] = useState(message.votes ?? { up: 0, down: 0 });
   const [saving, setSaving] = useState(false);
   const editRef = useRef<HTMLTextAreaElement>(null);
+  const showAvatars = useStore((s) => s.uiPrefs.showAvatars);
+  const showTimestamps = useStore((s) => s.uiPrefs.showTimestamps);
+  const markdownEnabled = useStore((s) => s.uiPrefs.markdownEnabled);
 
   useEffect(() => {
     if (editing && editRef.current) {
@@ -85,10 +89,6 @@ export function MessageBubble({
       )
     : message.content;
 
-  function escapeRegExp(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
   // Handoff message
   if (!!message.is_handoff) {
     return (
@@ -112,9 +112,13 @@ export function MessageBubble({
         </div>
         <div className="flex-1 glass-bubble rounded-2xl px-5 py-3 text-sm border-[var(--theme-accent-border)]">
           <Badge variant="outline" className="text-[0.625rem] border-[var(--theme-accent-border)] text-[var(--accent-amber)] mb-2">Compacted Context</Badge>
-          <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          </div>
+          {markdownEnabled ? (
+            <div className="message-content prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            </div>
+          ) : (
+            <PlainTextMessage content={message.content} searchQuery={searchQuery} />
+          )}
         </div>
       </div>
     );
@@ -124,8 +128,9 @@ export function MessageBubble({
     <div
       data-message-id={message.id}
       className={cn(
-        "group flex gap-3 px-2 py-1.5",
+        "group flex px-2 py-1.5",
         isUser ? "flex-row-reverse" : "flex-row",
+        showAvatars ? "gap-3" : "gap-0",
         isUser ? "animate-slide-up" : "animate-fade-in",
       )}
       style={{ animationDelay: `${animationDelay}ms` }}
@@ -133,20 +138,22 @@ export function MessageBubble({
       onMouseLeave={() => setHovered(false)}
     >
       {/* Avatar */}
-      {isUser ? (
-        <div className="brand-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] text-white">
-          <User className="h-4 w-4" />
-        </div>
-      ) : message.agent ? (
-        <LivingAvatar
-          name={message.agent.name}
-          id={message.agent.id}
-          state={isStreaming ? "speaking" : "idle"}
-          size="md"
-        />
-      ) : (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-xs font-semibold text-foreground">?</div>
-      )}
+      {showAvatars
+        ? isUser ? (
+            <div className="brand-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] text-white">
+              <User className="h-4 w-4" />
+            </div>
+          ) : message.agent ? (
+            <LivingAvatar
+              name={message.agent.name}
+              id={message.agent.id}
+              state={isStreaming ? "speaking" : "idle"}
+              size="md"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-xs font-semibold text-foreground">?</div>
+          )
+        : null}
 
       {/* Content */}
       <div className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start", "max-w-[90%]")}>
@@ -158,7 +165,9 @@ export function MessageBubble({
             )}
             {!!message.is_pinned && <Bookmark className="h-3 w-3 text-[var(--accent-amber)] fill-[var(--accent-amber)]" />}
             {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
-            <span className="text-[0.625rem] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
+            {showTimestamps ? (
+              <span className="text-[0.625rem] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
+            ) : null}
           </div>
         )}
 
@@ -202,46 +211,49 @@ export function MessageBubble({
         ) : (
           message.content && (
             <div className={cn(
-              "rounded-2xl px-5 py-3 text-sm transition-all duration-200",
+              "message-content rounded-2xl px-5 py-3 text-sm transition-all duration-200",
               isUser ? "glass-bubble-user text-foreground" : "glass-bubble text-foreground",
               hovered && "shadow-lg",
             )}>
-              <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code({ className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || "");
-                      const codeString = String(children).replace(/\n$/, "");
-                      if (match) return <CodeBlock language={match[1]} code={codeString} />;
-                      return (
-                        <code className="rounded-md border border-[var(--code-border)] bg-[var(--code-surface)] px-1.5 py-0.5 text-xs font-mono" {...props}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    table({ children }) {
-                      return (
-                        <div className="surface-code my-3 overflow-x-auto rounded-xl">
-                          <table className="min-w-full text-xs">{children}</table>
-                        </div>
-                      );
-                    },
-                    th({ children }) {
-                      return <th className="border-b border-[var(--panel-border)] bg-[var(--surface-muted)] px-3 py-2 text-left font-medium">{children}</th>;
-                    },
-                    td({ children }) {
-                      return <td className="border-b border-[var(--panel-border)] px-3 py-2">{children}</td>;
-                    },
-                    strong({ children }) {
-                      // Style search highlights
-                      return <mark className="bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)] rounded px-0.5">{children}</mark>;
-                    },
-                  }}
-                >
-                  {highlightedContent}
-                </ReactMarkdown>
-              </div>
+              {markdownEnabled ? (
+                <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || "");
+                        const codeString = String(children).replace(/\n$/, "");
+                        if (match) return <CodeBlock language={match[1]} code={codeString} />;
+                        return (
+                          <code className="rounded-md border border-[var(--code-border)] bg-[var(--code-surface)] px-1.5 py-0.5 text-xs font-mono" {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      table({ children }) {
+                        return (
+                          <div className="surface-code my-3 overflow-x-auto rounded-xl">
+                            <table className="min-w-full text-xs">{children}</table>
+                          </div>
+                        );
+                      },
+                      th({ children }) {
+                        return <th className="border-b border-[var(--panel-border)] bg-[var(--surface-muted)] px-3 py-2 text-left font-medium">{children}</th>;
+                      },
+                      td({ children }) {
+                        return <td className="border-b border-[var(--panel-border)] px-3 py-2">{children}</td>;
+                      },
+                      strong({ children }) {
+                        return <mark className="bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)] rounded px-0.5">{children}</mark>;
+                      },
+                    }}
+                  >
+                    {highlightedContent}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <PlainTextMessage content={message.content} searchQuery={searchQuery} />
+              )}
               {isStreaming && (
                 <span className="inline-block w-2 h-5 ml-1 rounded-sm bg-current animate-pulse" />
               )}
@@ -312,6 +324,34 @@ function CopyBtn({ text }: { text: string }) {
       {copied ? <Check className="h-3.5 w-3.5 text-[var(--accent-emerald)]" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground/60" />}
     </Button>
   );
+}
+
+function PlainTextMessage({ content, searchQuery }: { content: string; searchQuery: string }) {
+  return (
+    <div className="chat-font chat-text-size whitespace-pre-wrap break-words text-[color:var(--foreground)]">
+      {highlightPlainText(content, searchQuery)}
+    </div>
+  );
+}
+
+function highlightPlainText(content: string, searchQuery: string) {
+  if (!searchQuery.trim()) return content;
+  const query = searchQuery.trim().toLowerCase();
+  const segments = content.split(new RegExp(`(${escapeRegExp(searchQuery.trim())})`, "gi"));
+
+  return segments.map((segment, index) =>
+    segment.toLowerCase() === query ? (
+      <mark key={`${segment}-${index}`} className="rounded px-0.5 bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]">
+        {segment}
+      </mark>
+    ) : (
+      <span key={`${segment}-${index}`}>{segment}</span>
+    ),
+  );
+}
+
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function CodeBlock({ language, code }: { language: string; code: string }) {

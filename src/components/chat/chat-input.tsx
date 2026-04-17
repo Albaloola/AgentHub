@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Send, Square, ChevronDown, Upload, Maximize2, Minimize2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  Maximize2,
+  Minimize2,
+  Send,
+  Square,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,13 +18,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { cn, getAvatarColor, getInitials } from "@/lib/utils";
 import type { Agent } from "@/lib/types";
 import { CommandsMenu } from "./commands-menu";
-import { FileChips, UploadedFile } from "./file-chips";
+import { FileChips, type UploadedFile } from "./file-chips";
+import type { ChatChannelContext } from "./chat-channel-context";
 import { toast } from "sonner";
 import { spring } from "@/lib/animation";
-
 
 interface ChatInputProps {
   onSend: (content: string, targetAgentId?: string, attachmentIds?: string[]) => void;
@@ -29,14 +37,19 @@ interface ChatInputProps {
   chatFont?: string;
   isCentered?: boolean;
   hasStartedChat?: boolean;
+  channelContext?: ChatChannelContext | null;
 }
 
-export function ChatInput({ 
-  onSend, 
-  onCancel, 
-  isStreaming, 
-  agents, 
-  disabled, 
+function getQuickCommandLabels(channelContext: ChatChannelContext | null | undefined) {
+  return (channelContext?.suggestedCommands ?? []).slice(0, 3);
+}
+
+export function ChatInput({
+  onSend,
+  onCancel,
+  isStreaming,
+  agents,
+  disabled,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   conversationId,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,6 +59,7 @@ export function ChatInput({
   isCentered = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   hasStartedChat = false,
+  channelContext,
 }: ChatInputProps) {
   const [content, setContent] = useState("");
   const [targetAgent, setTargetAgent] = useState<Agent | null>(null);
@@ -59,177 +73,267 @@ export function ChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
+  const quickCommands = useMemo(() => getQuickCommandLabels(channelContext), [channelContext]);
+  const resolvedTargetAgent = useMemo(() => {
+    if (!targetAgent) {
+      return null;
+    }
+    return agents?.some((agent) => agent.id === targetAgent.id) ? targetAgent : null;
+  }, [agents, targetAgent]);
+  const routeLabel = resolvedTargetAgent
+    ? resolvedTargetAgent.name
+    : channelContext?.kind === "group"
+      ? "Entire squad"
+      : "Current channel";
+
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
   useEffect(() => {
-    if (textareaRef.current && !expanded) {
-      textareaRef.current.style.height = "auto";
-      const scrollHeight = textareaRef.current.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 40), 96); // 1 to ~3 lines
-      textareaRef.current.style.height = `${newHeight}px`;
+    if (!textareaRef.current || expanded) {
+      return;
     }
+
+    textareaRef.current.style.height = "auto";
+    const scrollHeight = textareaRef.current.scrollHeight;
+    const newHeight = Math.min(Math.max(scrollHeight, 48), 112);
+    textareaRef.current.style.height = `${newHeight}px`;
   }, [content, expanded]);
 
   function handleSend() {
     const text = content.trim();
-    if (!text || isStreaming) return;
-    onSend(text, targetAgent?.id, attachedFiles.map((f) => f.id));
+    if (!text || isStreaming) {
+      return;
+    }
+
+    onSend(text, resolvedTargetAgent?.id, attachedFiles.map((file) => file.id));
     setContent("");
     setAttachedFiles([]);
     setExpanded(false);
+    setCommandTrigger("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
     }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Escape" && expanded) {
+      event.preventDefault();
+      setExpanded(false);
+      return;
+    }
+
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       handleSend();
     }
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const value = e.target.value;
+  function handleInput(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = event.target.value;
     setContent(value);
 
     const lastSlashIndex = value.lastIndexOf("/");
-    if (lastSlashIndex >= 0) {
-      const afterSlash = value.slice(lastSlashIndex);
-      if (!afterSlash.includes(" ")) {
-        setCommandTrigger(afterSlash);
-      } else {
-        setCommandTrigger("");
-      }
-    } else {
+    if (lastSlashIndex < 0) {
       setCommandTrigger("");
+      return;
     }
+
+    const afterSlash = value.slice(lastSlashIndex);
+    if (!afterSlash.includes(" ")) {
+      setCommandTrigger(afterSlash);
+      return;
+    }
+
+    setCommandTrigger("");
   }
 
   async function handleFiles(files: FileList) {
     setUploading(true);
-    const uploaded: UploadedFile[] = [];
+    const uploadedFiles: UploadedFile[] = [];
 
     for (const file of Array.from(files)) {
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} is too large (max 10MB)`);
         continue;
       }
+
       try {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) { const err = await res.json(); toast.error(err.error || "Upload failed"); continue; }
-        const data = await res.json();
-        uploaded.push(data);
-      } catch { toast.error(`Failed to upload ${file.name}`); }
+        const response = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!response.ok) {
+          const error = await response.json();
+          toast.error(error.error || "Upload failed");
+          continue;
+        }
+
+        const payload = await response.json();
+        uploadedFiles.push(payload);
+      } catch {
+        toast.error(`Failed to upload ${file.name}`);
+      }
     }
 
-    if (uploaded.length > 0) setAttachedFiles((prev) => [...prev, ...uploaded]);
+    if (uploadedFiles.length > 0) {
+      setAttachedFiles((previous) => [...previous, ...uploadedFiles]);
+    }
+
     setUploading(false);
   }
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    if (disabled || uploading || isStreaming) return;
-    await handleFiles(e.dataTransfer.files);
-  }, [disabled, uploading, isStreaming]);
+  const handleDrop = useCallback(async (event: React.DragEvent) => {
+    event.preventDefault();
+    if (disabled || uploading || isStreaming) {
+      return;
+    }
+    await handleFiles(event.dataTransfer.files);
+  }, [disabled, isStreaming, uploading]);
 
   function removeFile(id: string) {
-    setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
+    setAttachedFiles((previous) => previous.filter((file) => file.id !== id));
   }
 
   return (
     <div
-      className="relative z-10 max-w-3xl mx-auto px-4"
-      onDragOver={(e) => e.preventDefault()}
+      className="relative z-10 mx-auto w-full max-w-[var(--composer-max-width,60rem)] px-3 md:px-4"
+      onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
     >
       <CommandsMenu
-        onSelect={(cmd) => { setContent(cmd); textareaRef.current?.focus(); }}
+        onSelect={(command) => {
+          setContent(command);
+          textareaRef.current?.focus();
+        }}
         triggerValue={commandTrigger}
         disabled={isStreaming}
+        channelContext={channelContext}
       />
 
-      <div 
-        className="absolute inset-0 pointer-events-none rounded-2xl blur-3xl transition-opacity duration-500"
+      <div
+        className="pointer-events-none absolute inset-x-6 inset-y-0 rounded-[2rem] blur-3xl transition-opacity duration-300"
         style={{
-          background: "radial-gradient(ellipse at center, var(--theme-accent) 0%, transparent 80%)",
-          opacity: isFocused ? 0.4 : 0.15,
-          transform: isFocused ? "scale(1.05)" : "scale(1)"
+          background: `radial-gradient(circle at 50% 0%, ${channelContext?.accent ?? "var(--theme-accent)"} 0%, transparent 72%)`,
+          opacity: isFocused ? 0.28 : 0.12,
         }}
       />
 
       <motion.div
-        className={cn(
-          "relative rounded-2xl backdrop-blur-xl",
-        )}
+        className="relative overflow-visible rounded-[1.9rem] border backdrop-blur-xl"
         style={{
           background: "var(--glass-bg)",
-          border: `1px solid var(--panel-border)`,
+          borderColor: "var(--panel-border)",
           boxShadow: isFocused
-            ? `var(--panel-shadow), 0 0 0 1px var(--theme-accent), 0 0 20px var(--theme-accent-soft)`
+            ? `var(--panel-shadow), 0 0 0 1px ${channelContext?.accent ?? "var(--theme-accent)"}, 0 0 26px color-mix(in srgb, ${channelContext?.accent ?? "var(--theme-accent)"} 26%, transparent)`
             : "var(--panel-shadow)",
-          transition: "border-color 0.2s, box-shadow 0.2s",
         }}
         animate={{
-          scale: isPressed && !prefersReducedMotion ? 0.98 : 1,
+          scale: isPressed && !prefersReducedMotion ? 0.985 : 1,
         }}
         transition={spring.gentle}
       >
+        <div
+          className="pointer-events-none absolute inset-x-4 -top-px h-px"
+          style={{
+            background: `linear-gradient(90deg, transparent, color-mix(in srgb, ${channelContext?.accent ?? "var(--theme-accent)"} 55%, transparent), transparent)`,
+          }}
+        />
+
         <FileChips files={attachedFiles} onRemove={removeFile} />
 
-        {agents && agents.length > 1 && (
-          <div className="px-4 pt-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="surface-subtle inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs transition-colors hover:bg-[var(--surface-hover)]"
-              >
-                {targetAgent ? (
-                  <>
-                    <div className={cn("h-4 w-4 rounded-md text-[0.5rem] font-medium text-white flex items-center justify-center", getAvatarColor(targetAgent.id))}>
-                      {getInitials(targetAgent.name)}
-                    </div>
-                    <span>{targetAgent.name}</span>
-                  </>
-                ) : (
-                  <span>All agents</span>
-                )}
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setTargetAgent(null)}>All agents</DropdownMenuItem>
-                {agents.map((agent) => (
-                  <DropdownMenuItem key={agent.id} onClick={() => setTargetAgent(agent)}>
-                    <div className={cn("h-4 w-4 rounded-md text-[0.5rem] font-medium text-white flex items-center justify-center mr-2", getAvatarColor(agent.id))}>
-                      {getInitials(agent.name)}
-                    </div>
-                    {agent.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+        <div className="space-y-3 px-[var(--shell-card-pad,1rem)] pb-[var(--shell-card-pad,1rem)] pt-3">
+          {((agents && agents.length > 1) || quickCommands.length > 0 || channelContext?.scopeHint) && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+              {agents && agents.length > 1 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="surface-subtle inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-transparent px-3 text-xs transition-colors hover:bg-[var(--surface-hover)]"
+                    aria-label="Choose which agent should answer next"
+                  >
+                  {resolvedTargetAgent ? (
+                    <>
+                      <div
+                        className={cn(
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white",
+                          getAvatarColor(resolvedTargetAgent.id),
+                        )}
+                      >
+                        {getInitials(resolvedTargetAgent.name)}
+                      </div>
+                      <span>{resolvedTargetAgent.name}</span>
+                    </>
+                  ) : (
+                      <span>{routeLabel}</span>
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-56">
+                    <DropdownMenuItem onClick={() => setTargetAgent(null)}>
+                      {channelContext?.kind === "group" ? "Entire squad" : "Current channel"}
+                    </DropdownMenuItem>
+                    {agents.map((agent) => (
+                      <DropdownMenuItem key={agent.id} onClick={() => setTargetAgent(agent)}>
+                        <div
+                          className={cn(
+                            "mr-2 flex h-5 w-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white",
+                            getAvatarColor(agent.id),
+                          )}
+                        >
+                          {getInitials(agent.name)}
+                        </div>
+                        {agent.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
-        <div className={cn("flex px-3 py-3 gap-2", expanded ? "flex-col" : "items-end md:items-center")}>
-          {/* Unexpanded Left Buttons */}
-          {!expanded && (
-            <div className="flex items-center gap-1 shrink-0 pb-1 md:pb-0">
+              {!resolvedTargetAgent && channelContext && (
+                <span className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[0.7rem] text-muted-foreground">
+                  {channelContext.kind === "group" ? "Squad lane" : "Channel lane"}
+                </span>
+              )}
+
+              {quickCommands.map((command) => (
+                <button
+                  key={command.name}
+                  type="button"
+                  onClick={() => {
+                    setContent(`${command.name} `);
+                    textareaRef.current?.focus();
+                  }}
+                  className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[0.72rem] text-muted-foreground transition-colors hover:border-foreground/[0.16] hover:bg-foreground/[0.04] hover:text-foreground"
+                >
+                  {command.name}
+                </button>
+              ))}
+              </div>
+
+              {channelContext?.scopeHint ? (
+                <span className="hidden max-w-[24rem] text-right text-[0.68rem] text-muted-foreground lg:block">
+                  {channelContext.scopeHint}
+                </span>
+              ) : null}
+            </div>
+          )}
+
+          <div className={cn("flex gap-2", expanded ? "flex-col" : "items-end")}>
+            <div className="flex shrink-0 items-center gap-1">
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 className="hidden"
-                onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                onChange={(event) => event.target.files && handleFiles(event.target.files)}
                 disabled={disabled || uploading || isStreaming}
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
+                className="h-10 w-10 rounded-[1rem] text-muted-foreground hover:text-foreground"
                 disabled={disabled || uploading || isStreaming}
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Attach file"
@@ -239,69 +343,85 @@ export function ChatInput({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200 text-muted-foreground hover:text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-softer)]"
-                onClick={() => setExpanded(true)}
-                title="Expand"
-                aria-label="Expand input"
+                className="h-10 w-10 rounded-[1rem] text-muted-foreground hover:text-foreground"
+                onClick={() => setExpanded((previous) => !previous)}
+                aria-label={expanded ? "Collapse composer" : "Expand composer"}
+                title={expanded ? "Collapse composer" : "Expand composer"}
               >
-                <Maximize2 className="h-4.5 w-4.5" />
+                {expanded ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
               </Button>
             </div>
-          )}
 
-          {/* Text Input Area */}
-          <div className="flex-1 relative min-w-0">
-            <div className={cn(
-              "bg-foreground/[0.04] transition-colors duration-200 focus-within:bg-foreground/[0.06] overflow-hidden",
-              expanded ? "rounded-xl p-4" : "rounded-2xl py-2.5 px-4"
-            )}>
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={isCentered ? "Ask anything..." : "Send a message..."}
-                disabled={disabled}
+            <div className="relative min-w-0 flex-1">
+              <div
                 className={cn(
-                  "w-full bg-transparent border-0 focus:outline-none focus:ring-0",
-                  "placeholder:text-muted-foreground/60 text-foreground",
-                  "scrollbar-thin scrollbar-thumb-rounded",
-                  expanded ? "min-h-[40vh]" : ""
+                  "overflow-hidden rounded-[1.5rem] border border-foreground/[0.05] bg-foreground/[0.035] transition-colors focus-within:bg-foreground/[0.05]",
+                  expanded ? "p-4" : "px-4 py-3",
                 )}
-                style={{
-                  fontSize: "0.9375rem",
-                  lineHeight: "1.5",
-                  resize: "none",
-                  overflowY: "auto",
-                  minHeight: expanded ? "40vh" : "24px",
-                  maxHeight: expanded ? "50vh" : "96px",
-                  display: "block"
-                }}
-              />
-            </div>
-            {content.length > 0 && (
-              <div className="absolute top-2 right-3 text-[var(--theme-accent-text)] opacity-40 text-[0.6875rem] tabular-nums pointer-events-none">
-                ~{Math.ceil(content.length / 4)} t
+              >
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder={
+                    channelContext?.composerPlaceholder ?? (isCentered ? "Ask anything..." : "Send a message...")
+                  }
+                  disabled={disabled}
+                  aria-label="Message composer"
+                  className={cn(
+                    "chat-font chat-input-text w-full border-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground/60",
+                    "scrollbar-thin scrollbar-thumb-rounded",
+                    expanded && "min-h-[32vh]",
+                  )}
+                  style={{
+                    resize: "none",
+                    overflowY: "auto",
+                    minHeight: expanded ? "32vh" : "28px",
+                    maxHeight: expanded ? "52vh" : "112px",
+                    display: "block",
+                  }}
+                />
               </div>
-            )}
-          </div>
 
-          {/* Unexpanded Right Button */}
-          {!expanded && (
-            <div className="flex items-center shrink-0 pb-1 md:pb-0">
+              {content.length > 0 && (
+                <div className="pointer-events-none absolute right-4 top-3 text-[0.68rem] text-muted-foreground/60">
+                  ~{Math.ceil(content.length / 4)} tokens
+                </div>
+              )}
+            </div>
+
+            <div className={cn("flex shrink-0 items-center gap-2", expanded && "justify-between")}>
+              <div className="hidden flex-col text-[0.68rem] text-muted-foreground md:flex">
+                <span>
+                  {resolvedTargetAgent ? `Next reply routes to ${resolvedTargetAgent.name}.` : `Next reply routes to ${routeLabel.toLowerCase()}.`}
+                </span>
+                <span>Enter sends, Shift+Enter adds a newline, `/` opens commands.</span>
+              </div>
+
               {isStreaming ? (
-                <Button variant="destructive" size="icon" className="h-10 w-10 aspect-square rounded-[0.8rem] transition-all" onClick={onCancel}>
-                  <Square className="h-4.5 w-4.5" />
+                <Button
+                  variant="destructive"
+                  className="h-11 rounded-[1rem] px-4"
+                  onClick={onCancel}
+                  aria-label="Stop generating"
+                >
+                  <Square className="mr-2 h-4 w-4" />
+                  Stop
                 </Button>
               ) : (
-                <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <motion.div
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 24 }}
+                >
                   <Button
-                    size="icon"
                     className={cn(
-                      "h-10 w-10 aspect-square rounded-[0.8rem] transition-all duration-200",
-                      content.trim() && !disabled ? "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)] text-white shadow-lg shadow-[var(--theme-accent-shadow-strong)]" : "bg-foreground/[0.06] text-muted-foreground"
+                      "h-11 rounded-[1rem] px-4 font-medium transition-colors duration-200",
+                      content.trim() && !disabled
+                        ? "bg-[var(--theme-accent)] text-white shadow-lg shadow-[var(--theme-accent-shadow-strong)] hover:bg-[var(--theme-accent-alt)]"
+                        : "bg-foreground/[0.06] text-muted-foreground",
                     )}
                     onClick={handleSend}
                     onMouseDown={() => setIsPressed(true)}
@@ -310,67 +430,17 @@ export function ChatInput({
                     disabled={!content.trim() || disabled}
                     aria-label="Send message"
                   >
-                    <Send className="h-4.5 w-4.5" />
+                    <span>{expanded ? "Send message" : "Send"}</span>
+                    {expanded ? (
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    ) : (
+                      <Send className="ml-2 h-4 w-4" />
+                    )}
                   </Button>
                 </motion.div>
               )}
             </div>
-          )}
-
-          {/* Expanded Bottom Row */}
-          {expanded && (
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1 pl-1">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => e.target.files && handleFiles(e.target.files)}
-                  disabled={disabled || uploading || isStreaming}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-                  disabled={disabled || uploading || isStreaming}
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Attach file"
-                >
-                  <Upload className={cn("h-4 w-4", uploading && "animate-spin")} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-                  onClick={() => setExpanded(false)}
-                  title="Minimize"
-                >
-                  <Minimize2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="pr-1">
-                {isStreaming ? (
-                  <Button variant="destructive" size="sm" className="rounded-lg px-4 transition-all" onClick={onCancel}>
-                    <Square className="h-4 w-4 mr-2" /> Stop
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    className={cn(
-                      "rounded-lg px-5 font-medium transition-all duration-200",
-                      content.trim() && !disabled ? "bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-alt)] text-white shadow-lg shadow-[var(--theme-accent-shadow)]" : "bg-foreground/[0.06] text-muted-foreground"
-                    )}
-                    onClick={handleSend}
-                    disabled={!content.trim() || disabled}
-                  >
-                    Send <Send className="h-3.5 w-3.5 ml-2" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </motion.div>
     </div>

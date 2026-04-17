@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings } from "lucide-react";
+import { Command, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
+import { formatUiDateTime } from "@/lib/frontend/date-format";
+import { openCommandPalette } from "@/lib/frontend/ui-events";
 
 interface ContextualTopBarProps {
   onOpenSettings: () => void;
@@ -24,29 +27,6 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
     return () => clearInterval(timer);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
-
-  function formatDateTime(date: Date) {
-    if (dateFormat === "system") {
-      return date.toLocaleDateString(undefined, {
-        month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-      });
-    }
-    
-    const h = date.getHours();
-    const m = date.getMinutes().toString().padStart(2, "0");
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = (h % 12 || 12).toString();
-    const timeStr = `${h12}:${m} ${ampm}`;
-    
-    const mo = (date.getMonth() + 1).toString().padStart(2, "0");
-    const d = date.getDate().toString().padStart(2, "0");
-    const y = date.getFullYear();
-    
-    if (dateFormat === "MM/DD/YYYY") {
-      return `${mo}/${d}/${y} ${timeStr}`;
-    }
-    return `${d}/${mo}/${y} ${timeStr}`;
-  }
 
   // Simple page title mapping
   const titles: Record<string, string> = {
@@ -81,9 +61,9 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
 
   return (
     <div
-      className="relative flex h-14 shrink-0 items-center justify-between px-6 z-20"
+      className="relative z-20 flex shrink-0 items-center justify-between border-b border-foreground/[0.05] px-[var(--shell-pad,1rem)]"
+      style={{ minHeight: "var(--topbar-height, 3.5rem)" }}
     >
-      {/* Heavy gradient mask: opaque near edges, fully transparent in center */}
       <div 
         className="pointer-events-none absolute inset-0"
         style={{
@@ -91,7 +71,6 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
         }}
       />
 
-      {/* Subtle floor reflection glow acting as a bottom border line */}
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-[1px]"
         style={{
@@ -100,25 +79,45 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
         }}
       />
 
-      <div className="flex items-center gap-2 flex-1 relative z-10">
-        <span className="text-base font-bold tracking-tight text-foreground">{title}</span>
+      <div className="relative z-10 flex flex-1 items-center gap-2">
+        <span className="contextual-topbar__title title-font font-bold tracking-tight text-foreground">{title}</span>
       </div>
 
-      <div className="flex justify-center flex-1 relative z-10">
+      <div className="relative z-10 hidden flex-1 justify-center lg:flex">
         {mounted && (
           <span className="text-sm font-semibold tracking-wide text-foreground/90 tabular-nums">
-            {formatDateTime(now)}
+            {formatUiDateTime(now, dateFormat)}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 flex-1 relative z-10">
+      <div className="relative z-10 flex flex-1 items-center justify-end gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={openCommandPalette}
+          aria-label="Open command palette"
+          className="hidden h-9 rounded-xl px-3 text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground md:inline-flex"
+        >
+          <Search className="mr-2 h-4 w-4" />
+          Search
+          <span className="ml-2 inline-flex items-center gap-1 rounded-md border border-foreground/[0.08] px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+            <Command className="h-3 w-3" />
+            K
+          </span>
+        </Button>
+        <Link
+          href="/settings"
+          className="hidden h-9 items-center rounded-xl border border-foreground/[0.08] px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground md:inline-flex"
+        >
+          Full settings
+        </Link>
         <Button
           variant="ghost"
           size="icon"
           onClick={onOpenSettings}
           aria-label="Open settings"
-          className="hover:bg-foreground/[0.08]"
+          className="h-9 w-9 rounded-xl hover:bg-foreground/[0.08]"
         >
           <Settings className="h-4.5 w-4.5" />
         </Button>

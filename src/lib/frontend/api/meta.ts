@@ -9,6 +9,7 @@
 "use client";
 
 import { fetchJSON } from "./client";
+import type { AgentCapabilitiesByChannel } from "@/lib/shared/types";
 
 // --- Adapter registry metadata ---------------------------------------------
 
@@ -41,27 +42,12 @@ export function getAdapters(): Promise<AdapterMeta[]> {
 
 // --- Per-agent capabilities ------------------------------------------------
 
-export interface AgentCapabilities {
-  agent_id: string;
-  agent_name: string;
-  gateway_type: string;
-  capabilities: {
-    streaming: boolean;
-    toolCalls: boolean;
-    healthCheck: boolean;
-    thinking?: boolean;
-    subagents?: boolean;
-    fileUpload?: { enabled: boolean; acceptedTypes?: string[]; maxSizeMB?: number; format?: string };
-    commands?: boolean;
-  };
-  commands: { name: string; description: string; args?: string; requiresArgs?: boolean }[];
-  maxContextTokens?: number;
-  contextReset: boolean;
-  fileUpload: { enabled: boolean; acceptedTypes?: string[]; maxSizeMB?: number; format?: string };
-  thinking: boolean;
-  subagents: boolean;
-}
+export type AgentCapabilities = AgentCapabilitiesByChannel;
 
-export function getCapabilities(): Promise<AgentCapabilities[]> {
-  return fetchJSON("/api/capabilities");
+export function getCapabilities(channelId?: string, agentId?: string): Promise<AgentCapabilities[]> {
+  const params = new URLSearchParams();
+  if (channelId) params.set("channel_id", channelId);
+  if (agentId) params.set("agent_id", agentId);
+  const qs = params.toString();
+  return fetchJSON(`/api/capabilities${qs ? `?${qs}` : ""}`);
 }

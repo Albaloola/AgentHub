@@ -1,17 +1,38 @@
 import { NextResponse } from "next/server";
 import { db, toBooleans } from "@/lib/db";
 import { v4 as uuid } from "uuid";
-import type { Agent, Conversation, ConversationWithDetails, Message, Tag } from "@/lib/types";
+import type { Agent, AgentChannel, Conversation, ConversationWithDetails, Message, Tag } from "@/lib/types";
+import { ensureServerRuntime } from "@/lib/backend/runtime/server-runtime";
+import { createConversationFromChannel, getChannelById } from "@/lib/backend/services/channels";
 
-export async function GET() {
+export async function GET(request: Request) {
+  ensureServerRuntime();
+
+  const url = new URL(request.url);
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "200", 10), 1), 500);
+  const channelId = url.searchParams.get("channel_id");
+  const pinnedOnly = url.searchParams.get("pinned") === "true";
+
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  if (channelId) {
+    filters.push("channel_id = ?");
+    values.push(channelId);
+  }
+  if (pinnedOnly) {
+    filters.push("is_pinned = 1");
+  }
+
+  const where = filters.length > 0 ? `WHERE ${filters.join(" AND ")}` : "";
   const conversations = db
-    .prepare("SELECT * FROM conversations ORDER BY updated_at DESC")
-    .all() as Conversation[];
+    .prepare(`SELECT * FROM conversations ${where} ORDER BY is_pinned DESC, updated_at DESC LIMIT ?`)
+    .all(...values, limit) as Conversation[];
 
   if (conversations.length === 0) return NextResponse.json([]);
 
   const convIds = conversations.map((c) => c.id);
   const placeholders = convIds.map(() => "?").join(",");
+  const channelIds = [...new Set(conversations.map((c) => c.channel_id).filter(Boolean))] as string[];
 
   // Batch: all agents referenced by single conversations
   const singleAgentIds = conversations.filter((c) => c.type === "single" && c.agent_id).map((c) => c.agent_id!);
@@ -62,6 +83,17 @@ export async function GET() {
     tagMap.set(t.conversation_id, list);
   }
 
+  const channelMap = new Map<string, AgentChannel>();
+  if (channelIds.length > 0) {
+    const channelPlaceholders = channelIds.map(() => "?").join(",");
+    const channels = db
+      .prepare(`SELECT * FROM agent_channels WHERE id IN (${channelPlaceholders})`)
+      .all(...channelIds) as AgentChannel[];
+    for (const channel of channels) {
+      channelMap.set(channel.id, toBooleans(channel as unknown as Record<string, unknown>) as unknown as AgentChannel);
+    }
+  }
+
   const results: ConversationWithDetails[] = conversations.map((conv) => {
     let agents: Agent[] = [];
     if (conv.type === "single" && conv.agent_id) {
@@ -74,6 +106,7 @@ export async function GET() {
     return toBooleans({
       ...conv,
       agents,
+      channel: conv.channel_id ? channelMap.get(conv.channel_id) ?? null : null,
       last_message: lastMsgMap.get(conv.id),
       message_count: countMap.get(conv.id) ?? 0,
       tags: tagMap.get(conv.id) ?? [],
@@ -84,13 +117,34 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  ensureServerRuntime();
+
   const body = (await request.json()) as {
+    channel_id?: string;
     agent_id?: string;
     agent_ids?: string[];
     name?: string;
     type?: "single" | "group";
     response_mode?: string;
   };
+
+  if (body.channel_id) {
+    const channel = getChannelById(body.channel_id);
+    if (!channel) {
+      return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+    }
+    if (body.agent_id && body.agent_id !== channel.agent_id) {
+      return NextResponse.json({ error: "Selected channel does not belong to the requested agent" }, { status: 400 });
+    }
+    const conversation = createConversationFromChannel({
+      channelId: body.channel_id,
+      name: body.name,
+      type: body.type,
+      agentIds: body.agent_ids,
+      responseMode: body.response_mode as "discussion" | "parallel" | "targeted" | undefined,
+    });
+    return NextResponse.json({ id: conversation.id }, { status: 201 });
+  }
 
   const id = uuid();
 

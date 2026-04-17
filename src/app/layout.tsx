@@ -27,9 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`} suppressHydrationWarning>
+        <UiPrefsApplier />
         <ThemeBackground />
         <ThemeTransitionOverlay />
-        <UiPrefsApplier />
         {children}
         <Toaster />
       </body>

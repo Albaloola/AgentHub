@@ -28,6 +28,51 @@ const FONT_FAMILIES: Record<string, string> = {
   lexend: "'Lexend', system-ui, sans-serif",
 };
 
+const DENSITY_VARS = {
+  compact: {
+    scale: "0.88",
+    shellGap: "0.75rem",
+    shellSectionGap: "1.1rem",
+    shellPad: "0.9rem",
+    shellCardPad: "0.85rem",
+    sidebarWidth: "308px",
+    sidebarCollapsedWidth: "78px",
+    topbarHeight: "3.25rem",
+    railRowPadX: "0.8rem",
+    railRowPadY: "0.72rem",
+    composerMaxWidth: "56rem",
+    emptyStateScale: "0.92",
+  },
+  comfortable: {
+    scale: "1",
+    shellGap: "0.95rem",
+    shellSectionGap: "1.4rem",
+    shellPad: "1rem",
+    shellCardPad: "1rem",
+    sidebarWidth: "340px",
+    sidebarCollapsedWidth: "86px",
+    topbarHeight: "3.5rem",
+    railRowPadX: "0.95rem",
+    railRowPadY: "0.82rem",
+    composerMaxWidth: "60rem",
+    emptyStateScale: "1",
+  },
+  spacious: {
+    scale: "1.12",
+    shellGap: "1.1rem",
+    shellSectionGap: "1.75rem",
+    shellPad: "1.15rem",
+    shellCardPad: "1.15rem",
+    sidebarWidth: "376px",
+    sidebarCollapsedWidth: "94px",
+    topbarHeight: "3.75rem",
+    railRowPadX: "1.05rem",
+    railRowPadY: "0.95rem",
+    composerMaxWidth: "64rem",
+    emptyStateScale: "1.06",
+  },
+} as const;
+
 // Track which fonts we've already loaded
 const loadedFonts = new Set<string>();
 
@@ -62,6 +107,19 @@ export function UiPrefsApplier() {
 
     // Density
     root.setAttribute("data-density", uiPrefs.density);
+    const densityVars = DENSITY_VARS[uiPrefs.density] ?? DENSITY_VARS.comfortable;
+    root.style.setProperty("--density-scale", densityVars.scale);
+    root.style.setProperty("--shell-gap", densityVars.shellGap);
+    root.style.setProperty("--shell-section-gap", densityVars.shellSectionGap);
+    root.style.setProperty("--shell-pad", densityVars.shellPad);
+    root.style.setProperty("--shell-card-pad", densityVars.shellCardPad);
+    root.style.setProperty("--sidebar-width", densityVars.sidebarWidth);
+    root.style.setProperty("--sidebar-collapsed-width", densityVars.sidebarCollapsedWidth);
+    root.style.setProperty("--topbar-height", densityVars.topbarHeight);
+    root.style.setProperty("--rail-row-pad-x", densityVars.railRowPadX);
+    root.style.setProperty("--rail-row-pad-y", densityVars.railRowPadY);
+    root.style.setProperty("--composer-max-width", densityVars.composerMaxWidth);
+    root.style.setProperty("--empty-state-scale", densityVars.emptyStateScale);
 
     // Font size — acts as a multiplier on the fluid base (16px = 1.0x, default)
     // The CSS :root has font-size: clamp(14px, 0.625rem + 0.4vw, 22px)
@@ -99,6 +157,9 @@ export function UiPrefsApplier() {
     root.style.fontFamily = FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist;
     root.style.setProperty("--font-title", FONT_FAMILIES[titleKey] || FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist);
     root.style.setProperty("--font-chat", FONT_FAMILIES[chatKey] || FONT_FAMILIES[fontKey] || FONT_FAMILIES.geist);
+    root.style.setProperty("--title-font-size", `${uiPrefs.titleFontSize || 18}px`);
+    root.style.setProperty("--chat-font-size", `${uiPrefs.chatFontSize || 14}px`);
+    root.style.setProperty("--chat-line-height", (uiPrefs.chatFontSize || 14) >= 18 ? "1.7" : "1.6");
 
     // Animations
     if (!uiPrefs.animationsEnabled) {
@@ -112,6 +173,24 @@ export function UiPrefsApplier() {
       root.classList.add("ambient-hidden");
     } else {
       root.classList.remove("ambient-hidden");
+    }
+
+    if (!uiPrefs.showAmbientGlow) {
+      root.classList.add("ambient-glow-hidden");
+    } else {
+      root.classList.remove("ambient-glow-hidden");
+    }
+
+    if (!uiPrefs.showStarfield) {
+      root.classList.add("starfield-hidden");
+    } else {
+      root.classList.remove("starfield-hidden");
+    }
+
+    if (!uiPrefs.showMeteors) {
+      root.classList.add("meteors-hidden");
+    } else {
+      root.classList.remove("meteors-hidden");
     }
 
     // Glass glow settings

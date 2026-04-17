@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useStore } from "@/lib/store";
 import {
   useCanvasBg,
   getCssVar,
@@ -143,6 +144,9 @@ function generateStars(count: number): Star[] {
 /* ------------------------------------------------------------------ */
 
 export function MidnightBackground() {
+  const showStarfield = useStore((s) => s.uiPrefs.showStarfield);
+  const showMeteors = useStore((s) => s.uiPrefs.showMeteors);
+  const showAmbientGlow = useStore((s) => s.uiPrefs.showAmbientGlow);
   /* Pre-allocated mutable state kept in refs (never triggers re-render) */
   const starsRef = useRef<Star[]>(generateStars(180));
   const meteorsRef = useRef<Meteor[]>([]);
@@ -191,53 +195,55 @@ export function MidnightBackground() {
     ctx.rotate(rotation);
     ctx.translate(-w / 2, -h / 2);
 
-    const stars = starsRef.current;
-    const beaconStart = 180;
-    for (let i = 0; i < stars.length; i++) {
-      const s = stars[i];
-      const isBeacon = i >= beaconStart;
+    if (showStarfield) {
+      const stars = starsRef.current;
+      const beaconStart = 180;
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        const isBeacon = i >= beaconStart;
 
-      const twinkle =
-        Math.sin((time / s.period) * 6.2831853 + s.phase) * 0.5 + 0.5;
+        const twinkle =
+          Math.sin((time / s.period) * 6.2831853 + s.phase) * 0.5 + 0.5;
 
-      let opacity: number;
-      if (isBeacon) {
-        opacity = 0.3 + twinkle * 0.7;
-      } else {
-        opacity = s.baseOpacity * (0.5 + twinkle);
-      }
+        let opacity: number;
+        if (isBeacon) {
+          opacity = 0.3 + twinkle * 0.7;
+        } else {
+          opacity = s.baseOpacity * (0.5 + twinkle);
+        }
 
-      const px = s.x * w;
-      const py = s.y * h;
+        const px = s.x * w;
+        const py = s.y * h;
 
-      let color: string;
-      switch (s.colorType) {
-        case 1:
-          color = colors.starWarm;
-          break;
-        case 2:
-          color = colors.starCool;
-          break;
-        case 3:
-          color = colors.starBright;
-          break;
-        default:
-          color = colors.star;
-      }
+        let color: string;
+        switch (s.colorType) {
+          case 1:
+            color = colors.starWarm;
+            break;
+          case 2:
+            color = colors.starCool;
+            break;
+          case 3:
+            color = colors.starBright;
+            break;
+          default:
+            color = colors.star;
+        }
 
-      ctx.globalAlpha = opacity;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(px, py, s.radius, 0, 6.2831853);
-      ctx.fill();
-
-      if (s.colorType === 3) {
-        const glowRadius = isBeacon ? s.radius * 2 : s.radius * 1.5;
-        ctx.globalAlpha = opacity * 0.3;
+        ctx.globalAlpha = opacity;
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(px, py, glowRadius, 0, 6.2831853);
+        ctx.arc(px, py, s.radius, 0, 6.2831853);
         ctx.fill();
+
+        if (s.colorType === 3) {
+          const glowRadius = isBeacon ? s.radius * 2 : s.radius * 1.5;
+          ctx.globalAlpha = opacity * 0.3;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(px, py, glowRadius, 0, 6.2831853);
+          ctx.fill();
+        }
       }
     }
 
@@ -257,33 +263,35 @@ export function MidnightBackground() {
     }
 
     // Schedule shower bursts (3-5 meteors in quick succession) every 15-25s
-    if (nextBurstRef.current === 0) {
-      nextBurstRef.current = time + 15 + rand() * 10;
-    }
-    if (time >= nextBurstRef.current) {
-      const burstCount = 3 + Math.floor(rand() * 3); // 3-5 meteors
-      for (let i = 0; i < burstCount; i++) {
-        queue.push(time + i * 0.2); // 200ms apart
+    if (showMeteors) {
+      if (nextBurstRef.current === 0) {
+        nextBurstRef.current = time + 15 + rand() * 10;
       }
-      nextBurstRef.current = time + 15 + rand() * 10; // 15-25s until next burst
-    }
+      if (time >= nextBurstRef.current) {
+        const burstCount = 3 + Math.floor(rand() * 3); // 3-5 meteors
+        for (let i = 0; i < burstCount; i++) {
+          queue.push(time + i * 0.2); // 200ms apart
+        }
+        nextBurstRef.current = time + 15 + rand() * 10; // 15-25s until next burst
+      }
 
-    // Spawn regular meteors every 2-4 seconds
-    if (nextMeteorRef.current === 0) {
-      nextMeteorRef.current = time + 1 + rand() * 2; // first one after 1-3s
-    }
-    if (time >= nextMeteorRef.current) {
-      spawnMeteor(meteorsRef.current, w, h, time, rand, false);
-      nextMeteorRef.current = time + 2 + rand() * 2; // 2-4s until next
-    }
+      // Spawn regular meteors every 2-4 seconds
+      if (nextMeteorRef.current === 0) {
+        nextMeteorRef.current = time + 1 + rand() * 2; // first one after 1-3s
+      }
+      if (time >= nextMeteorRef.current) {
+        spawnMeteor(meteorsRef.current, w, h, time, rand, false);
+        nextMeteorRef.current = time + 2 + rand() * 2; // 2-4s until next
+      }
 
-    // Spawn occasional comet every 20-40 seconds
-    if (nextCometRef.current === 0) {
-      nextCometRef.current = time + 10 + rand() * 15; // first comet 10-25s in
-    }
-    if (time >= nextCometRef.current) {
-      spawnMeteor(meteorsRef.current, w, h, time, rand, true);
-      nextCometRef.current = time + 20 + rand() * 20; // 20-40s until next
+      // Spawn occasional comet every 20-40 seconds
+      if (nextCometRef.current === 0) {
+        nextCometRef.current = time + 10 + rand() * 15; // first comet 10-25s in
+      }
+      if (time >= nextCometRef.current) {
+        spawnMeteor(meteorsRef.current, w, h, time, rand, true);
+        nextCometRef.current = time + 20 + rand() * 20; // 20-40s until next
+      }
     }
 
     // Draw & advance meteors
@@ -308,17 +316,19 @@ export function MidnightBackground() {
        3. Distant lightning flares
        ================================================================ */
 
-    if (nextFlareRef.current === 0) {
-      nextFlareRef.current = time + 10 + rand() * 20;
-    }
-    if (time >= nextFlareRef.current) {
-      flaresRef.current.push({
-        cx: rand() * w,
-        cy: rand() * h * 0.7, // keep in upper 70%
-        spawnTime: time,
-        alive: true,
-      });
-      nextFlareRef.current = time + 20 + rand() * 20; // 20-40s
+    if (showAmbientGlow) {
+      if (nextFlareRef.current === 0) {
+        nextFlareRef.current = time + 10 + rand() * 20;
+      }
+      if (time >= nextFlareRef.current) {
+        flaresRef.current.push({
+          cx: rand() * w,
+          cy: rand() * h * 0.7, // keep in upper 70%
+          spawnTime: time,
+          alive: true,
+        });
+        nextFlareRef.current = time + 20 + rand() * 20; // 20-40s
+      }
     }
 
     const flares = flaresRef.current;
@@ -367,51 +377,55 @@ export function MidnightBackground() {
       }}
     >
       {/* CSS nebula clouds — blur is far cheaper in the compositor */}
-      <div
-        style={{
-          position: "absolute",
-          width: "80vw",
-          height: "60vh",
-          top: "-15%",
-          right: "-20%",
-          borderRadius: "50%",
-          background: "var(--starfield-nebula-1)",
-          filter: "blur(100px)",
-          willChange: "transform",
-          animation: "midnight-nebula-drift-1 50s ease-in-out infinite alternate",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          width: "60vw",
-          height: "70vh",
-          bottom: "-20%",
-          left: "-15%",
-          borderRadius: "50%",
-          background: "var(--starfield-nebula-2)",
-          filter: "blur(100px)",
-          willChange: "transform",
-          animation: "midnight-nebula-drift-2 55s ease-in-out infinite alternate",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          width: "50vw",
-          height: "50vh",
-          top: "30%",
-          left: "20%",
-          borderRadius: "50%",
-          background: "var(--starfield-nebula-3)",
-          filter: "blur(100px)",
-          willChange: "transform",
-          animation: "midnight-nebula-drift-3 60s ease-in-out infinite alternate",
-          pointerEvents: "none",
-        }}
-      />
+      {showStarfield || showAmbientGlow ? (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              width: "80vw",
+              height: "60vh",
+              top: "-15%",
+              right: "-20%",
+              borderRadius: "50%",
+              background: "var(--starfield-nebula-1)",
+              filter: "blur(100px)",
+              willChange: "transform",
+              animation: "midnight-nebula-drift-1 50s ease-in-out infinite alternate",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              width: "60vw",
+              height: "70vh",
+              bottom: "-20%",
+              left: "-15%",
+              borderRadius: "50%",
+              background: "var(--starfield-nebula-2)",
+              filter: "blur(100px)",
+              willChange: "transform",
+              animation: "midnight-nebula-drift-2 55s ease-in-out infinite alternate",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              width: "50vw",
+              height: "50vh",
+              top: "30%",
+              left: "20%",
+              borderRadius: "50%",
+              background: "var(--starfield-nebula-3)",
+              filter: "blur(100px)",
+              willChange: "transform",
+              animation: "midnight-nebula-drift-3 60s ease-in-out infinite alternate",
+              pointerEvents: "none",
+            }}
+          />
+        </>
+      ) : null}
 
       {/* Canvas layer for stars, meteors, flares */}
       <canvas

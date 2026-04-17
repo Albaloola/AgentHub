@@ -3,7 +3,15 @@
 export type ThemeMode = "dark" | "light";
 
 export interface ThemeDefinition {
-  id: "midnight" | "emerald-terminal" | "obsidian" | "daylight" | "paper" | "arctic";
+  id:
+    | "midnight"
+    | "aurora"
+    | "emerald-terminal"
+    | "obsidian"
+    | "daylight"
+    | "atelier"
+    | "paper"
+    | "arctic";
   label: string;
   mode: ThemeMode;
   description: string;
@@ -31,6 +39,21 @@ export const THEMES: ThemeDefinition[] = [
       surfaceAlt: "#16161b",
       border: "#3d3a39",
       accent: "#6c7dff",
+      accentAlt: "#8b5cf6",
+    },
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    mode: "dark",
+    description: "Polar-night glass surfaces with teal-violet atmosphere and cinematic skies.",
+    accentLabel: "Aurora Teal",
+    preview: {
+      canvas: "#061118",
+      surface: "#0d1922",
+      surfaceAlt: "#112333",
+      border: "#2d4a5c",
+      accent: "#3fd7d0",
       accentAlt: "#8b5cf6",
     },
   },
@@ -76,6 +99,21 @@ export const THEMES: ThemeDefinition[] = [
       surfaceAlt: "#f5f5f4",
       border: "#d6d3d1",
       accent: "#5b6bff",
+      accentAlt: "#7c56ff",
+    },
+  },
+  {
+    id: "atelier",
+    label: "Atelier",
+    mode: "light",
+    description: "Editorial studio neutrals with coral-ink accents and painterly light washes.",
+    accentLabel: "Coral Ink",
+    preview: {
+      canvas: "#f6f1eb",
+      surface: "#fdf9f4",
+      surfaceAlt: "#efe5db",
+      border: "#d6c5b6",
+      accent: "#db6f56",
       accentAlt: "#7c56ff",
     },
   },

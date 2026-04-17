@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Bot, MessageSquare, Settings, Activity, X, ArrowRight } from "lucide-react";
+import { Search, Bot, MessageSquare, X, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getConversations, getAgents } from "@/lib/api";
+import { SIDEBAR_CONTROL_GROUPS } from "@/components/layout/sidebar-control-data";
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,40 +33,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const loadCommands = useCallback(async () => {
     try {
       const [convs, agents] = await Promise.all([getConversations(), getAgents()]);
+      const routeCommands = SIDEBAR_CONTROL_GROUPS.flatMap((group) =>
+        group.items.map((item) => ({
+          id: `route-${item.href}`,
+          label: item.label,
+          description: item.description,
+          icon: <item.icon className="h-4 w-4" />,
+          action: () => router.push(item.href),
+          keywords: [group.label, item.label, item.description, item.href],
+        })),
+      );
 
       const items: CommandItem[] = [
-        {
-          id: "nav-dashboard",
-          label: "Go to Dashboard",
-          description: "View all agents and activity",
-          icon: <Activity className="h-4 w-4" />,
-          action: () => router.push("/"),
-          keywords: ["dashboard", "home", "activity"],
-        },
-        {
-          id: "nav-agents",
-          label: "Manage Agents",
-          description: "Add, edit, or remove agents",
-          icon: <Bot className="h-4 w-4" />,
-          action: () => router.push("/agents"),
-          keywords: ["agents", "manage", "add", "bot"],
-        },
-        {
-          id: "nav-groups",
-          label: "Group Chats",
-          description: "Create or manage group conversations",
-          icon: <MessageSquare className="h-4 w-4" />,
-          action: () => router.push("/groups"),
-          keywords: ["group", "multi", "team"],
-        },
-        {
-          id: "nav-settings",
-          label: "Settings",
-          description: "Configure AgentHub",
-          icon: <Settings className="h-4 w-4" />,
-          action: () => router.push("/settings"),
-          keywords: ["settings", "config", "preferences"],
-        },
+        ...routeCommands,
         ...convs.map((conv) => ({
           id: `conv-${conv.id}`,
           label: conv.name,
@@ -84,7 +64,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         })),
       ];
 
-      setCommands(items);
+      const deduped = new Map(items.map((item) => [item.id, item]));
+      setCommands(Array.from(deduped.values()));
     } catch {
       // Silently fail
     }

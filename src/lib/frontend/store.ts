@@ -21,7 +21,7 @@
  *   traces, prompt versions, knowledge bases, editing, generation status,
  *   auto-approve, thinking timestamp, uiPrefs (persisted).
  *
- * uiPrefs persists to localStorage under `agenthub-ui-prefs-v5`. Bump the
+ * uiPrefs persists to localStorage under `agenthub-ui-prefs-v6`. Bump the
  * version suffix ONLY if changing the uiPrefs shape in a backwards-breaking
  * way — otherwise old users would see a reset to defaults.
  */
@@ -217,7 +217,6 @@ interface AppState {
     showAmbientGlow: boolean;
     navStyle: "pills" | "list";
     theme: ThemePreference;
-    accentColor: string;
     showTimestamps: boolean;
     showAvatars: boolean;
     markdownEnabled: boolean;
@@ -261,7 +260,6 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
   showAmbientGlow: true,
   navStyle: "pills",
   theme: "midnight",
-  accentColor: "blue-violet",
   showTimestamps: true,
   showAvatars: true,
   markdownEnabled: true,
@@ -281,6 +279,7 @@ const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
 function loadUiPrefs(): AppState["uiPrefs"] {
   try {
     const stored =
+      localStorage.getItem("agenthub-ui-prefs-v6") ??
       localStorage.getItem("agenthub-ui-prefs-v5") ??
       localStorage.getItem("agenthub-ui-prefs-v4");
 
@@ -308,7 +307,7 @@ function loadUiPrefs(): AppState["uiPrefs"] {
 
 function saveUiPrefs(prefs: AppState["uiPrefs"]) {
   try {
-    localStorage.setItem("agenthub-ui-prefs-v5", JSON.stringify(prefs));
+    localStorage.setItem("agenthub-ui-prefs-v6", JSON.stringify(prefs));
   } catch {}
 }
 

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureServerRuntime } from "@/lib/backend/runtime/server-runtime";
+import { getChannelById } from "@/lib/backend/services/channels";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  ensureServerRuntime();
   const { id } = await params;
   const conv = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id);
   if (!conv) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
@@ -15,6 +18,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  ensureServerRuntime();
   const { id } = await params;
   const body = await request.json();
 
@@ -32,8 +36,23 @@ export async function PATCH(
     return NextResponse.json({ folder_id: body.folder_id ?? null });
   }
 
+  if (body.channel_id !== undefined && body.channel_id !== null) {
+    const channel = getChannelById(body.channel_id);
+    if (!channel) {
+      return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+    }
+  }
+
   // General field updates (name, behavior_mode, etc.)
-  const allowedFields = ["name", "behavior_mode", "is_autonomous", "auto_compact_enabled", "compact_threshold", "summary"];
+  const allowedFields = [
+    "name",
+    "behavior_mode",
+    "is_autonomous",
+    "auto_compact_enabled",
+    "compact_threshold",
+    "summary",
+    "channel_id",
+  ];
   const updates: string[] = [];
   const values: unknown[] = [];
   for (const field of allowedFields) {

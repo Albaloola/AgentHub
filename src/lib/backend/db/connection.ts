@@ -71,6 +71,7 @@ export const db = new Proxy({} as Database.Database, {
 const BOOLEAN_FIELDS = new Set([
   "is_active", "is_available", "is_pinned", "is_summary", "is_handoff", "is_edited",
   "is_read", "is_resolved", "is_published", "is_builtin", "is_complete", "is_autonomous",
+  "is_archived", "is_running",
   "adaptive_timeout_enabled", "auto_compact_enabled", "stop_on_completion", "error_occurred",
 ]);
 

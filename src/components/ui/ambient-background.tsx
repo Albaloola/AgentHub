@@ -3,8 +3,7 @@
 export function AmbientBackground() {
   return (
     <div
-      className="pointer-events-none fixed z-[-1] overflow-hidden"
-      style={{ top: "-30vh", left: "-30vw", right: "-30vw", bottom: "-30vh" }}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
       aria-hidden="true"
     >
       <div className="ambient-blob ambient-blob--1" />

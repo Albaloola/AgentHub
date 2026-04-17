@@ -45,6 +45,27 @@ export function createTablesAndIndexes(db: Database.Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS agent_channels (
+      id TEXT PRIMARY KEY,
+      agent_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL,
+      description TEXT,
+      icon TEXT DEFAULT 'hash',
+      color TEXT DEFAULT '#5b6bff',
+      is_pinned INTEGER DEFAULT 0,
+      sort_order INTEGER DEFAULT 0,
+      default_model TEXT,
+      default_system_prompt TEXT,
+      default_response_mode TEXT NOT NULL DEFAULT 'discussion' CHECK(default_response_mode IN ('discussion','parallel','targeted')),
+      enabled_commands_json TEXT DEFAULT '[]',
+      notification_prefs_json TEXT DEFAULT '{}',
+      is_archived INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL CHECK(type IN ('single','group')),
@@ -62,11 +83,13 @@ export function createTablesAndIndexes(db: Database.Database): void {
       is_autonomous INTEGER DEFAULT 0,
       total_cost REAL DEFAULT 0,
       behavior_mode TEXT DEFAULT 'default',
+      channel_id TEXT,
       folder_id TEXT,
       ghost_user_ids TEXT DEFAULT '[]',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL,
+      FOREIGN KEY (channel_id) REFERENCES agent_channels(id) ON DELETE SET NULL,
       FOREIGN KEY (template_id) REFERENCES templates(id) ON DELETE SET NULL,
       FOREIGN KEY (parent_conversation_id) REFERENCES conversations(id) ON DELETE SET NULL
     );
@@ -260,6 +283,7 @@ export function createTablesAndIndexes(db: Database.Database): void {
       name TEXT NOT NULL,
       secret TEXT NOT NULL UNIQUE,
       agent_id TEXT NOT NULL,
+      channel_id TEXT,
       system_prompt TEXT,
       body_transform TEXT,
       rate_limit_per_min INTEGER DEFAULT 10,
@@ -267,18 +291,21 @@ export function createTablesAndIndexes(db: Database.Database): void {
       total_triggers INTEGER DEFAULT 0,
       last_triggered_at TEXT,
       created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+      FOREIGN KEY (channel_id) REFERENCES agent_channels(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS webhook_events (
       id TEXT PRIMARY KEY,
       webhook_id TEXT NOT NULL,
+      conversation_id TEXT,
       payload TEXT,
       response_message_id TEXT,
       status TEXT DEFAULT 'pending',
       error TEXT,
       created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE
+      FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE SET NULL
     );
 
     -- =====================================================================
@@ -324,17 +351,22 @@ export function createTablesAndIndexes(db: Database.Database): void {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       agent_id TEXT NOT NULL,
+      channel_id TEXT,
       prompt TEXT NOT NULL,
       cron_expression TEXT,
       conversation_id TEXT,
       is_active INTEGER DEFAULT 1,
+      is_running INTEGER DEFAULT 0,
+      last_started_at TEXT,
       last_run_at TEXT,
       next_run_at TEXT,
       run_count INTEGER DEFAULT 0,
       last_status TEXT,
       last_error TEXT,
       created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+      FOREIGN KEY (channel_id) REFERENCES agent_channels(id) ON DELETE SET NULL,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE SET NULL
     );
 
     -- =====================================================================
@@ -357,19 +389,43 @@ export function createTablesAndIndexes(db: Database.Database): void {
       id TEXT PRIMARY KEY,
       event_type TEXT NOT NULL,
       channel TEXT NOT NULL DEFAULT 'system',
+      channel_id TEXT,
+      delivery_channel TEXT DEFAULT 'in_app',
+      routing_key TEXT,
+      routing_metadata TEXT DEFAULT '{}',
       config TEXT DEFAULT '{}',
       is_active INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (channel_id) REFERENCES agent_channels(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
+      source_type TEXT,
+      severity TEXT DEFAULT 'info',
       title TEXT NOT NULL,
       body TEXT,
       source_id TEXT,
+      agent_id TEXT,
+      channel_id TEXT,
+      conversation_id TEXT,
+      task_id TEXT,
+      webhook_id TEXT,
+      action_url TEXT,
+      dedupe_key TEXT,
+      delivery_channel TEXT DEFAULT 'in_app',
+      delivery_status TEXT DEFAULT 'pending',
+      routing_key TEXT,
+      routing_metadata TEXT DEFAULT '{}',
       is_read INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now'))
+      read_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL,
+      FOREIGN KEY (channel_id) REFERENCES agent_channels(id) ON DELETE SET NULL,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE SET NULL,
+      FOREIGN KEY (task_id) REFERENCES scheduled_tasks(id) ON DELETE SET NULL,
+      FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS performance_snapshots (
@@ -385,6 +441,14 @@ export function createTablesAndIndexes(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_perf_agent_time ON performance_snapshots(agent_id, recorded_at);
     CREATE INDEX IF NOT EXISTS idx_cache_lookup ON response_cache(agent_id, prompt_hash);
     CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(is_read, created_at);
+    CREATE INDEX IF NOT EXISTS idx_webhooks_channel ON webhooks(channel_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_webhook_events_conversation ON webhook_events(conversation_id, created_at);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_channels_agent_slug ON agent_channels(agent_id, slug);
+    CREATE INDEX IF NOT EXISTS idx_agent_channels_pinned ON agent_channels(is_pinned, sort_order, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_conversations_channel ON conversations(channel_id, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_due ON scheduled_tasks(is_active, is_running, next_run_at);
+    CREATE INDEX IF NOT EXISTS idx_notifications_route ON notifications(channel_id, conversation_id, task_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(dedupe_key);
     CREATE INDEX IF NOT EXISTS idx_shared_memory_key ON shared_memory(key);
     CREATE INDEX IF NOT EXISTS idx_checkpoints_conv ON checkpoints(conversation_id);
 

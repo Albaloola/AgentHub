@@ -55,6 +55,9 @@ export function EmptyChatState({
   onSuggestionClick: (prompt: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    typeof document === "undefined" ? true : document.documentElement.dataset.themeMode === "dark",
+  );
   const [activeSet, setActiveSet] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
   const [greetingIdx, setGreetingIdx] = useState(() => Math.floor(Math.random() * GREETINGS.length));
@@ -63,6 +66,22 @@ export function EmptyChatState({
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => { setMounted(true); }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const root = document.documentElement;
+    const syncThemeMode = () => {
+      setIsDarkMode(root.dataset.themeMode === "dark");
+    };
+
+    syncThemeMode();
+    const observer = new MutationObserver(syncThemeMode);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme-mode"] });
+    return () => observer.disconnect();
+  }, []);
 
   // Rotate greeting every 8 seconds
   useEffect(() => {
@@ -141,7 +160,9 @@ export function EmptyChatState({
           className="absolute inset-0 rounded-full blur-3xl animate-[luminance-pulse_4s_ease-in-out_infinite]"
           style={{
             background:
-              "radial-gradient(circle, color-mix(in srgb, var(--theme-accent) 16%, transparent) 0%, color-mix(in srgb, var(--accent-violet) 10%, transparent) 45%, color-mix(in srgb, var(--accent-cyan) 6%, transparent) 70%, transparent 100%)",
+              isDarkMode
+                ? "radial-gradient(circle, color-mix(in srgb, var(--theme-accent) 16%, transparent) 0%, color-mix(in srgb, var(--accent-violet) 10%, transparent) 45%, color-mix(in srgb, var(--accent-cyan) 6%, transparent) 70%, transparent 100%)"
+                : "radial-gradient(circle, color-mix(in srgb, var(--theme-accent) 10%, transparent) 0%, color-mix(in srgb, var(--accent-violet) 6%, transparent) 42%, color-mix(in srgb, var(--accent-cyan) 4%, transparent) 68%, transparent 100%)",
           }}
         />
 
@@ -228,10 +249,24 @@ export function EmptyChatState({
         "transition-all duration-400 mb-10",
         greetingFade ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0",
       )}>
-        <h1 className="text-fluid-3xl font-bold text-foreground/90 mb-1 tracking-tight">
+        <h1
+          className="text-fluid-3xl mb-1 font-bold tracking-tight"
+          style={{
+            color: isDarkMode
+              ? "color-mix(in srgb, var(--foreground) 90%, transparent)"
+              : "color-mix(in srgb, var(--foreground) 82%, transparent)",
+          }}
+        >
           {GREETINGS[greetingIdx].line1.replace("{name}", firstName)}
         </h1>
-        <h2 className="text-fluid-3xl font-light text-foreground/40 tracking-tight">
+        <h2
+          className="text-fluid-3xl font-light tracking-tight"
+          style={{
+            color: isDarkMode
+              ? "color-mix(in srgb, var(--foreground) 42%, transparent)"
+              : "color-mix(in srgb, var(--foreground) 58%, transparent)",
+          }}
+        >
           {GREETINGS[greetingIdx].line2.replace("{name}", firstName)}
         </h2>
       </div>
@@ -272,7 +307,16 @@ export function EmptyChatState({
                     key={card.tag}
                     onClick={() => onSuggestionClick(card.prompt)}
                     className="selection-card group flex flex-col items-start rounded-[1em] text-left transition-all duration-300 overflow-visible"
-                    style={{ padding: "1.2em", gap: "0.6em" }}
+                    style={{
+                      padding: "1.2em",
+                      gap: "0.6em",
+                      background: isDarkMode
+                        ? "var(--surface-subtle)"
+                        : "color-mix(in srgb, var(--panel-bg) 94%, transparent)",
+                      boxShadow: isDarkMode
+                        ? "0 24px 60px -42px color-mix(in srgb, var(--foreground) 10%, transparent)"
+                        : "0 20px 50px -38px color-mix(in srgb, var(--foreground) 14%, transparent)",
+                    }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow = `0 0 12px color-mix(in srgb, ${card.tagColor} 25%, transparent), 0 0 30px color-mix(in srgb, ${card.tagColor} 8%, transparent)`;
                       e.currentTarget.style.borderColor = `color-mix(in srgb, ${card.tagColor} 25%, transparent)`;
@@ -298,8 +342,14 @@ export function EmptyChatState({
                       {card.tag}
                     </span>
                     <p
-                      className="text-muted-foreground/60 group-hover:text-muted-foreground/80 transition-colors"
-                      style={{ fontSize: "0.9em", lineHeight: 1.5 }}
+                      className="transition-colors group-hover:text-foreground/78"
+                      style={{
+                        fontSize: "0.9em",
+                        lineHeight: 1.5,
+                        color: isDarkMode
+                          ? "color-mix(in srgb, var(--muted-foreground) 72%, transparent)"
+                          : "color-mix(in srgb, var(--muted-foreground) 92%, transparent)",
+                      }}
                     >
                       {card.desc}
                     </p>
@@ -315,7 +365,8 @@ export function EmptyChatState({
       <div className="flex items-center gap-2 mt-6 mb-8">
         <button
           onClick={() => switchSet((activeSet - 1 + TOTAL_SETS) % TOTAL_SETS)}
-          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-full hover:text-foreground hover:bg-foreground/[0.08] transition-all"
+          style={{ color: isDarkMode ? "color-mix(in srgb, var(--muted-foreground) 60%, transparent)" : "color-mix(in srgb, var(--muted-foreground) 90%, transparent)" }}
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -331,7 +382,8 @@ export function EmptyChatState({
         ))}
         <button
           onClick={() => switchSet((activeSet + 1) % TOTAL_SETS)}
-          className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.08] transition-all"
+          className="h-7 w-7 flex items-center justify-center rounded-full hover:text-foreground hover:bg-foreground/[0.08] transition-all"
+          style={{ color: isDarkMode ? "color-mix(in srgb, var(--muted-foreground) 60%, transparent)" : "color-mix(in srgb, var(--muted-foreground) 90%, transparent)" }}
         >
           <ChevronRight className="h-4 w-4" />
         </button>

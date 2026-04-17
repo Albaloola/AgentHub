@@ -23,6 +23,7 @@ export interface Webhook {
   name: string;
   secret: string;
   agent_id: string;
+  channel_id: string | null;
   system_prompt: string | null;
   body_transform: string | null;
   rate_limit_per_min: number;
@@ -35,6 +36,7 @@ export interface Webhook {
 export interface WebhookEvent {
   id: string;
   webhook_id: string;
+  conversation_id: string | null;
   payload: string | null;
   response_message_id: string | null;
   status: string;
@@ -48,10 +50,13 @@ export interface ScheduledTask {
   id: string;
   name: string;
   agent_id: string;
+  channel_id?: string | null;
   prompt: string;
   cron_expression: string | null;
   conversation_id: string | null;
   is_active: boolean;
+  is_running?: boolean;
+  last_started_at?: string | null;
   last_run_at: string | null;
   next_run_at: string | null;
   run_count: number;
@@ -66,6 +71,10 @@ export interface NotificationRule {
   id: string;
   event_type: string;
   channel: string;
+  channel_id: string | null;
+  delivery_channel: string;
+  routing_key: string | null;
+  routing_metadata: string;
   config: string;
   is_active: boolean;
   created_at: string;
@@ -74,10 +83,24 @@ export interface NotificationRule {
 export interface Notification {
   id: string;
   type: string;
+  source_type: string | null;
+  severity: "info" | "success" | "warning" | "error";
   title: string;
   body: string | null;
   source_id: string | null;
+  agent_id: string | null;
+  channel_id: string | null;
+  conversation_id: string | null;
+  task_id: string | null;
+  webhook_id: string | null;
+  action_url: string | null;
+  dedupe_key: string | null;
+  delivery_channel: string;
+  delivery_status: string;
+  routing_key: string | null;
+  routing_metadata: string;
   is_read: boolean;
+  read_at: string | null;
   created_at: string;
 }
 

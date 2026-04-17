@@ -8,6 +8,7 @@
  *
  * Files are grouped by domain:
  *   core              — Agent, Conversation, Message, ToolCall, Tag
+ *   channels          — first-class agent channels + channel-aware capabilities
  *   chat              — templates, threads, checkpoints, votes, folders, subagents
  *   workflows         — visual pipeline builder
  *   adapter-protocol  — the contract adapters implement
@@ -20,6 +21,7 @@
  */
 
 export * from "./core";
+export * from "./channels";
 export * from "./chat";
 export * from "./workflows";
 export * from "./adapter-protocol";

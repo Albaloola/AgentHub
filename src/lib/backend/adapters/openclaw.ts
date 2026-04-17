@@ -96,19 +96,44 @@ export class OpenClawAdapter implements GatewayAdapter {
     });
   }
 
+  private normalizeEndpoint(path: string): string {
+    const trimmed = path.trim();
+    if (!trimmed) return "/v1/chat";
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  }
+
+  private getChatPathCandidates(config: OpenClawConfig): string[] {
+    const requested = this.normalizeEndpoint(config.chat_endpoint ?? "/v1/chat");
+    const candidates = new Set<string>([requested]);
+
+    if (config.request_format === "openai") {
+      candidates.add("/v1/chat/completions");
+      if (requested === "/v1/chat") {
+        candidates.add("/v1/chat/completions");
+      } else {
+        candidates.add("/v1/chat");
+      }
+    }
+
+    return Array.from(candidates);
+  }
+
   async *sendMessage(
     agent: Agent,
     message: AgentMessage,
     signal?: AbortSignal,
   ): AsyncIterable<AgentResponseChunk> {
     const config = this.parseConfig(agent);
-    const chatPath = config.chat_endpoint ?? "/v1/chat";
-    const url = `${agent.connection_url.replace(/\/+$/, "")}${chatPath}`;
+    const chatPaths = this.getChatPathCandidates(config);
+    const baseUrl = agent.connection_url.replace(/\/+$/, "");
     const timeoutMs = config.timeout_ms ?? 60000;
+    let response: Response | undefined;
+    let errorInfo = "";
 
     const headers = this.buildHeaders(config);
     const body = this.buildRequestBody(config, message);
 
+    let responseUrl = "";
     // Timeout handling
     const timeoutController = new AbortController();
     const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
@@ -116,17 +141,40 @@ export class OpenClawAdapter implements GatewayAdapter {
       ? anySignal([signal, timeoutController.signal])
       : timeoutController.signal;
 
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        method: "POST",
-        headers,
-        body,
-        signal: combinedSignal,
-      });
-    } catch (err) {
+    for (const chatPath of chatPaths) {
+      responseUrl = `${baseUrl}${this.normalizeEndpoint(chatPath)}`;
+      try {
+        response = await fetch(responseUrl, {
+          method: "POST",
+          headers,
+          body,
+          signal: combinedSignal,
+        });
+      } catch (err) {
+        clearTimeout(timeout);
+        yield { type: "error", error: classifyFetchError(err, responseUrl, "OpenClaw") };
+        yield { type: "done" };
+        return;
+      }
+
+      if (response.ok) break;
+
+      // For endpoint-path mismatches (common with mixed OpenAI/OpenClaw deployments),
+      // try alternatives before surfacing an error to the UI.
+      if (response.status === 404 || response.status === 405) {
+        try {
+          const errBody = await response.text();
+          if (errBody) errorInfo = errBody.slice(0, 300);
+        } catch {}
+        continue;
+      }
+
+      break;
+    }
+
+    if (!response) {
       clearTimeout(timeout);
-      yield { type: "error", error: classifyFetchError(err, url, "OpenClaw") };
+      yield { type: "error", error: errorInfo || "OpenClaw did not return a response" };
       yield { type: "done" };
       return;
     }
@@ -139,7 +187,10 @@ export class OpenClawAdapter implements GatewayAdapter {
         const errBody = await response.text();
         if (errBody) detail = errBody.slice(0, 300);
       } catch { /* ignore */ }
-      yield { type: "error", error: `OpenClaw returned ${response.status}: ${detail}` };
+      yield {
+        type: "error",
+        error: `OpenClaw returned ${response.status} at ${responseUrl}: ${detail}`,
+      };
       yield { type: "done" };
       return;
     }
@@ -153,6 +204,7 @@ export class OpenClawAdapter implements GatewayAdapter {
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let rawBody = "";
     // For OpenAI-format responses: accumulate streamed tool call fragments
     const toolCallBuffers = new Map<number, { id: string; name: string; args: string }>();
 
@@ -161,7 +213,9 @@ export class OpenClawAdapter implements GatewayAdapter {
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        const chunkText = decoder.decode(value, { stream: true });
+        rawBody += chunkText;
+        buffer += chunkText;
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
 
@@ -171,6 +225,14 @@ export class OpenClawAdapter implements GatewayAdapter {
             yield chunk;
             if (chunk.type === "done") return;
           }
+        }
+      }
+
+      if (rawBody.trim()) {
+        const fallbackPayload = this.parseFallbackResponse(rawBody, toolCallBuffers);
+        for (const chunk of fallbackPayload) {
+          yield chunk;
+          if (chunk.type === "done") return;
         }
       }
 
@@ -234,6 +296,76 @@ export class OpenClawAdapter implements GatewayAdapter {
     // Unknown structure — look for content field
     if (typeof parsed.content === "string") {
       return { type: "content", content: parsed.content };
+    }
+
+    return null;
+  }
+
+  private parseFallbackResponse(
+    payload: string,
+    toolCallBuffers: Map<number, { id: string; name: string; args: string }>,
+  ): AgentResponseChunk[] {
+    const chunks: AgentResponseChunk[] = [];
+    const raw = payload.trim();
+    if (!raw) return chunks;
+
+    const pushIfChunk = (parsed: Record<string, unknown> | unknown[]) => {
+      if (!parsed) return;
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          const chunk = this.parsePayloadObject(item as Record<string, unknown>, toolCallBuffers);
+          if (chunk) chunks.push(chunk);
+        }
+        return;
+      }
+      const chunk = this.parsePayloadObject(parsed as Record<string, unknown>, toolCallBuffers);
+      if (chunk) chunks.push(chunk);
+    };
+
+    for (const rawLine of raw.split("\n")) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (line.startsWith("data:")) {
+        const chunk = this.parseLine(line, toolCallBuffers);
+        if (chunk) chunks.push(chunk);
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(line) as Record<string, unknown> | unknown[];
+        pushIfChunk(parsed);
+        continue;
+      } catch {
+        chunks.push({ type: "content", content: line });
+      }
+    }
+
+    return chunks;
+  }
+
+  private parsePayloadObject(
+    parsed: Record<string, unknown>,
+    toolCallBuffers: Map<number, { id: string; name: string; args: string }>,
+  ): AgentResponseChunk | null {
+    if (Array.isArray(parsed.choices)) {
+      return this.parseOpenAIChunk(parsed, toolCallBuffers);
+    }
+
+    const validTypes = ["content", "tool_call", "tool_result", "error", "done", "thinking", "thinking_chunk", "thinking_end", "subagent_spawned", "subagent_progress", "subagent_completed", "subagent_failed", "handoff", "agent_start"];
+    if (typeof parsed.type === "string" && validTypes.includes(parsed.type)) {
+      return parsed as unknown as AgentResponseChunk;
+    }
+
+    if (typeof parsed.content === "string") {
+      return { type: "content", content: parsed.content };
+    }
+
+    if (typeof parsed.error === "string") {
+      return { type: "error", error: parsed.error };
+    }
+
+    const message = parsed.message as { content?: unknown } | undefined;
+    if (message && typeof message.content === "string") {
+      return { type: "content", content: message.content };
     }
 
     return null;

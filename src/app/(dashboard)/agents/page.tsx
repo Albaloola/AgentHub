@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Bot,
@@ -46,6 +46,7 @@ import { toast } from "sonner";
 
 export default function AgentsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const agents = useStore((s) => s.agents);
   const setAgents = useStore((s) => s.setAgents);
   const updateAgentStatus = useStore((s) => s.updateAgentStatus);
@@ -56,6 +57,11 @@ export default function AgentsPage() {
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [deletingAgent, setDeletingAgent] = useState<AgentWithStatus | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const gatewayFilter = searchParams.get("gateway");
+
+  const visibleAgents = gatewayFilter
+    ? agents.filter((agent) => agent.gateway_type === gatewayFilter)
+    : agents;
 
   // Click outside to collapse expanded card
   useEffect(() => {
@@ -188,6 +194,15 @@ export default function AgentsPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Manage your connected agent gateways
           </p>
+          {gatewayFilter && (
+            <button
+              type="button"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] px-3 py-1 text-xs font-medium text-[var(--theme-accent-text)]"
+              onClick={() => router.push("/agents")}
+            >
+              Filtered to {GATEWAY_LABELS[gatewayFilter] ?? gatewayFilter}
+            </button>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={loadAgents} disabled={refreshing}>
@@ -209,7 +224,7 @@ export default function AgentsPage() {
       </FadeIn>
 
       <div ref={gridRef} className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        {refreshing && agents.length === 0 && (
+        {refreshing && visibleAgents.length === 0 && (
           <>
             {Array.from({ length: 3 }).map((_, i) => (
               <AgentCardSkeleton key={i} />
@@ -217,7 +232,7 @@ export default function AgentsPage() {
           </>
         )}
 
-        {agents.map((agent) => (
+        {visibleAgents.map((agent) => (
           <AgentCard
             key={agent.id}
             agent={agent}
@@ -233,11 +248,13 @@ export default function AgentsPage() {
           />
         ))}
 
-        {agents.length === 0 && !refreshing && (
+        {visibleAgents.length === 0 && !refreshing && (
           <Card className="col-span-full border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <Bot className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No agents registered yet</p>
+              <p className="text-muted-foreground">
+                {gatewayFilter ? "No agents in this gateway yet" : "No agents registered yet"}
+              </p>
               <Button
                 className="mt-4"
                 onClick={() => {

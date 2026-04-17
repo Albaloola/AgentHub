@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell, AlertTriangle, CheckCircle, Zap, Wifi, X,
   Loader2, CheckCheck,
@@ -23,15 +24,33 @@ const NOTIFICATION_ICONS: Record<string, { icon: typeof Bell; className: string 
   agent_error: { icon: AlertTriangle, className: "text-[var(--status-danger)]" },
   task_complete: { icon: CheckCircle, className: "text-[var(--status-online)]" },
   webhook_trigger: { icon: Zap, className: "text-[var(--accent-amber)]" },
+  "scheduled_task.completed": { icon: CheckCircle, className: "text-[var(--status-online)]" },
+  "scheduled_task.failed": { icon: AlertTriangle, className: "text-[var(--status-danger)]" },
+  "webhook.completed": { icon: Zap, className: "text-[var(--accent-amber)]" },
+  "webhook.failed": { icon: AlertTriangle, className: "text-[var(--status-danger)]" },
   agent_online: { icon: Wifi, className: "text-[var(--status-online)]" },
   system: { icon: Bell, className: "text-[var(--accent-blue)]" },
 };
 
-function getNotificationIcon(type: string) {
-  return NOTIFICATION_ICONS[type] ?? NOTIFICATION_ICONS.system;
+function getNotificationIcon(notification: Notification) {
+  return (
+    NOTIFICATION_ICONS[notification.type] ??
+    (notification.source_type === "scheduled_task"
+      ? notification.severity === "error"
+        ? NOTIFICATION_ICONS["scheduled_task.failed"]
+        : NOTIFICATION_ICONS["scheduled_task.completed"]
+      : notification.source_type === "webhook"
+        ? notification.severity === "error"
+          ? NOTIFICATION_ICONS["webhook.failed"]
+          : NOTIFICATION_ICONS["webhook.completed"]
+        : notification.severity === "error"
+          ? { icon: AlertTriangle, className: "text-[var(--status-danger)]" }
+          : NOTIFICATION_ICONS.system)
+  );
 }
 
 export function NotificationCenter() {
+  const router = useRouter();
   const { notifications, setNotifications, unreadCount, setUnreadCount, uiPrefs } = useStore(useShallow((s) => ({ 
     notifications: s.notifications, 
     setNotifications: s.setNotifications, 
@@ -51,9 +70,9 @@ export function NotificationCenter() {
 
   const filteredNotifications = notifications.filter(n => {
     if (!uiPrefs.notificationsEnabled) return false;
-    if (n.type === 'agent_error' && !uiPrefs.notifyAgentErrors) return false;
-    if (n.type === 'task_complete' && !uiPrefs.notifyTasks) return false;
-    if (n.type === 'webhook_trigger' && !uiPrefs.notifyWebhooks) return false;
+    if ((n.type === "agent_error" || n.source_type === "agent") && !uiPrefs.notifyAgentErrors) return false;
+    if ((n.source_type === "scheduled_task" || n.type === "task_complete") && !uiPrefs.notifyTasks) return false;
+    if ((n.source_type === "webhook" || n.type === "webhook_trigger") && !uiPrefs.notifyWebhooks) return false;
     return true;
   });
 
@@ -123,7 +142,11 @@ export function NotificationCenter() {
 
   function handleNotificationClick(notification: Notification) {
     if (!notification.is_read) {
-      handleMarkRead(notification.id);
+      void handleMarkRead(notification.id);
+    }
+    if (notification.action_url) {
+      router.push(notification.action_url);
+      setOpen(false);
     }
   }
 
@@ -184,7 +207,7 @@ export function NotificationCenter() {
             <ScrollArea className="max-h-[25rem]">
               <div className="divide-y divide-border">
                 {filteredNotifications.map((notification) => {
-                  const { icon: Icon, className: iconClass } = getNotificationIcon(notification.type);
+                  const { icon: Icon, className: iconClass } = getNotificationIcon(notification);
                   const isHovered = hoveredId === notification.id;
 
                   return (

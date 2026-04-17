@@ -97,13 +97,16 @@ export class OpenAICompatAdapter implements GatewayAdapter {
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let rawBody = "";
 
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        const chunkText = decoder.decode(value, { stream: true });
+        rawBody += chunkText;
+        buffer += chunkText;
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
 
@@ -133,6 +136,12 @@ export class OpenAICompatAdapter implements GatewayAdapter {
           }
         }
       }
+
+      const fallback = this.parseFallbackResponse(rawBody);
+      for (const chunk of fallback) {
+        yield chunk;
+        if (chunk.type === "done") return;
+      }
     } catch (err) {
       yield { type: "error", error: err instanceof Error ? err.message : "Stream read error" };
     } finally {
@@ -144,22 +153,117 @@ export class OpenAICompatAdapter implements GatewayAdapter {
 
   async healthCheck(agent: Agent): Promise<HealthCheckResponse> {
     const config = this.parseConfig(agent);
-    const url = `${agent.connection_url.replace(/\/+$/, "")}/v1/models`;
+    const base = `${agent.connection_url.replace(/\/+$/, "")}`;
     const start = Date.now();
+    const endpoints = ["/v1/models", "/v1/health", "/health", "/v1/status"];
+    const headers: Record<string, string> = {};
+    if (config.api_key) headers["Authorization"] = `Bearer ${config.api_key}`;
 
-    try {
-      const headers: Record<string, string> = {};
-      if (config.api_key) headers["Authorization"] = `Bearer ${config.api_key}`;
+    for (const endpoint of endpoints) {
+      try {
+        const url = `${base}${endpoint}`;
+        const res = await fetch(url, { headers, signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          return {
+            status: "ok",
+            agent_name: agent.name,
+            latency_ms: Date.now() - start,
+          };
+        }
 
-      const res = await fetch(url, { headers, signal: AbortSignal.timeout(5000) });
-      return {
-        status: res.ok ? "ok" : "error",
-        agent_name: agent.name,
-        latency_ms: Date.now() - start,
-      };
-    } catch {
-      return { status: "error", agent_name: agent.name, latency_ms: Date.now() - start };
+        if (res.status !== 404 && res.status !== 405) {
+          return { status: "error", agent_name: agent.name, latency_ms: Date.now() - start };
+        }
+      } catch {
+        // Try next endpoint on network/connectivity failures where fallback might still pass.
+        continue;
+      }
     }
+
+    return { status: "error", agent_name: agent.name, latency_ms: Date.now() - start };
+  }
+
+  private parseFallbackResponse(payload: string): AgentResponseChunk[] {
+    const chunks: AgentResponseChunk[] = [];
+    const raw = payload.trim();
+    if (!raw) return chunks;
+
+    const pushParsed = (parsed: unknown) => {
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          const chunk = this.parsePayloadObject(item);
+          if (chunk) chunks.push(chunk);
+        }
+        return;
+      }
+      const chunk = this.parsePayloadObject(parsed);
+      if (chunk) chunks.push(chunk);
+    };
+
+    for (const rawLine of raw.split("\n")) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const payloadLine = line.startsWith("data:") ? line.slice(line.indexOf(":") + 1).trim() : line;
+      if (!payloadLine) continue;
+
+      try {
+        const parsed = JSON.parse(payloadLine) as unknown;
+        pushParsed(parsed);
+      } catch {
+        chunks.push({ type: "content", content: line });
+      }
+    }
+
+    return chunks;
+  }
+
+  private parsePayloadObject(parsed: unknown): AgentResponseChunk | null {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const parsedObj = parsed as Record<string, unknown>;
+
+    if (Array.isArray(parsedObj.choices)) {
+      const first = (parsedObj.choices as { delta?: { content?: string }; message?: { content?: string }; finish_reason?: string }[])[0];
+      if (first?.delta?.content && typeof first.delta.content === "string") {
+        return { type: "content", content: first.delta.content };
+      }
+      if (first?.message?.content && typeof first.message.content === "string") {
+        return { type: "content", content: first.message.content };
+      }
+      if (first?.finish_reason === "stop") {
+        return { type: "done" };
+      }
+    }
+
+    if (typeof parsedObj.error === "string") {
+      return { type: "error", error: parsedObj.error };
+    }
+
+    if (typeof parsedObj.content === "string") {
+      return { type: "content", content: parsedObj.content };
+    }
+
+    if (typeof parsedObj.type === "string") {
+      const valid: AgentResponseChunk["type"][] = ["content", "error", "done"];
+      if (!valid.includes(parsedObj.type as AgentResponseChunk["type"])) {
+        return null;
+      }
+
+      const type = parsedObj.type as AgentResponseChunk["type"];
+      switch (type) {
+        case "content":
+          if (typeof parsedObj.content === "string") return { type, content: parsedObj.content };
+          return null;
+        case "error":
+          if (typeof parsedObj.error === "string") return { type, error: parsedObj.error };
+          return null;
+        case "done":
+          return { type };
+        default:
+          return null;
+      }
+    }
+
+    return null;
   }
 }
 

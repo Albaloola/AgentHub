@@ -1,26 +1,12 @@
 /**
- * Install-level preferences — theme, settings key/value store, onboarding,
+ * Install-level preferences — settings key/value store, onboarding,
  * and single-file uploads (for message attachments, not KB docs).
  */
 
 "use client";
 
 import { fetchJSON } from "./client";
-import type { ThemePreference, OnboardingState } from "@/lib/shared/types";
-
-// --- Theme preferences ----------------------------------------------------
-
-export function getTheme(): Promise<ThemePreference> {
-  return fetchJSON("/api/theme");
-}
-
-export function updateTheme(body: Partial<ThemePreference>): Promise<unknown> {
-  return fetchJSON("/api/theme", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
+import type { OnboardingState } from "@/lib/shared/types";
 
 // --- Settings (string/string key-value store) -----------------------------
 

@@ -107,9 +107,9 @@ const STARFIELD_STYLES = `
   }
 
   .root-starfield {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
     overflow: hidden;
     pointer-events: none;
     background: var(--starfield-bg);
@@ -330,7 +330,6 @@ export function RootStarfield() {
     []
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const lensFlares = useMemo(
     () =>
       Array.from({ length: 4 }, (_, i) => ({
@@ -343,7 +342,6 @@ export function RootStarfield() {
     []
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const lightnings = useMemo(
     () =>
       Array.from({ length: 3 }, (_, i) => ({
@@ -415,6 +413,58 @@ export function RootStarfield() {
             }
           />
         ))}
+
+        {lensFlares.map((flare) => (
+          <div
+            key={flare.id}
+            className="root-starfield__lens-flare"
+            style={
+              {
+                left: `${flare.x}%`,
+                top: `${flare.y}%`,
+                "--flare-delay": `${flare.delay}s`,
+                "--flare-duration": `${flare.duration}s`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+
+        {lightnings.map((lightning) => (
+          <div
+            key={lightning.id}
+            className="root-starfield__lightning"
+            style={
+              {
+                left: `${lightning.x}%`,
+                top: `${lightning.y}%`,
+                "--lightning-delay": `${lightning.delay}s`,
+                "--lightning-duration": `${lightning.duration}s`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+
+        <div
+          className="root-starfield__ambient-glow"
+          style={{
+            width: "34vw",
+            height: "34vw",
+            left: "-8vw",
+            top: "10vh",
+            background: "color-mix(in srgb, var(--theme-accent) 14%, transparent)",
+          }}
+        />
+        <div
+          className="root-starfield__ambient-glow"
+          style={{
+            width: "28vw",
+            height: "28vw",
+            right: "-6vw",
+            top: "20vh",
+            background: "color-mix(in srgb, var(--theme-accent-alt) 12%, transparent)",
+            animationDelay: "-6s",
+          }}
+        />
 
         <div className="root-starfield__noise" />
       </div>

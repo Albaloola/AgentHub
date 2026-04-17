@@ -24,6 +24,7 @@ export function getConversations(): Promise<ConversationWithDetails[]> {
 }
 
 export function createConversation(data: {
+  channel_id?: string;
   agent_id?: string;
   agent_ids?: string[];
   name?: string;
@@ -57,6 +58,14 @@ export function moveConversationToFolder(conversationId: string, folderId: strin
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "move_to_folder", folder_id: folderId }),
+  });
+}
+
+export function setConversationChannel(conversationId: string, channelId: string | null): Promise<unknown> {
+  return fetchJSON(`/api/conversations/${conversationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel_id: channelId }),
   });
 }
 

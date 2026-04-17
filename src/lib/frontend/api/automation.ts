@@ -23,6 +23,7 @@ export function getWebhooks(): Promise<(Webhook & { agent_name?: string })[]> {
 export function createWebhook(body: {
   name: string;
   agent_id: string;
+  channel_id?: string | null;
   system_prompt?: string;
   body_transform?: string;
   rate_limit_per_min?: number;
@@ -36,7 +37,15 @@ export function createWebhook(body: {
 
 export function updateWebhook(
   id: string,
-  body: Partial<{ name: string; agent_id: string; system_prompt: string; is_active: boolean }>,
+  body: Partial<{
+    name: string;
+    agent_id: string;
+    channel_id: string | null;
+    system_prompt: string;
+    body_transform: string;
+    rate_limit_per_min: number;
+    is_active: boolean;
+  }>,
 ): Promise<unknown> {
   return fetchJSON(`/api/webhooks/${id}`, {
     method: "PATCH",
@@ -90,9 +99,12 @@ export function getScheduledTasks(): Promise<(ScheduledTask & { agent_name?: str
 export function createScheduledTask(body: {
   name: string;
   agent_id: string;
+  channel_id?: string | null;
   prompt: string;
   cron_expression?: string;
-}): Promise<{ id: string }> {
+  conversation_id?: string | null;
+  is_active?: boolean;
+}): Promise<ScheduledTask> {
   return fetchJSON("/api/scheduled-tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -102,7 +114,15 @@ export function createScheduledTask(body: {
 
 export function updateScheduledTask(
   id: string,
-  body: Partial<{ name: string; prompt: string; cron_expression: string; is_active: boolean }>,
+  body: Partial<{
+    name: string;
+    agent_id: string;
+    channel_id: string | null;
+    prompt: string;
+    cron_expression: string;
+    is_active: boolean;
+    conversation_id: string | null;
+  }>,
 ): Promise<unknown> {
   return fetchJSON(`/api/scheduled-tasks/${id}`, {
     method: "PATCH",
@@ -125,10 +145,18 @@ export function deleteScheduledTask(id: string): Promise<unknown> {
 
 // --- Notifications --------------------------------------------------------
 
-export function getNotifications(unreadOnly?: boolean, limit?: number): Promise<Notification[]> {
+export function getNotifications(
+  unreadOnly?: boolean,
+  limit?: number,
+  filters?: { channel_id?: string; conversation_id?: string; task_id?: string; severity?: string },
+): Promise<Notification[]> {
   const params = new URLSearchParams();
   if (unreadOnly) params.set("unread", "true");
   if (limit) params.set("limit", limit.toString());
+  if (filters?.channel_id) params.set("channel_id", filters.channel_id);
+  if (filters?.conversation_id) params.set("conversation_id", filters.conversation_id);
+  if (filters?.task_id) params.set("task_id", filters.task_id);
+  if (filters?.severity) params.set("severity", filters.severity);
   const qs = params.toString();
   return fetchJSON(`/api/notifications${qs ? `?${qs}` : ""}`);
 }

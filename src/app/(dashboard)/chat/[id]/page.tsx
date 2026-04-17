@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { EmptyChatState } from "@/components/chat/empty-chat-state";
+import { buildChatChannelContext } from "@/components/chat/chat-channel-context";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -12,7 +13,6 @@ import { streamChat, getMessages, getConversations } from "@/lib/api";
 import { spring } from "@/lib/animation";
 import type { MessageWithToolCalls, ConversationWithDetails } from "@/lib/types";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -46,6 +46,7 @@ export default function ChatPage() {
     setThinkingStartTime,
     agents,
     setConversations,
+    uiPrefs,
   } = useStore();
 
   // Check if chat has started (has messages)
@@ -96,10 +97,9 @@ export default function ChatPage() {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (messagesEndRef.current && !prefersReducedMotion) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, prefersReducedMotion]);
+    if (!uiPrefs.autoScroll || !messagesEndRef.current) return;
+    messagesEndRef.current.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth" });
+  }, [messages, prefersReducedMotion, uiPrefs.autoScroll]);
 
   // Handle sending a message
   const handleSendMessage = useCallback(async (content: string, targetAgentId?: string) => {
@@ -240,6 +240,16 @@ export default function ChatPage() {
     handleSendMessage(prompt);
   }, [handleSendMessage]);
 
+  const handleConversationPinnedChange = useCallback((pinned: boolean) => {
+    setConversation((previous) => (previous ? { ...previous, is_pinned: pinned } : previous));
+    setConversations(
+      useStore
+        .getState()
+        .conversations
+        .map((item) => (item.id === conversationId ? { ...item, is_pinned: pinned } : item)),
+    );
+  }, [conversationId, setConversations]);
+
   // Search functionality
   const handleSearchQueryChange = useCallback((query: string) => {
     setSearchQuery(query);
@@ -271,6 +281,7 @@ export default function ChatPage() {
 
   // Get primary agent for empty state
   const primaryAgent = conversation?.agents?.[0];
+  const channelContext = buildChatChannelContext(conversation);
 
   // Animation variants
   const welcomeVariants = {
@@ -305,55 +316,49 @@ export default function ChatPage() {
   return (
     <div className="flex h-full min-h-0">
       <div className="flex flex-1 flex-col min-h-0 min-w-0">
-        {/* Header */}
         <ChatHeader
           conversation={conversation}
+          channelContext={channelContext}
           isStreaming={isStreaming}
           streamingAgentId={streamingAgentId}
-          toolPanelOpen={false}
-          onToggleToolPanel={() => {}}
           onReset={handleReset}
           onStop={handleStop}
           searchQuery={searchQuery}
           onSearchQueryChange={handleSearchQueryChange}
           searchResultCount={searchResults.length}
           onNavigateSearch={handleNavigateSearch}
+          onConversationPinnedChange={handleConversationPinnedChange}
         />
 
-        {/* Main content area */}
-        <div className={cn(
-          "flex-1 flex flex-col min-h-0 overflow-hidden relative",
-          !hasStartedChat && "justify-center"
-        )}>
-          {/* Messages container */}
-          <motion.div 
-            layout
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <motion.div
             ref={messagesContainerRef}
-            className={cn(
-              "overflow-y-auto min-h-0 px-4 scrollbar-thin scrollbar-thumb-rounded",
-              hasStartedChat ? "flex-1 py-4 order-1" : "flex-none order-2 pb-12"
-            )}
+            className="min-h-0 flex-1 overflow-y-auto px-4 pb-36 pt-4 scrollbar-thin scrollbar-thumb-rounded md:px-6"
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="wait">
               {!hasMessages ? (
-                // Empty state with welcome content
                 <motion.div
                   key="empty-state"
                   variants={welcomeVariants}
                   initial="visible"
                   exit="hidden"
-                  layout
-                  className="flex flex-col items-center justify-center pt-8"
+                  className="flex min-h-full items-center justify-center px-4 py-8"
                 >
-                  <EmptyChatState
-                    agentName={primaryAgent?.name}
-                    agentId={primaryAgent?.id}
-                    onSuggestionClick={handleSuggestionClick}
-                  />
+                  <div
+                    style={{
+                      transform: "scale(var(--empty-state-scale, 1))",
+                      transformOrigin: "center top",
+                    }}
+                  >
+                    <EmptyChatState
+                      agentName={primaryAgent?.name}
+                      agentId={primaryAgent?.id}
+                      onSuggestionClick={handleSuggestionClick}
+                    />
+                  </div>
                 </motion.div>
               ) : (
-                // Messages list
-                <div className="max-w-3xl mx-auto space-y-4">
+                <div className="mx-auto w-full max-w-4xl space-y-4">
                   <AnimatePresence initial={false}>
                     {messages.map((message, index) => (
                       <motion.div
@@ -379,19 +384,13 @@ export default function ChatPage() {
             </AnimatePresence>
           </motion.div>
 
-          {/* Input area with animation */}
           <motion.div
-            layout
-            className={cn(
-              "flex-shrink-0 px-4 w-full max-w-4xl mx-auto z-10",
-               hasStartedChat ? "pb-4 pt-2 order-2" : "pt-8 pb-4 order-1"
-            )}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[var(--background)] via-[color-mix(in_srgb,var(--background)_82%,transparent)] to-transparent px-4 pb-4 pt-12 md:px-6"
             initial={false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { ...spring.gentle, duration: 0.35 }}
           >
-            <motion.div
-              layout
-              transition={prefersReducedMotion ? { duration: 0 } : { ...spring.gentle, duration: 0.4 }}
-            >
+            <div className="pointer-events-auto">
               <ChatInput
                 onSend={handleSendMessage}
                 onCancel={handleStop}
@@ -401,8 +400,9 @@ export default function ChatPage() {
                 conversationId={conversationId}
                 isCentered={!hasStartedChat}
                 hasStartedChat={hasStartedChat}
+                channelContext={channelContext}
               />
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </div>

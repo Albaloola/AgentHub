@@ -1,32 +1,20 @@
 import { NextResponse } from "next/server";
-import { getAllAdapterMeta } from "@/lib/adapters";
 import { db } from "@/lib/db";
 import type { Agent } from "@/lib/types";
+import { ensureServerRuntime } from "@/lib/backend/runtime/server-runtime";
+import { buildAgentCapabilitiesByChannel } from "@/lib/backend/services/channels";
 
-export async function GET() {
-  const agents = db.prepare("SELECT * FROM agents WHERE is_active = 1").all() as Agent[];
-  const adapterMeta = getAllAdapterMeta();
-  const metaMap = new Map(adapterMeta.map((m) => [m.type, m]));
+export async function GET(request: Request) {
+  ensureServerRuntime();
 
-  const capabilities = agents.map((agent) => {
-    const meta = metaMap.get(agent.gateway_type);
-    return {
-      agent_id: agent.id,
-      agent_name: agent.name,
-      gateway_type: agent.gateway_type,
-      capabilities: meta?.capabilities ?? {
-        streaming: false,
-        toolCalls: false,
-        healthCheck: false,
-      },
-      commands: meta?.commands ?? [],
-      maxContextTokens: meta?.maxContextTokens,
-      contextReset: meta?.contextReset ?? false,
-      fileUpload: meta?.capabilities?.fileUpload ?? { enabled: false },
-      thinking: meta?.capabilities?.thinking ?? false,
-      subagents: meta?.capabilities?.subagents ?? false,
-    };
-  });
+  const { searchParams } = new URL(request.url);
+  const channelId = searchParams.get("channel_id");
+  const agentId = searchParams.get("agent_id");
 
+  const agents = agentId
+    ? (db.prepare("SELECT * FROM agents WHERE id = ? AND is_active = 1").all(agentId) as Agent[])
+    : (db.prepare("SELECT * FROM agents WHERE is_active = 1").all() as Agent[]);
+
+  const capabilities = agents.map((agent) => buildAgentCapabilitiesByChannel(agent, channelId));
   return NextResponse.json(capabilities);
 }

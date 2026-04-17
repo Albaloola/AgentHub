@@ -30,6 +30,7 @@ import {
   getScheduledTasks, createScheduledTask, updateScheduledTask,
   runScheduledTask, deleteScheduledTask, getAgents,
 } from "@/lib/api";
+import { formatUiDateTime } from "@/lib/frontend/date-format";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import type { ScheduledTask, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ import { toast } from "sonner";
 export default function ScheduledTasksPage() {
   const agents = useStore((s) => s.agents);
   const setAgents = useStore((s) => s.setAgents);
+  const dateFormat = useStore((s) => s.uiPrefs.dateFormat);
   const [tasks, setTasks] = useState<(ScheduledTask & { agent_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -117,10 +119,7 @@ export default function ScheduledTasksPage() {
 
   function formatDate(dateStr: string | null): string {
     if (!dateStr) return "Never";
-    const d = new Date(dateStr + "Z");
-    return d.toLocaleString(undefined, {
-      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-    });
+    return formatUiDateTime(new Date(`${dateStr}Z`), dateFormat);
   }
 
   const activeTasks = tasks.filter((t) => t.is_active);
