@@ -15,6 +15,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useStore } from "@/lib/store";
 import { getGuardrails, createGuardrail, updateGuardrail, deleteGuardrail, getAgents } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -182,22 +183,18 @@ export default function GuardrailsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Shield className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">
-              {rules.length === 0 ? "No guardrail rules yet" : "No matching rules"}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {rules.length === 0
-                ? "Create a rule to enforce safety policies on agent behavior"
-                : "Try a different search term"}
-            </p>
-            {rules.length === 0 && (
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Create Rule
-              </Button>
-            )}
+          <CardContent>
+            <EmptyState
+              icon={Shield}
+              title={rules.length === 0 ? "No guardrail rules yet" : "No matching rules"}
+              description={rules.length === 0 ? "Create a rule to enforce safety policies on agent behavior" : "Try a different search term"}
+              action={rules.length === 0 ? (
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Rule
+                </Button>
+              ) : undefined}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -217,17 +214,17 @@ export default function GuardrailsPage() {
                       <span className="font-medium">{rule.name}</span>
                       <Badge
                         variant="outline"
-                        className={cn("text-[0.625rem]", TYPE_COLORS[rule.type])}
+                        className={cn("text-[var(--text-label)]", TYPE_COLORS[rule.type])}
                       >
                         {TYPE_LABELS[rule.type] || rule.type}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={cn("text-[0.625rem]", ACTION_COLORS[rule.action])}
+                        className={cn("text-[var(--text-label)]", ACTION_COLORS[rule.action])}
                       >
                         {rule.action}
                       </Badge>
-                      <Badge variant="outline" className="text-[0.625rem]">
+                      <Badge variant="outline" className="text-[var(--text-label)]">
                         {rule.scope}
                         {agentName ? `: ${agentName}` : ""}
                       </Badge>
@@ -377,7 +374,7 @@ function CreateGuardrailDialog({
             onChange={(e) => setPattern(e.target.value)}
             rows={3}
           />
-          <p className="text-[0.625rem] text-muted-foreground mt-1">
+          <p className="text-[var(--text-label)] text-muted-foreground mt-1">
             {PATTERN_HELPERS[type]}
           </p>
         </div>

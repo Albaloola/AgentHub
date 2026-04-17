@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/layout/page-intro";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { getAnalytics, getAgents, getConversations } from "@/lib/api";
@@ -76,22 +78,36 @@ export default function AnalyticsPage() {
     : null;
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Usage metrics and performance insights across all agents
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
-          Refresh
-        </Button>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="Operational telemetry"
+          title="Analytics"
+          description="Usage metrics, throughput, latency, and reliability trends across the active agent network."
+          actions={
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw className={cn("mr-1 h-4 w-4", refreshing && "animate-spin")} />
+              Refresh
+            </Button>
+          }
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Messages</p>
+                <p className="workspace-metric__value">{formatNumber(totalMessages)}</p>
+                <p className="workspace-metric__hint">Across all tracked agents</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Online</p>
+                <p className="workspace-metric__value">{onlineCount}</p>
+                <p className="workspace-metric__hint">Agents currently reachable</p>
+              </div>
+            </div>
+          }
+        />
 
       {/* Overview Stats */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="workspace-panel-grid grid-cols-2 lg:grid-cols-4">
         <OverviewCard
           icon={MessageSquare}
           label="Total Messages"
@@ -123,8 +139,8 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Highlights */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="workspace-panel-grid md:grid-cols-3">
+        <Card className="workspace-panel">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-normal">Status Overview</CardTitle>
           </CardHeader>
@@ -159,7 +175,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="workspace-panel">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-normal">Top Performer</CardTitle>
           </CardHeader>
@@ -177,12 +193,17 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No data yet</p>
+              <EmptyState
+                icon={MessageSquare}
+                title="No data yet"
+                className="py-6"
+                iconClassName="h-8 w-8 mb-2"
+              />
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="workspace-panel">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-normal">Fastest Agent</CardTitle>
           </CardHeader>
@@ -200,23 +221,30 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No data yet</p>
+              <EmptyState
+                icon={Clock}
+                title="No data yet"
+                className="py-6"
+                iconClassName="h-8 w-8 mb-2"
+              />
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Agent Performance Table */}
-      <Card>
+      <Card className="workspace-panel">
         <CardHeader>
           <CardTitle className="text-base">Agent Performance</CardTitle>
         </CardHeader>
-        <CardContent>
-          {agentStats.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <BarChart3 className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">No agent data yet. Start chatting to see metrics.</p>
-            </div>
+          <CardContent>
+            {agentStats.length === 0 ? (
+              <EmptyState
+                icon={BarChart3}
+                title="No agent data yet. Start chatting to see metrics."
+                className="py-8"
+                iconClassName="h-8 w-8 mb-2"
+              />
           ) : (
             <div className="space-y-2">
               {/* Header */}
@@ -244,13 +272,13 @@ export default function AnalyticsPage() {
                       />
                       <div className="relative grid grid-cols-6 gap-2 px-3 py-2.5 items-center">
                         <div className="col-span-2 flex items-center gap-2 min-w-0">
-                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-medium text-white", getAvatarColor(stat.agent_id))}>
+                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white", getAvatarColor(stat.agent_id))}>
                             {getInitials(stat.agent_name)}
                           </div>
                           <div className="min-w-0">
                             <div className="text-sm font-medium truncate">{stat.agent_name}</div>
                             {agent && (
-                              <div className="text-[0.625rem] text-muted-foreground">
+                              <div className="text-[var(--text-label)] text-muted-foreground">
                                 {GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}
                               </div>
                             )}
@@ -275,7 +303,7 @@ export default function AnalyticsPage() {
 
       {/* Token Usage Distribution */}
       {agentStats.length > 0 && (
-        <Card>
+        <Card className="workspace-panel">
           <CardHeader>
             <CardTitle className="text-base">Token Distribution</CardTitle>
           </CardHeader>
@@ -307,6 +335,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
@@ -325,7 +354,7 @@ function OverviewCard({
   bgAccent: string;
 }) {
   return (
-    <Card>
+    <Card className="workspace-panel">
       <CardContent className="flex items-center gap-3 p-4">
         <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", bgAccent)}>
           <Icon className={cn("h-5 w-5", accent)} />

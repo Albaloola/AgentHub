@@ -259,7 +259,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">Conversation Replay</span>
-          <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0 tabular-nums">
+          <Badge variant="outline" className="text-[var(--text-micro)] px-1.5 py-0 tabular-nums">
             {currentIndex + 1} / {snapshots.length}
           </Badge>
         </div>
@@ -280,7 +280,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
             setIsPlaying(false);
           }}
         />
-        <div className="flex items-center justify-between text-[0.5625rem] text-muted-foreground tabular-nums px-0.5">
+        <div className="flex items-center justify-between text-[var(--text-micro)] text-muted-foreground tabular-nums px-0.5">
           <span>{formatTimestamp(snapshots[0].timestamp_ms)}</span>
           <span>{formatTimestamp(snapshots[snapshots.length - 1].timestamp_ms)}</span>
         </div>
@@ -313,7 +313,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
         <Button
           variant="ghost"
           size="xs"
-          className="tabular-nums text-[0.5625rem] px-1.5"
+          className="tabular-nums text-[var(--text-micro)] px-1.5"
           onClick={cycleSpeed}
           title="Playback speed"
         >
@@ -335,11 +335,11 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
             <span className="text-sm font-medium text-foreground">
               {currentData.agent_name || "Unknown"}
             </span>
-            <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0 gap-1">
+            <Badge variant="outline" className="text-[var(--text-micro)] px-1.5 py-0 gap-1">
               {getEventIcon(currentData.event)}
               {getEventLabel(currentData.event)}
             </Badge>
-            <span className="text-[0.5625rem] text-muted-foreground ml-auto tabular-nums">
+            <span className="text-[var(--text-micro)] text-muted-foreground ml-auto tabular-nums">
               {formatTimestamp(current.timestamp_ms)}
             </span>
           </div>
@@ -354,19 +354,19 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
           {/* Metadata row */}
           <div className="flex items-center gap-3 pl-7 flex-wrap">
             {currentData.response_time_ms != null && currentData.response_time_ms > 0 && (
-              <div className="flex items-center gap-1 text-[0.5625rem] text-muted-foreground">
+              <div className="flex items-center gap-1 text-[var(--text-micro)] text-muted-foreground">
                 <Clock className="h-2.5 w-2.5" />
                 {formatDuration(currentData.response_time_ms)}
               </div>
             )}
             {currentData.token_count != null && currentData.token_count > 0 && (
-              <div className="flex items-center gap-1 text-[0.5625rem] text-muted-foreground">
+              <div className="flex items-center gap-1 text-[var(--text-micro)] text-muted-foreground">
                 <Hash className="h-2.5 w-2.5" />
                 {currentData.token_count.toLocaleString()} tokens
               </div>
             )}
             {currentData.model && (
-              <div className="flex items-center gap-1 text-[0.5625rem] text-muted-foreground">
+              <div className="flex items-center gap-1 text-[var(--text-micro)] text-muted-foreground">
                 <Cpu className="h-2.5 w-2.5" />
                 {currentData.model}
               </div>
@@ -407,7 +407,7 @@ export function ReplayPanel({ conversationId, onClose }: ReplayPanelProps) {
       )}
 
       {/* Keyboard hints */}
-      <div className="flex items-center justify-center gap-3 text-[0.5rem] text-muted-foreground/50">
+      <div className="flex items-center justify-center gap-3 text-[var(--text-micro)] text-muted-foreground/50">
         <span>Space: play/pause</span>
         <span>Arrows: step</span>
         <span>Esc: close</span>

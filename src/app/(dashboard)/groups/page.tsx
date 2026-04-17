@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Users, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/layout/page-intro";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -62,21 +64,46 @@ export default function GroupsPage() {
   }
 
   const activeAgents = agents.filter((a) => a.is_active);
+  const responseModeDescription =
+    responseMode === "discussion"
+      ? "Each agent sees previous replies before responding. Best for collaborative problem-solving."
+      : responseMode === "parallel"
+        ? "All agents respond independently at the same time. Best for collecting multiple viewpoints fast."
+        : "You direct each message to a specific participant. Best for moderated or role-based conversations.";
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Create Group Chat</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Select multiple agents to orchestrate a group conversation
-        </p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-6xl">
+        <PageIntro
+          eyebrow="Shared channels"
+          title="Launch a group channel"
+          description="Assemble a squad, choose how responses should flow, and open a channel that feels native to the rest of the workspace shell."
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Active agents</p>
+                <p className="workspace-metric__value">{activeAgents.length}</p>
+                <p className="workspace-metric__hint">Available for group routing</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Selected</p>
+                <p className="workspace-metric__value">{selectedAgents.size}</p>
+                <p className="workspace-metric__hint">Need at least two to launch</p>
+              </div>
+            </div>
+          }
+        />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Configuration */}
-        <Card>
+        <div className="workspace-panel-grid md:grid-cols-2">
+        <Card className="workspace-panel surface-panel-strong">
           <CardHeader>
-            <CardTitle className="text-base">Configuration</CardTitle>
+            <div className="space-y-2">
+              <p className="workspace-eyebrow">Setup</p>
+              <CardTitle className="text-base">Channel configuration</CardTitle>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Name the room, decide how agents should take turns, then launch the conversation in one step.
+              </p>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -107,14 +134,9 @@ export default function GroupsPage() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {responseMode === "discussion" &&
-                  "Each agent sees all previous responses before replying. Good for collaborative problem-solving."}
-                {responseMode === "parallel" &&
-                  "All agents respond at the same time without seeing each other's responses. Good for independent opinions."}
-                {responseMode === "targeted" &&
-                  "You choose which agent to address each message to. Good for moderated conversations."}
-              </p>
+              <div className="workspace-list-row px-4 py-3 text-sm text-muted-foreground">
+                {responseModeDescription}
+              </div>
             </div>
 
             <Button
@@ -123,15 +145,20 @@ export default function GroupsPage() {
               className="w-full"
             >
               <Users className="h-4 w-4 mr-2" />
-              Create Group Chat ({selectedAgents.size} agents)
+              Launch channel ({selectedAgents.size} agents)
             </Button>
           </CardContent>
         </Card>
 
-        {/* Agent Selection */}
-        <Card>
+        <Card className="workspace-panel surface-panel-strong">
           <CardHeader>
-            <CardTitle className="text-base">Select Agents</CardTitle>
+            <div className="space-y-2">
+              <p className="workspace-eyebrow">Roster</p>
+              <CardTitle className="text-base">Select agents</CardTitle>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Pick at least two active agents. The selected roster becomes the launch context for the new channel.
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -140,10 +167,10 @@ export default function GroupsPage() {
                   key={agent.id}
                   onClick={() => toggleAgent(agent.id)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                    "workspace-list-row flex w-full items-center gap-3 px-4 py-3 text-left",
                     selectedAgents.has(agent.id)
-                      ? "border-[var(--accent-blue)] bg-[var(--accent-blue)]/10"
-                      : "border-border hover:bg-accent/50",
+                      ? "border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] shadow-[var(--theme-accent-shadow)]"
+                      : "",
                   )}
                 >
                   <div
@@ -156,14 +183,15 @@ export default function GroupsPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-sm">{agent.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-[0.625rem] px-1">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-[var(--text-label)] px-1.5">
                         {agent.gateway_type}
                       </Badge>
+                      <span>{agent.is_active ? "Ready for routing" : "Inactive"}</span>
                     </div>
                   </div>
                   {selectedAgents.has(agent.id) && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-blue)]">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--theme-accent)] shadow-[var(--theme-accent-shadow)]">
                       <Check className="h-4 w-4 text-white" />
                     </div>
                   )}
@@ -171,16 +199,19 @@ export default function GroupsPage() {
               ))}
 
               {activeAgents.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  No active agents available.
-                  <br />
-                  <button
-                    className="text-[var(--accent-blue)] hover:underline mt-1"
-                    onClick={() => router.push("/agents")}
-                  >
-                    Register agents first
-                  </button>
-                </div>
+                <EmptyState
+                  icon={Users}
+                  eyebrow="Roster"
+                  title="No active agents available"
+                  description="Register agents and mark them active before you create a shared conversation lane."
+                  className="py-8"
+                  iconClassName="h-10 w-10"
+                  action={
+                    <Button variant="outline" size="sm" onClick={() => router.push("/agents")}>
+                      Register agents
+                    </Button>
+                  }
+                />
               )}
 
               {activeAgents.length === 1 && (
@@ -191,6 +222,7 @@ export default function GroupsPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

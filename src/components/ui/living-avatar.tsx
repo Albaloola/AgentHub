@@ -14,7 +14,7 @@ interface LivingAvatarProps {
 }
 
 const SIZE_MAP = {
-  sm: "h-7 w-7 text-[0.625rem]",
+  sm: "h-7 w-7 text-[var(--text-label)]",
   md: "h-9 w-9 text-xs",
   lg: "h-12 w-12 text-sm",
   xl: "h-16 w-16 text-lg",

@@ -150,7 +150,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
               </SelectContent>
             </Select>
             {currentMeta && (
-              <p className="text-[0.6875rem] text-muted-foreground">{currentMeta.description}</p>
+              <p className="text-[var(--text-caption)] text-muted-foreground">{currentMeta.description}</p>
             )}
           </div>
 
@@ -184,7 +184,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                         onCheckedChange={(checked) => updateConfigValue(field.key, checked)}
                       />
                       {field.description && (
-                        <span className="text-[0.625rem] text-muted-foreground">{field.description}</span>
+                        <span className="text-[var(--text-label)] text-muted-foreground">{field.description}</span>
                       )}
                     </div>
                   ) : field.type === "password" ? (
@@ -215,7 +215,7 @@ export function AgentDialog({ open, onOpenChange, agent, onSave }: AgentDialogPr
                     />
                   )}
                   {field.description && field.type !== "boolean" && (
-                    <p className="text-[0.625rem] text-muted-foreground">{field.description}</p>
+                    <p className="text-[var(--text-label)] text-muted-foreground">{field.description}</p>
                   )}
                 </div>
               ))}

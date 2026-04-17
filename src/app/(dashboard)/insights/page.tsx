@@ -7,8 +7,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { PageIntro } from "@/components/layout/page-intro";
 import { useStore } from "@/lib/store";
 import { getTopicClusters, getFeedbackInsights, getAnomalies, resolveAnomaly, getAgents, getConversations } from "@/lib/api";
 import { cn, getInitials, getAvatarColor, timeAgo } from "@/lib/utils";
@@ -84,17 +86,31 @@ export default function InsightsPage() {
   const maxAgentCost = agentCosts.length > 0 ? agentCosts[0].totalCost : 1;
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Insights</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Intelligence dashboard combining topic analysis, feedback, and anomaly detection
-        </p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="Signal review"
+          title="Insights"
+          description="Topic clustering, feedback quality, anomaly review, and spend visibility in one shared analysis surface."
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Topics</p>
+                <p className="workspace-metric__value">{topics.length}</p>
+                <p className="workspace-metric__hint">Detected clusters</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Open anomalies</p>
+                <p className="workspace-metric__value">{anomalies.filter((a) => !a.is_resolved).length}</p>
+                <p className="workspace-metric__hint">Need review</p>
+              </div>
+            </div>
+          }
+        />
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-2 md:grid-cols-4">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Brain className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
@@ -103,7 +119,7 @@ export default function InsightsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <MessageSquareHeart className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
@@ -112,7 +128,7 @@ export default function InsightsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <AlertTriangle className="h-5 w-5 text-[var(--status-warning)]" />
             <div>
@@ -123,7 +139,7 @@ export default function InsightsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <DollarSign className="h-5 w-5 text-[var(--accent-cyan)]" />
             <div>
@@ -139,7 +155,7 @@ export default function InsightsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <Tabs defaultValue={0}>
+        <Tabs defaultValue={0} className="workspace-stack">
           <TabsList>
             <TabsTrigger value={0}>
               <Brain className="h-4 w-4 mr-1" />
@@ -162,19 +178,19 @@ export default function InsightsPage() {
           {/* === Topics Tab === */}
           <TabsContent value={0}>
             {topics.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Brain className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No topics yet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Topic clusters will appear as conversations accumulate
-                  </p>
+              <Card className="workspace-panel">
+                <CardContent>
+                  <EmptyState
+                    icon={Brain}
+                    title="No topics yet"
+                    description="Topic clusters will appear as conversations accumulate"
+                  />
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-3">
                 {/* Distribution bar */}
-                <Card>
+                 <Card className="workspace-panel">
                   <CardContent className="p-4">
                     <div className="text-xs text-muted-foreground mb-2">Topic Distribution</div>
                     <div className="flex h-4 rounded-full overflow-hidden">
@@ -234,13 +250,13 @@ export default function InsightsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">{topic.name}</span>
-                              <Badge variant="outline" className="text-[0.625rem]">
+                              <Badge variant="outline" className="text-[var(--text-label)]">
                                 {topic.conversation_count} conversations
                               </Badge>
                             </div>
                             <div className="flex flex-wrap gap-1 mb-2">
                               {keywords.map((kw, i) => (
-                                <Badge key={i} variant="secondary" className="text-[0.625rem]">
+                                <Badge key={i} variant="secondary" className="text-[var(--text-label)]">
                                   <Hash className="h-3 w-3 mr-0.5" />
                                   {kw}
                                 </Badge>
@@ -275,12 +291,12 @@ export default function InsightsPage() {
           <TabsContent value={1}>
             {feedback.length === 0 ? (
               <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <MessageSquareHeart className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No feedback insights</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Feedback insights will appear as users rate agent responses
-                  </p>
+                <CardContent>
+                  <EmptyState
+                    icon={MessageSquareHeart}
+                    title="No feedback insights"
+                    description="Feedback insights will appear as users rate agent responses"
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -295,7 +311,7 @@ export default function InsightsPage() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              "flex h-9 w-9 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
+                              "flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-caption)] font-medium text-white shrink-0",
                               getAvatarColor(fb.agent_id),
                             )}
                           >
@@ -305,7 +321,7 @@ export default function InsightsPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">{agentName}</span>
                               {fb.topic && (
-                                <Badge variant="outline" className="text-[0.625rem]">
+                                <Badge variant="outline" className="text-[var(--text-label)]">
                                   {fb.topic}
                                 </Badge>
                               )}
@@ -352,12 +368,12 @@ export default function InsightsPage() {
           <TabsContent value={2}>
             {anomalies.length === 0 ? (
               <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <AlertTriangle className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No anomalies detected</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Anomaly events will appear when unusual agent behavior is detected
-                  </p>
+                <CardContent>
+                  <EmptyState
+                    icon={AlertTriangle}
+                    title="No anomalies detected"
+                    description="Anomaly events will appear when unusual agent behavior is detected"
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -381,7 +397,7 @@ export default function InsightsPage() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              "flex h-9 w-9 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
+                              "flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-caption)] font-medium text-white shrink-0",
                               getAvatarColor(anomaly.agent_id),
                             )}
                           >
@@ -390,17 +406,17 @@ export default function InsightsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="font-medium">{agentName}</span>
-                              <Badge variant="outline" className="text-[0.625rem]">
+                              <Badge variant="outline" className="text-[var(--text-label)]">
                                 {anomaly.type}
                               </Badge>
                               <Badge
                                 variant="outline"
-                                className={cn("text-[0.625rem]", severityColor)}
+                                className={cn("text-[var(--text-label)]", severityColor)}
                               >
                                 {anomaly.severity}
                               </Badge>
                               {anomaly.is_resolved && (
-                                <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
+                                <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)]">
                                   resolved
                                 </Badge>
                               )}
@@ -426,11 +442,11 @@ export default function InsightsPage() {
                               </p>
                             )}
                             <div className="flex items-center justify-between mt-2">
-                              <span className="text-[0.6875rem] text-muted-foreground">
+                              <span className="text-[var(--text-caption)] text-muted-foreground">
                                 {timeAgo(anomaly.created_at)}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-[0.6875rem] text-muted-foreground">Resolved</span>
+                                <span className="text-[var(--text-caption)] text-muted-foreground">Resolved</span>
                                 <Switch
                                   checked={anomaly.is_resolved}
                                   onCheckedChange={() => {
@@ -473,12 +489,12 @@ export default function InsightsPage() {
               {/* Per-agent cost breakdown */}
               {agentCosts.length === 0 ? (
                 <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <DollarSign className="h-10 w-10 text-muted-foreground mb-3" />
-                    <h3 className="font-medium mb-1">No cost data yet</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Cost breakdown will appear as conversations accumulate
-                    </p>
+                  <CardContent>
+                    <EmptyState
+                      icon={DollarSign}
+                      title="No cost data yet"
+                      description="Cost breakdown will appear as conversations accumulate"
+                    />
                   </CardContent>
                 </Card>
               ) : (
@@ -502,11 +518,11 @@ export default function InsightsPage() {
                                   style={{ width: `${Math.max(pct, 2)}%` }}
                                 />
                               </div>
-                              <span className="text-[0.6875rem] text-muted-foreground w-28 text-right shrink-0">
+                              <span className="text-[var(--text-caption)] text-muted-foreground w-28 text-right shrink-0">
                                 avg ${avgCost.toFixed(4)}/conv
                               </span>
                             </div>
-                            <div className="text-[0.625rem] text-muted-foreground mt-0.5">
+                            <div className="text-[var(--text-label)] text-muted-foreground mt-0.5">
                               {entry.convCount} conversation{entry.convCount !== 1 ? "s" : ""}
                             </div>
                           </div>
@@ -520,6 +536,7 @@ export default function InsightsPage() {
           </TabsContent>
         </Tabs>
       )}
+      </div>
     </div>
   );
 }

@@ -169,8 +169,8 @@ export function SettingsSurface({ variant, onClose }: SettingsSurfaceProps) {
       className={cn(
         "surface-panel-strong relative overflow-hidden",
         variant === "modal"
-          ? "w-[95vw] max-h-[90vh] rounded-[1.2rem] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)]"
-          : "mx-auto w-full max-w-7xl rounded-[1.6rem] border border-[var(--panel-border)]/85 shadow-[var(--panel-shadow-dramatic)]",
+          ? "w-[95vw] max-h-[90vh] rounded-[var(--workspace-radius-lg)] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)]"
+          : "mx-auto w-full max-w-7xl rounded-[var(--workspace-radius-xl)] border border-[var(--panel-border)]/85 shadow-[var(--panel-shadow-dramatic)]",
       )}
       style={variant === "modal" ? { maxWidth: "clamp(860px, 82vw, 1280px)" } : undefined}
     >
@@ -183,7 +183,7 @@ export function SettingsSurface({ variant, onClose }: SettingsSurfaceProps) {
       />
 
       {showExitConfirm && variant === "modal" && (
-        <div className="surface-panel-strong absolute right-4 top-16 z-50 w-80 space-y-3 rounded-[1rem] p-4 animate-fade-in">
+        <div className="surface-panel-strong absolute right-4 top-16 z-50 w-80 space-y-3 rounded-[var(--workspace-radius-md)] p-4 animate-fade-in">
           <p className="text-sm font-medium text-foreground">You have unsaved changes</p>
           <p className="text-xs text-muted-foreground">
             Keep editing, or discard the live preview changes before closing.
@@ -210,12 +210,12 @@ export function SettingsSurface({ variant, onClose }: SettingsSurfaceProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "relative flex w-full items-center gap-2.5 rounded-[0.95rem] px-3 py-2.5 text-sm font-medium transition-all duration-300",
+                    "relative flex w-full items-center gap-2.5 rounded-[var(--workspace-radius-sm)] px-3 py-2.5 text-sm font-medium transition-all duration-300",
                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {isActive && (
-                    <div className="selection-card-active absolute inset-0 rounded-[0.95rem] animate-[luminance-pulse_3s_ease-in-out_infinite]" />
+                    <div className="selection-card-active absolute inset-0 rounded-[var(--workspace-radius-sm)] animate-[luminance-pulse_3s_ease-in-out_infinite]" />
                   )}
                   <Icon className={cn("relative z-10 h-4 w-4 shrink-0", isActive && "text-[var(--theme-accent-text)]")} />
                   <span className="relative z-10 font-medium">{tab.label}</span>
@@ -227,8 +227,8 @@ export function SettingsSurface({ variant, onClose }: SettingsSurfaceProps) {
             })}
           </div>
 
-          <div className="mt-6 rounded-[1rem] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-3">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="mt-6 rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-3">
+            <p className="text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
               Live Preview
             </p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
@@ -288,12 +288,12 @@ function SettingsHeader({
     <div className="flex items-start justify-between gap-6 border-b border-[var(--panel-border)] px-6 py-5">
       <div className="min-w-0">
         <div className="flex items-center gap-3">
-          <div className="brand-chip flex h-11 w-11 items-center justify-center rounded-[1rem]">
+          <div className="brand-chip flex h-11 w-11 items-center justify-center rounded-[var(--workspace-radius-md)]">
             <Settings2 className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">
             <h1 className={cn("title-font settings-display-title truncate font-semibold tracking-tight", variant === "page" && "max-w-[28rem]")}>
-              {variant === "page" ? "Workspace Settings" : "Quick Settings"}
+              {variant === "page" ? "Settings" : "Quick Settings"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {variant === "page"
@@ -306,7 +306,7 @@ function SettingsHeader({
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {hasUnsavedPrefs ? (
             <>
-              <span className="rounded-full border border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] px-3 py-1 text-[0.7rem] font-medium text-[var(--theme-accent-text)]">
+              <span className="rounded-full border border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] px-3 py-1 text-[var(--text-caption)] font-medium text-[var(--theme-accent-text)]">
                 Unsaved preview changes
               </span>
               <Button size="sm" className="h-8 rounded-lg px-3 text-xs" onClick={onSave}>
@@ -317,7 +317,7 @@ function SettingsHeader({
               </Button>
             </>
           ) : (
-            <span className="rounded-full border border-[var(--panel-border)] bg-[var(--surface-subtle)] px-3 py-1 text-[0.7rem] font-medium text-muted-foreground">
+            <span className="rounded-full border border-[var(--panel-border)] bg-[var(--surface-subtle)] px-3 py-1 text-[var(--text-caption)] font-medium text-muted-foreground">
               All changes saved locally
             </span>
           )}
@@ -338,7 +338,7 @@ function SettingsHeader({
             href="/admin"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9 rounded-xl px-3")}
           >
-            Admin controls
+            Platform controls
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         )}
@@ -385,7 +385,7 @@ function SectionTitle({
   return (
     <div className="space-y-1">
       {eyebrow ? (
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
           {eyebrow}
         </p>
       ) : null}
@@ -438,7 +438,7 @@ function WorkspaceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }
             <div className="flex w-full items-center justify-between border-t border-[var(--panel-border)] bg-[var(--glass-bg)] px-3 py-2">
               <div>
                 <div className="text-xs font-semibold">{option.label}</div>
-                <div className="text-[0.65rem] text-muted-foreground">{option.desc}</div>
+                <div className="text-[var(--text-label)] text-muted-foreground">{option.desc}</div>
               </div>
               <div className={selectionIndicatorClass(prefs.density === option.value)}>
                 {prefs.density === option.value ? <Check className="h-3 w-3 text-white" /> : null}
@@ -501,12 +501,12 @@ function WorkspaceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }
 
       <SectionTitle icon={Maximize} title="Interface Scale" eyebrow="Reading comfort" />
       <div className="grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
-        <div className="space-y-3 rounded-[1rem] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
+        <div className="space-y-3 rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Zoom</p>
+              <p className="text-sm font-medium">UI scale</p>
               <p className="text-xs text-muted-foreground">
-                Multiplies the viewport-aware UI scale without changing system zoom.
+                Adjusts the fluid interface scale without magnifying the whole document or clipping the viewport.
               </p>
             </div>
             <span className="rounded-full border border-[var(--panel-border)] px-3 py-1 text-xs font-medium tabular-nums">
@@ -525,14 +525,14 @@ function WorkspaceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref }
           />
         </div>
 
-        <div className="rounded-[1rem] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
+          <p className="text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
             Preview
           </p>
-          <div className="mt-3 space-y-3 rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] p-4">
+          <div className="mt-3 space-y-3 rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--panel-bg)] p-4">
             <div className="flex items-center justify-between">
               <div className="title-font text-sm font-semibold">Control room</div>
-              <div className="rounded-full bg-[var(--theme-accent-softer)] px-2 py-1 text-[0.65rem] text-[var(--theme-accent-text)]">
+              <div className="rounded-full bg-[var(--theme-accent-softer)] px-2 py-1 text-[var(--text-label)] text-[var(--theme-accent-text)]">
                 Live
               </div>
             </div>
@@ -612,17 +612,17 @@ function AppearanceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref 
             onClick={() => setPref("theme", "system")}
             className={selectionCardClass(prefs.theme === "system", "flex items-center gap-4")}
           >
-            <div className="brand-chip flex h-12 w-12 items-center justify-center rounded-[0.95rem] text-white">
+            <div className="brand-chip flex h-12 w-12 items-center justify-center rounded-[var(--workspace-radius-sm)] text-white">
               <Monitor className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1 text-left">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Follow system appearance</span>
-                <span className={chipClass(false, "px-2 py-0.5 text-[0.625rem]")}>
+                <span className={chipClass(false, "px-2 py-0.5 text-[var(--text-label)]")}>
                   {systemTheme.label}
                 </span>
               </div>
-              <p className="mt-1 text-[0.6875rem] leading-5 text-muted-foreground">
+              <p className="mt-1 text-[var(--text-caption)] leading-5 text-muted-foreground">
                 AgentHub will swap between {resolveThemePreference("system", true).resolvedTheme.label} and {resolveThemePreference("system", false).resolvedTheme.label} with your OS theme.
               </p>
             </div>
@@ -690,7 +690,7 @@ function AppearanceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref 
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Glow spread</span>
-            <span className="text-[0.625rem] text-muted-foreground">{prefs.glowSpread}px</span>
+            <span className="text-[var(--text-label)] text-muted-foreground">{prefs.glowSpread}px</span>
           </div>
           <Slider
             min={0}
@@ -707,7 +707,7 @@ function AppearanceTab({ prefs, setPref }: { prefs: UiPrefs; setPref: SetUiPref 
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Glow intensity</span>
-            <span className="text-[0.625rem] text-muted-foreground">{Math.round((prefs.glowIntensity ?? 0.5) * 100)}%</span>
+            <span className="text-[var(--text-label)] text-muted-foreground">{Math.round((prefs.glowIntensity ?? 0.5) * 100)}%</span>
           </div>
           <Slider
             min={0}
@@ -819,7 +819,7 @@ function NotificationsTab({
       <Separator />
 
       <SectionTitle icon={Settings2} title="Reset Preferences" eyebrow="Data" />
-      <div className="relative overflow-hidden rounded-[1rem] border border-[var(--status-danger)]/20 bg-[var(--status-danger)]/5 p-4">
+      <div className="relative overflow-hidden rounded-[var(--workspace-radius-md)] border border-[var(--status-danger)]/20 bg-[var(--status-danger)]/5 p-4">
         <div>
           <h3 className="text-sm font-semibold text-[var(--status-danger)]">Danger zone</h3>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -898,10 +898,10 @@ function TypographySection({
           <p className="text-xs text-muted-foreground">{desc}</p>
         </div>
         <FontPicker value={fontValue} onChange={(value) => setPref(prefKey, value as UiPrefs[typeof prefKey])} />
-        <div className="rounded-[1rem] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
+        <div className="rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.6875rem] text-muted-foreground">Size</span>
-            <span className="text-[0.6875rem] font-mono tabular-nums text-muted-foreground">{sizeValue}px</span>
+            <span className="text-[var(--text-caption)] text-muted-foreground">Size</span>
+            <span className="text-[var(--text-caption)] font-mono tabular-nums text-muted-foreground">{sizeValue}px</span>
           </div>
           <Slider
             min={minSize}
@@ -916,13 +916,13 @@ function TypographySection({
         </div>
       </div>
 
-      <div className="rounded-[1rem] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-4">
+        <p className="text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
           Preview
         </p>
         <div
           className={cn(
-            "mt-3 flex min-h-[10rem] items-center justify-center rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] p-5 text-center",
+            "mt-3 flex min-h-[10rem] items-center justify-center rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--panel-bg)] p-5 text-center",
             isTitle && "font-semibold tracking-tight",
           )}
           style={{ fontFamily, fontSize: `${sizeValue}px` }}
@@ -969,7 +969,7 @@ function FontPicker({
       </div>
 
       <div
-        className="surface-subtle rounded-[1rem] p-4 transition-all duration-300"
+        className="surface-subtle rounded-[var(--workspace-radius-md)] p-4 transition-all duration-300"
         style={{ fontFamily: FONT_PICKER_FAMILIES[value] || FONT_PICKER_FAMILIES.geist }}
       >
         <p className="text-base text-foreground/80">The quick brown fox jumps over the lazy dog</p>
@@ -997,7 +997,7 @@ function ThemePreviewCard({
     >
       <div className="p-3">
         <div
-          className="overflow-hidden rounded-[0.95rem] border p-3"
+          className="overflow-hidden rounded-[var(--workspace-radius-sm)] border p-3"
           style={{ background: theme.preview.canvas, borderColor: theme.preview.border }}
         >
           <div className="mb-3 flex items-center gap-1.5">
@@ -1008,7 +1008,7 @@ function ThemePreviewCard({
           </div>
           <div className="grid grid-cols-[0.9fr_1.4fr] gap-2">
             <div
-              className="flex min-h-24 flex-col gap-2 rounded-[0.8rem] border p-2"
+              className="flex min-h-24 flex-col gap-2 rounded-[var(--workspace-radius-sm)] border p-2"
               style={{ background: theme.preview.surfaceAlt, borderColor: theme.preview.border }}
             >
               <div className="h-2.5 w-14 rounded-full" style={{ background: theme.preview.accent, opacity: 0.9 }} />
@@ -1021,7 +1021,7 @@ function ThemePreviewCard({
             </div>
             <div className="flex flex-col gap-2">
               <div
-                className="flex items-center justify-between rounded-[0.8rem] border p-2"
+                className="flex items-center justify-between rounded-[var(--workspace-radius-sm)] border p-2"
                 style={{ background: theme.preview.surface, borderColor: theme.preview.border }}
               >
                 <div className="space-y-1">
@@ -1029,12 +1029,12 @@ function ThemePreviewCard({
                   <div className="h-2 w-12 rounded-full" style={{ background: theme.preview.border, opacity: 0.65 }} />
                 </div>
                 <div
-                  className="h-7 w-7 rounded-[0.75rem]"
+                  className="h-7 w-7 rounded-lg"
                   style={{ background: `linear-gradient(135deg, ${theme.preview.accent}, ${theme.preview.accentAlt})` }}
                 />
               </div>
               <div
-                className="rounded-[0.8rem] border p-2"
+                className="rounded-[var(--workspace-radius-sm)] border p-2"
                 style={{ background: theme.preview.surface, borderColor: theme.preview.border }}
               >
                 <div className="mb-2 h-2.5 w-24 rounded-full" style={{ background: theme.preview.border, opacity: 0.8 }} />
@@ -1054,11 +1054,11 @@ function ThemePreviewCard({
           <div className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-2">
               <span className="truncate text-sm font-medium">{theme.label}</span>
-              <span className={chipClass(false, "shrink-0 px-2 py-0.5 text-[0.625rem]")}>
+              <span className={chipClass(false, "shrink-0 px-2 py-0.5 text-[var(--text-label)]")}>
                 {theme.accentLabel}
               </span>
             </div>
-            <p className="mt-1 line-clamp-3 text-[0.6875rem] leading-snug text-muted-foreground">
+            <p className="mt-1 line-clamp-3 text-[var(--text-caption)] leading-snug text-muted-foreground">
               {theme.description}
             </p>
           </div>
@@ -1105,7 +1105,7 @@ function GlowColorPicker({
               "flex items-center gap-2 rounded-xl border-2 p-2.5 transition-all duration-200",
               value === preset.value
                 ? "border-foreground/30 bg-foreground/[0.08]"
-                : "border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.03]",
+                : "border-foreground/[0.06] hover:border-foreground/[0.14] hover:bg-foreground/[0.03]",
             )}
           >
             <div
@@ -1123,7 +1123,7 @@ function GlowColorPicker({
               ? "border-foreground/30 bg-foreground/[0.08]"
               : customOpen
                 ? "selection-card-active"
-                : "border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.03]",
+                : "border-foreground/[0.06] hover:border-foreground/[0.14] hover:bg-foreground/[0.03]",
           )}
         >
           <div
@@ -1145,8 +1145,8 @@ function GlowColorPicker({
 function AboutTab() {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-500">
-      <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-[1.4rem] bg-gradient-to-br from-[var(--theme-accent)] to-[var(--theme-accent-alt)] text-white shadow-xl shadow-[var(--theme-accent-shadow)]">
-        <div className="pointer-events-none absolute inset-0 rounded-[1.4rem] bg-[linear-gradient(to_bottom,white_0%,transparent_100%)] opacity-20" />
+      <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-[var(--workspace-radius-lg)] bg-gradient-to-br from-[var(--theme-accent)] to-[var(--theme-accent-alt)] text-white shadow-[var(--theme-accent-shadow)]">
+        <div className="pointer-events-none absolute inset-0 rounded-[var(--workspace-radius-lg)] bg-[linear-gradient(to_bottom,white_0%,transparent_100%)] opacity-20" />
         <Bot className="relative z-10 h-10 w-10" />
       </div>
       <h2 className="title-font settings-display-title mb-3 font-bold tracking-tight">AgentHub</h2>
@@ -1155,7 +1155,7 @@ function AboutTab() {
         and feedback preferences that shape how AgentHub feels day to day.
       </p>
       <div className="rounded-xl border border-[var(--panel-border-strong)] bg-foreground/[0.04] px-4 py-2">
-        <p className="text-[0.6875rem] font-mono uppercase tracking-widest text-muted-foreground">
+        <p className="text-[var(--text-caption)] font-mono uppercase tracking-widest text-muted-foreground">
           Apache 2.0 License
         </p>
       </div>
@@ -1165,7 +1165,7 @@ function AboutTab() {
 
 function selectionCardClass(active: boolean, className?: string) {
   return cn(
-    "selection-card relative overflow-hidden rounded-[1rem] border p-3 transition-all duration-200",
+    "selection-card relative overflow-hidden rounded-[var(--workspace-radius-md)] border p-3 transition-all duration-200",
     active && "selection-card-active",
     className,
   );

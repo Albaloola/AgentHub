@@ -47,9 +47,9 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col gap-[var(--shell-gap,0.95rem)] overflow-hidden px-[var(--shell-pad,1rem)] pb-[var(--shell-pad,1rem)] pt-[var(--shell-pad,1rem)]">
         <ContextualTopBar onOpenSettings={() => setSettingsOpen(true)} />
-        <main className="flex-1 overflow-hidden relative">
+        <main className="relative min-h-0 flex-1 overflow-hidden">
           {children}
         </main>
       </div>

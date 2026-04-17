@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/layout/page-intro";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { getAgents, checkAgentHealth, getConversations, getCacheStats, clearCache } from "@/lib/api";
@@ -111,15 +113,13 @@ export default function MonitoringPage() {
     .reduce((sum, a, _, arr) => sum + (a.latency_ms ?? 0) / arr.length, 0);
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Monitoring</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time status and health of all agent gateways
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="Runtime status"
+          title="Monitoring"
+          description="Real-time gateway health, live traffic posture, and cache visibility in one operational surface."
+          actions={<div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={loadData} disabled={refreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
             Refresh
@@ -132,12 +132,26 @@ export default function MonitoringPage() {
             )}
             Check All
           </Button>
-        </div>
-      </div>
+        </div>}
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Online</p>
+                <p className="workspace-metric__value">{onlineCount}</p>
+                <p className="workspace-metric__hint">Healthy gateways</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Errors</p>
+                <p className="workspace-metric__value">{errorCount}</p>
+                <p className="workspace-metric__hint">Need intervention</p>
+              </div>
+            </div>
+          }
+        />
 
       {/* Summary Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-2 md:grid-cols-4">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Wifi className="h-5 w-5 text-[var(--status-online)]" />
             <div>
@@ -146,7 +160,7 @@ export default function MonitoringPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <WifiOff className="h-5 w-5 text-[var(--status-danger)]" />
             <div>
@@ -155,7 +169,7 @@ export default function MonitoringPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Clock className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
@@ -164,7 +178,7 @@ export default function MonitoringPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <MessageSquare className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -178,7 +192,7 @@ export default function MonitoringPage() {
       </div>
 
       {/* Agent Status Table */}
-      <Card>
+      <Card className="workspace-panel">
         <CardHeader>
           <CardTitle className="text-base">Agent Status</CardTitle>
         </CardHeader>
@@ -210,7 +224,7 @@ export default function MonitoringPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{agent.name}</span>
-                      <Badge variant="outline" className="text-[0.625rem]">
+                      <Badge variant="outline" className="text-[var(--text-label)]">
                         {GATEWAY_LABELS[agent.gateway_type]}
                       </Badge>
                     </div>
@@ -256,9 +270,12 @@ export default function MonitoringPage() {
             })}
 
             {agents.length === 0 && (
-              <p className="text-center py-8 text-sm text-muted-foreground">
-                No agents registered
-              </p>
+              <EmptyState
+                icon={Activity}
+                title="No agents registered"
+                className="py-8"
+                iconClassName="h-8 w-8 mb-2"
+              />
             )}
           </div>
         </CardContent>
@@ -372,11 +389,11 @@ export default function MonitoringPage() {
                               <span className="font-medium truncate">
                                 {entry.agent_name || "Unknown Agent"}
                               </span>
-                              <Badge variant="outline" className="text-[0.625rem] shrink-0">
+                              <Badge variant="outline" className="text-[var(--text-label)] shrink-0">
                                 {entry.hit_count} hits
                               </Badge>
                               {isExpired && (
-                                <Badge variant="outline" className="text-[0.625rem] border-[var(--status-warning)]/30 text-[var(--status-warning)] shrink-0">
+                                <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-warning)]/30 text-[var(--status-warning)] shrink-0">
                                   expired
                                 </Badge>
                               )}
@@ -403,13 +420,13 @@ export default function MonitoringPage() {
               )}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Database className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground">No cache data available</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Cache entries will appear here once agents start generating responses
-              </p>
-            </div>
+            <EmptyState
+              icon={Database}
+              title="No cache data available"
+              description="Cache entries will appear here once agents start generating responses"
+              className="py-8"
+              iconClassName="h-8 w-8 mb-2 opacity-50"
+            />
           )}
         </CardContent>
       </Card>
@@ -437,6 +454,7 @@ export default function MonitoringPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }

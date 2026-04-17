@@ -111,7 +111,7 @@ export function MessageBubble({
           <Sparkles className="h-4 w-4 text-[var(--accent-amber)]" />
         </div>
         <div className="flex-1 glass-bubble rounded-2xl px-5 py-3 text-sm border-[var(--theme-accent-border)]">
-          <Badge variant="outline" className="text-[0.625rem] border-[var(--theme-accent-border)] text-[var(--accent-amber)] mb-2">Compacted Context</Badge>
+          <Badge variant="outline" className="text-[var(--text-label)] border-[var(--theme-accent-border)] text-[var(--accent-amber)] mb-2">Compacted Context</Badge>
           {markdownEnabled ? (
             <div className="message-content prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
@@ -140,7 +140,7 @@ export function MessageBubble({
       {/* Avatar */}
       {showAvatars
         ? isUser ? (
-            <div className="brand-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] text-white">
+            <div className="brand-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--workspace-radius-sm)] text-white">
               <User className="h-4 w-4" />
             </div>
           ) : message.agent ? (
@@ -164,9 +164,9 @@ export function MessageBubble({
               <span className="text-xs font-medium text-muted-foreground/80">{message.agent.name}</span>
             )}
             {!!message.is_pinned && <Bookmark className="h-3 w-3 text-[var(--accent-amber)] fill-[var(--accent-amber)]" />}
-            {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
+            {!!message.is_edited && <span className="text-[var(--text-label)] text-muted-foreground/50 italic">(edited)</span>}
             {showTimestamps ? (
-              <span className="text-[0.625rem] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
+              <span className="text-[var(--text-label)] text-muted-foreground/40">{timeAgo(message.created_at)}</span>
             ) : null}
           </div>
         )}
@@ -174,7 +174,7 @@ export function MessageBubble({
         {isUser && !!(message.is_pinned || message.is_edited) && (
           <div className="flex items-center gap-2 px-1">
             {!!message.is_pinned && <Bookmark className="h-3 w-3 text-[var(--accent-amber)] fill-[var(--accent-amber)]" />}
-            {!!message.is_edited && <span className="text-[0.625rem] text-muted-foreground/50 italic">(edited)</span>}
+            {!!message.is_edited && <span className="text-[var(--text-label)] text-muted-foreground/50 italic">(edited)</span>}
           </div>
         )}
 
@@ -205,7 +205,7 @@ export function MessageBubble({
                 {saving ? "Saving..." : "Save & Send"}
               </Button>
               <Button size="sm" variant="ghost" className="h-7 text-xs rounded-lg" onClick={() => setEditing(false)}>Cancel</Button>
-              <span className="text-[0.625rem] text-muted-foreground/50 self-center ml-auto">Ctrl+Enter</span>
+              <span className="text-[var(--text-label)] text-muted-foreground/50 self-center ml-auto">Ctrl+Enter</span>
             </div>
           </div>
         ) : (
@@ -213,7 +213,7 @@ export function MessageBubble({
             <div className={cn(
               "message-content rounded-2xl px-5 py-3 text-sm transition-all duration-200",
               isUser ? "glass-bubble-user text-foreground" : "glass-bubble text-foreground",
-              hovered && "shadow-lg",
+              hovered && "shadow-[var(--panel-shadow)]",
             )}>
               {markdownEnabled ? (
                 <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
@@ -279,7 +279,7 @@ export function MessageBubble({
             <ActionBtn icon={Bookmark} onClick={handlePin} title={message.is_pinned ? "Unpin" : "Pin"} active={!!message.is_pinned} activeColor="text-[var(--accent-amber)]" glowClass="hover-glow-amber" />
             <CopyBtn text={message.content} />
             {message.token_count > 0 && (
-              <span className="text-[0.625rem] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
+              <span className="text-[var(--text-label)] text-muted-foreground/40 ml-1.5 tabular-nums">{message.token_count} tok</span>
             )}
           </div>
         )}
@@ -418,19 +418,19 @@ function ToolCallPill({ toolCall }: { toolCall: MessageWithToolCalls["tool_calls
       <CollapsibleTrigger className="flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-all hover:bg-foreground/5 w-full glass" style={statusStyle} aria-expanded={open}>
         <Wrench className="h-3 w-3" />
         <span className="font-mono font-medium">{toolCall.tool_name}</span>
-        <Badge variant="outline" className="ml-auto text-[0.625rem] px-1.5 py-0 rounded-md" style={statusStyle}>{toolCall.status}</Badge>
+        <Badge variant="outline" className="ml-auto text-[var(--text-label)] px-1.5 py-0 rounded-md" style={statusStyle}>{toolCall.status}</Badge>
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1.5 rounded-xl border border-border/20 glass p-3 text-xs font-mono space-y-2">
           <div>
             <span className="text-muted-foreground/60">Input:</span>
-            <pre className="mt-1 whitespace-pre-wrap break-all text-[0.6875rem] text-foreground/80">{formatJSON(toolCall.input)}</pre>
+            <pre className="mt-1 whitespace-pre-wrap break-all text-[var(--text-caption)] text-foreground/80">{formatJSON(toolCall.input)}</pre>
           </div>
           {toolCall.output && toolCall.output !== "{}" && (
             <div>
               <span className="text-muted-foreground/60">Output:</span>
-              <pre className="mt-1 whitespace-pre-wrap break-all text-[0.6875rem] text-foreground/80">{formatJSON(toolCall.output)}</pre>
+              <pre className="mt-1 whitespace-pre-wrap break-all text-[var(--text-caption)] text-foreground/80">{formatJSON(toolCall.output)}</pre>
             </div>
           )}
         </div>

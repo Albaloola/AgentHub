@@ -102,7 +102,7 @@ export default function ChatPage() {
   }, [messages, prefersReducedMotion, uiPrefs.autoScroll]);
 
   // Handle sending a message
-  const handleSendMessage = useCallback(async (content: string, targetAgentId?: string) => {
+  const handleSendMessage = useCallback(async (content: string, targetAgentId?: string, attachmentIds?: string[]) => {
     if (!conversationId || !content.trim()) return;
     
     // Mark chat as started (triggers animation)
@@ -202,7 +202,11 @@ export default function ChatPage() {
           setThinkingContent("", true);
         },
       },
-      { target_agent_id: targetAgentId, signal: abortControllerRef.current.signal }
+      {
+        target_agent_id: targetAgentId,
+        attachment_ids: attachmentIds,
+        signal: abortControllerRef.current.signal,
+      }
     );
   }, [conversationId, hasStartedChat, agents, appendMessage, setIsStreaming, setStreamingAgentId, updateLastAssistantMessage, setThinkingContent, setThinkingStartTime]);
 
@@ -300,7 +304,7 @@ export default function ChatPage() {
   if (isLoading) {
     return (
       <div className="flex h-full min-h-0">
-        <div className="flex flex-1 flex-col min-h-0 min-w-0">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[var(--shell-gap,0.95rem)]">
           <div className="flex items-center gap-2 px-2 shrink-0 py-2">
             <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
             <div className="h-4 w-24 bg-muted animate-pulse rounded" />
@@ -315,7 +319,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full min-h-0">
-      <div className="flex flex-1 flex-col min-h-0 min-w-0">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[var(--shell-gap,0.95rem)]">
         <ChatHeader
           conversation={conversation}
           channelContext={channelContext}
@@ -330,10 +334,10 @@ export default function ChatPage() {
           onConversationPinnedChange={handleConversationPinnedChange}
         />
 
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="surface-panel workspace-panel relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <motion.div
             ref={messagesContainerRef}
-            className="min-h-0 flex-1 overflow-y-auto px-4 pb-36 pt-4 scrollbar-thin scrollbar-thumb-rounded md:px-6"
+            className="min-h-0 flex-1 overflow-y-auto px-4 pb-36 pt-5 scrollbar-thin scrollbar-thumb-rounded md:px-6"
           >
             <AnimatePresence mode="wait">
               {!hasMessages ? (
@@ -342,7 +346,7 @@ export default function ChatPage() {
                   variants={welcomeVariants}
                   initial="visible"
                   exit="hidden"
-                  className="flex min-h-full items-center justify-center px-4 py-8"
+                  className="flex min-h-full items-center justify-center px-4 py-8 md:px-6"
                 >
                   <div
                     style={{
@@ -385,7 +389,7 @@ export default function ChatPage() {
           </motion.div>
 
           <motion.div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[var(--background)] via-[color-mix(in_srgb,var(--background)_82%,transparent)] to-transparent px-4 pb-4 pt-12 md:px-6"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[var(--panel-bg-strong)] via-[color-mix(in_srgb,var(--panel-bg)_88%,transparent)] to-transparent px-4 pb-4 pt-14 md:px-6"
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={prefersReducedMotion ? { duration: 0 } : { ...spring.gentle, duration: 0.35 }}

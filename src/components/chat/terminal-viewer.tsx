@@ -45,11 +45,11 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
         </div>
         <div className="flex items-center gap-2 ml-2">
           <Terminal className="h-3 w-3 text-muted-foreground/50" />
-          <span className="text-[0.6875rem] text-muted-foreground/50 font-mono">
+          <span className="text-[var(--text-caption)] text-muted-foreground/50 font-mono">
             agent-tools
           </span>
         </div>
-        <span className="text-[0.625rem] text-muted-foreground/30 ml-auto tabular-nums">
+        <span className="text-[var(--text-label)] text-muted-foreground/30 ml-auto tabular-nums">
           {toolCalls.length} call{toolCalls.length !== 1 && "s"}
         </span>
       </div>
@@ -125,7 +125,7 @@ export function TerminalViewer({ toolCalls, isStreaming }: TerminalViewerProps) 
                   )}
 
                   {/* Timestamp */}
-                  <div className="text-[0.625rem] text-muted-foreground/30 pl-1">
+                  <div className="text-[var(--text-label)] text-muted-foreground/30 pl-1">
                     {new Date(tc.timestamp + "Z").toLocaleTimeString()}
                   </div>
                 </div>
@@ -168,7 +168,7 @@ function TerminalBlock({
   return (
     <div className="rounded-lg border border-border/10 bg-black/30 overflow-hidden">
       <div className="flex items-center justify-between px-3 py-1 border-b border-border/10">
-        <span className={cn("text-[0.625rem] font-sans", labelColor)}>{label}</span>
+        <span className={cn("text-[var(--text-label)] font-sans", labelColor)}>{label}</span>
         <Button
           variant="ghost"
           size="icon"
@@ -183,7 +183,7 @@ function TerminalBlock({
           )}
         </Button>
       </div>
-      <pre className="px-3 py-2 text-[0.6875rem] text-foreground/70 whitespace-pre-wrap break-all max-h-60 overflow-y-auto">
+      <pre className="px-3 py-2 text-[var(--text-caption)] text-foreground/70 whitespace-pre-wrap break-all max-h-60 overflow-y-auto">
         {content}
       </pre>
     </div>

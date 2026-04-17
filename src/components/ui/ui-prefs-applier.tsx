@@ -35,7 +35,7 @@ const DENSITY_VARS = {
     shellSectionGap: "1.1rem",
     shellPad: "0.9rem",
     shellCardPad: "0.85rem",
-    sidebarWidth: "308px",
+    sidebarWidth: "292px",
     sidebarCollapsedWidth: "78px",
     topbarHeight: "3.25rem",
     railRowPadX: "0.8rem",
@@ -49,8 +49,8 @@ const DENSITY_VARS = {
     shellSectionGap: "1.4rem",
     shellPad: "1rem",
     shellCardPad: "1rem",
-    sidebarWidth: "340px",
-    sidebarCollapsedWidth: "86px",
+    sidebarWidth: "320px",
+    sidebarCollapsedWidth: "82px",
     topbarHeight: "3.5rem",
     railRowPadX: "0.95rem",
     railRowPadY: "0.82rem",
@@ -63,8 +63,8 @@ const DENSITY_VARS = {
     shellSectionGap: "1.75rem",
     shellPad: "1.15rem",
     shellCardPad: "1.15rem",
-    sidebarWidth: "376px",
-    sidebarCollapsedWidth: "94px",
+    sidebarWidth: "352px",
+    sidebarCollapsedWidth: "90px",
     topbarHeight: "3.75rem",
     railRowPadX: "1.05rem",
     railRowPadY: "0.95rem",
@@ -121,31 +121,17 @@ export function UiPrefsApplier() {
     root.style.setProperty("--composer-max-width", densityVars.composerMaxWidth);
     root.style.setProperty("--empty-state-scale", densityVars.emptyStateScale);
 
-    // Font size — acts as a multiplier on the fluid base (16px = 1.0x, default)
-    // The CSS :root has font-size: clamp(14px, 0.625rem + 0.4vw, 22px)
-    // We scale that by the user's preference: 16px=100%, 18px=112.5%, 14px=87.5%
+    // Fluid UI scale.
+    // We keep scaling inside the root font-size instead of CSS zoom so viewport
+    // measurements, overflow, and sticky/fixed layout math stay stable.
     const fontScale = uiPrefs.fontSize / 16;
-    root.style.fontSize = `calc(clamp(14px, 0.625rem + 0.4vw, 22px) * ${fontScale})`;
-
-    // Zoom - use CSS zoom property (Chrome/Safari/Edge/Firefox 126+)
-    const zoom = uiPrefs.zoom ?? 100;
-    if (zoom !== 100) {
-      // CSS zoom accepts a number (1.25) or percentage string ("125%")
-      // Use the number form for widest support
-      root.style.setProperty("zoom", String(zoom / 100));
-      // Firefox < 126 fallback: use transform scale
-      const isFirefox = typeof navigator !== "undefined" && /Firefox/.test(navigator.userAgent);
-      if (isFirefox) {
-        root.style.transform = `scale(${zoom / 100})`;
-        root.style.transformOrigin = "0 0";
-        root.style.width = `${10000 / zoom}%`;
-      }
-    } else {
-      root.style.removeProperty("zoom");
-      root.style.transform = "";
-      root.style.transformOrigin = "";
-      root.style.width = "";
-    }
+    const interfaceScale = (uiPrefs.zoom ?? 100) / 100;
+    const combinedScale = fontScale * interfaceScale;
+    root.style.fontSize = `calc(clamp(14px, 0.625rem + 0.4vw, 22px) * ${combinedScale})`;
+    root.style.removeProperty("zoom");
+    root.style.transform = "";
+    root.style.transformOrigin = "";
+    root.style.width = "";
 
     // Font families - load from CDN if needed
     const fontKey = uiPrefs.fontFamily || "geist";

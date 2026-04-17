@@ -244,7 +244,7 @@ interface AppState {
 }
 
 const DEFAULT_UI_PREFS: AppState["uiPrefs"] = {
-  density: "spacious",
+  density: "comfortable",
   fontSize: 16,
   zoom: 100,
   fontFamily: "geist",

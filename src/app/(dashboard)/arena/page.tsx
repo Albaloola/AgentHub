@@ -16,6 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
@@ -183,16 +184,18 @@ export default function ArenaPage() {
             </div>
           ) : arenaRounds.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Swords className="h-10 w-10 text-muted-foreground mb-3" />
-                <h3 className="font-medium mb-1">No arena rounds yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Create a round to compare agents head-to-head
-                </p>
-                <Button size="sm" onClick={() => setCreateOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Create Round
-                </Button>
+              <CardContent>
+                <EmptyState
+                  icon={Swords}
+                  title="No arena rounds yet"
+                  description="Create a round to compare agents head-to-head"
+                  action={
+                    <Button size="sm" onClick={() => setCreateOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Create Round
+                    </Button>
+                  }
+                />
               </CardContent>
             </Card>
           ) : (
@@ -207,18 +210,18 @@ export default function ArenaPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {isPending ? (
-                              <Badge variant="outline" className="text-[0.625rem] border-[var(--status-warning)]/30 text-[var(--status-warning)]">
+                              <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-warning)]/30 text-[var(--status-warning)]">
                                 <Clock className="h-3 w-3 mr-0.5" />
                                 pending
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
+                              <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)]">
                                 <CheckCircle2 className="h-3 w-3 mr-0.5" />
                                 completed
                               </Badge>
                             )}
                             {round.category && (
-                              <Badge variant="outline" className="text-[0.625rem]">
+                              <Badge variant="outline" className="text-[var(--text-label)]">
                                 {round.category}
                               </Badge>
                             )}
@@ -252,7 +255,7 @@ export default function ArenaPage() {
                             >
                               <div
                                 className={cn(
-                                  "flex h-6 w-6 items-center justify-center rounded-full text-[0.5625rem] font-medium text-white",
+                                  "flex h-6 w-6 items-center justify-center rounded-full text-[var(--text-micro)] font-medium text-white",
                                   getAvatarColor(agentId),
                                 )}
                               >
@@ -293,12 +296,12 @@ export default function ArenaPage() {
             </div>
           ) : leaderboard.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Trophy className="h-10 w-10 text-muted-foreground mb-3" />
-                <h3 className="font-medium mb-1">No leaderboard data</h3>
-                <p className="text-sm text-muted-foreground">
-                  Complete some arena rounds to see agent rankings
-                </p>
+              <CardContent>
+                <EmptyState
+                  icon={Trophy}
+                  title="No leaderboard data"
+                  description="Complete some arena rounds to see agent rankings"
+                />
               </CardContent>
             </Card>
           ) : (
@@ -329,7 +332,7 @@ export default function ArenaPage() {
                             <div className="flex items-center gap-2">
                               <div
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
+                                  "flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white",
                                   getAvatarColor(entry.agent_id),
                                 )}
                               >
@@ -474,7 +477,7 @@ function CreateRoundDialog({
                 >
                   <div
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white",
                       getAvatarColor(agent.id),
                     )}
                   >
@@ -482,7 +485,7 @@ function CreateRoundDialog({
                   </div>
                   <span className="flex-1 text-sm">{agent.name}</span>
                   {isSelected && (
-                    <Badge variant="outline" className="text-[0.625rem]">
+                    <Badge variant="outline" className="text-[var(--text-label)]">
                       selected
                     </Badge>
                   )}
@@ -490,9 +493,12 @@ function CreateRoundDialog({
               );
             })}
             {agents.filter((a) => a.is_active).length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No active agents available
-              </p>
+              <EmptyState
+                icon={Users}
+                title="No active agents available"
+                className="py-4"
+                iconClassName="h-6 w-6 mb-2"
+              />
             )}
           </div>
         </div>

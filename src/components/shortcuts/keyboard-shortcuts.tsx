@@ -99,7 +99,7 @@ export function ShortcutsHelp({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-xl border border-border bg-card p-4 shadow-2xl"
+        className="w-full max-w-md rounded-xl border border-border bg-card p-4 shadow-[var(--panel-shadow-dramatic)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">

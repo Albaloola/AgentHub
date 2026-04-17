@@ -88,7 +88,7 @@ export function FloatingStats({
       {expanded ? (
         /* Expanded panel */
         <div
-          className="glass-strong rounded-2xl border border-border/20 shadow-2xl shadow-black/40 animate-fade-in"
+          className="glass-strong rounded-2xl border border-border/20 shadow-[var(--panel-shadow-dramatic)] animate-fade-in"
           style={{ animationDuration: "200ms" }}
         >
           {/* Header */}
@@ -120,7 +120,7 @@ export function FloatingStats({
                   {formatTokens(stats.totalTokens)}
                 </div>
                 {isStreaming && (
-                  <span className="text-[0.625rem] text-[var(--accent-blue)] animate-pulse">streaming...</span>
+                  <span className="text-[var(--text-label)] text-[var(--accent-blue)] animate-pulse">streaming...</span>
                 )}
               </StatSection>
 
@@ -149,7 +149,7 @@ export function FloatingStats({
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[0.5625rem] px-1 py-0 rounded-md",
+                            "text-[var(--text-micro)] px-1 py-0 rounded-md",
                             tc.status === "success"
                               ? "text-[var(--accent-emerald)] border-[var(--status-online)]/20"
                               : tc.status === "error"
@@ -183,7 +183,7 @@ export function FloatingStats({
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[0.5625rem] px-1 py-0 rounded-md",
+                            "text-[var(--text-micro)] px-1 py-0 rounded-md",
                             sa.status === "completed"
                               ? "text-[var(--accent-emerald)] border-[var(--status-online)]/20"
                               : sa.status === "failed"
@@ -224,7 +224,7 @@ export function FloatingStats({
           className={cn(
             "flex flex-col items-center gap-2 rounded-2xl px-2.5 py-3 transition-all duration-300",
             "glass-strong border border-border/20 hover:border-border/40",
-            "shadow-lg shadow-black/30 hover:shadow-xl",
+            "shadow-[var(--panel-shadow)] hover:shadow-[var(--panel-shadow-hover)]",
             isStreaming && "shadow-[var(--neon-blue-shadow)]",
           )}
         >
@@ -238,7 +238,7 @@ export function FloatingStats({
           {/* Token count */}
           <div className="flex flex-col items-center">
             <Coins className="h-3 w-3 text-[var(--accent-amber)] opacity-70" />
-            <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
+            <span className="text-[var(--text-label)] text-muted-foreground/60 tabular-nums mt-0.5">
               {formatTokens(stats.totalTokens)}
             </span>
           </div>
@@ -246,7 +246,7 @@ export function FloatingStats({
           {/* Tool calls count */}
           <div className="flex flex-col items-center">
             <Wrench className="h-3 w-3 text-[var(--accent-violet)] opacity-70" />
-            <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
+            <span className="text-[var(--text-label)] text-muted-foreground/60 tabular-nums mt-0.5">
               {stats.totalToolCalls}
             </span>
           </div>
@@ -255,7 +255,7 @@ export function FloatingStats({
           {subagents.length > 0 && (
             <div className="flex flex-col items-center">
               <Network className="h-3 w-3 text-[var(--accent-emerald)] opacity-70" />
-              <span className="text-[0.625rem] text-muted-foreground/60 tabular-nums mt-0.5">
+              <span className="text-[var(--text-label)] text-muted-foreground/60 tabular-nums mt-0.5">
                 {subagents.length}
               </span>
             </div>

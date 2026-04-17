@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageIntro } from "@/components/layout/page-intro";
 import { getStatusStyle } from "@/lib/status-colors";
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ import {
   createConversation,
 } from "@/lib/api";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/motion-primitives";
 import { GATEWAY_LABELS } from "@/lib/types";
 import type { Agent, AgentWithStatus, GatewayType } from "@/lib/types";
@@ -62,6 +64,8 @@ export default function AgentsPage() {
   const visibleAgents = gatewayFilter
     ? agents.filter((agent) => agent.gateway_type === gatewayFilter)
     : agents;
+  const onlineCount = visibleAgents.filter((agent) => agent.status === "online").length;
+  const activeCount = visibleAgents.filter((agent) => agent.is_active).length;
 
   // Click outside to collapse expanded card
   useEffect(() => {
@@ -178,7 +182,8 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack">
       {/* Backdrop overlay when a card is expanded */}
       {expandedAgent && (
         <div
@@ -188,42 +193,56 @@ export default function AgentsPage() {
       )}
 
       <FadeIn direction="up" distance={16}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Agents</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your connected agent gateways
-          </p>
-          {gatewayFilter && (
-            <button
-              type="button"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] px-3 py-1 text-xs font-medium text-[var(--theme-accent-text)]"
-              onClick={() => router.push("/agents")}
-            >
-              Filtered to {GATEWAY_LABELS[gatewayFilter] ?? gatewayFilter}
-            </button>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadAgents} disabled={refreshing}>
-            <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingAgent(undefined);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Register Agent
-          </Button>
-        </div>
-      </div>
+        <PageIntro
+          eyebrow={gatewayFilter ? "Filtered gateway" : "Connected gateways"}
+          title="Agents"
+          description="Manage connected agent gateways, monitor live status, and jump directly into the right operator without leaving the shell."
+          actions={
+            <>
+              <Button variant="outline" size="sm" onClick={loadAgents} disabled={refreshing}>
+                <RefreshCw className={cn("mr-1 h-4 w-4", refreshing && "animate-spin")} />
+                Refresh
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingAgent(undefined);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Register Agent
+              </Button>
+              {gatewayFilter && (
+                <Button variant="outline" size="sm" onClick={() => router.push("/agents")}>
+                  {GATEWAY_LABELS[gatewayFilter] ?? gatewayFilter}
+                </Button>
+              )}
+            </>
+          }
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Visible</p>
+                <p className="workspace-metric__value">{visibleAgents.length}</p>
+                <p className="workspace-metric__hint">Agents in the current view</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Online</p>
+                <p className="workspace-metric__value">{onlineCount}</p>
+                <p className="workspace-metric__hint">Ready to take work now</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Enabled</p>
+                <p className="workspace-metric__value">{activeCount}</p>
+                <p className="workspace-metric__hint">Included in routing</p>
+              </div>
+            </div>
+          }
+        />
       </FadeIn>
 
-      <div ref={gridRef} className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <div ref={gridRef} className="workspace-panel-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {refreshing && visibleAgents.length === 0 && (
           <>
             {Array.from({ length: 3 }).map((_, i) => (
@@ -250,20 +269,21 @@ export default function AgentsPage() {
 
         {visibleAgents.length === 0 && !refreshing && (
           <Card className="col-span-full border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Bot className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                {gatewayFilter ? "No agents in this gateway yet" : "No agents registered yet"}
-              </p>
-              <Button
-                className="mt-4"
-                onClick={() => {
-                  setEditingAgent(undefined);
-                  setDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Register Your First Agent
-              </Button>
+            <CardContent>
+              <EmptyState
+                icon={Bot}
+                title={gatewayFilter ? "No agents in this gateway yet" : "No agents registered yet"}
+                action={
+                  <Button
+                    onClick={() => {
+                      setEditingAgent(undefined);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Register Your First Agent
+                  </Button>
+                }
+              />
             </CardContent>
           </Card>
         )}
@@ -300,6 +320,7 @@ export default function AgentsPage() {
         agent={editingAgent}
         onSave={editingAgent ? handleEdit : handleCreate}
       />
+      </div>
     </div>
   );
 }
@@ -359,14 +380,14 @@ function AgentCard({
         )}
         style={{
           ...(isExpanded ? {
-            boxShadow: `0 0 20px ${glowColor}90, 0 0 50px ${glowColor}40, 0 0 80px ${glowColor}15`,
+            boxShadow: `0 20px 48px -28px ${glowColor}60`,
             borderColor: `${glowColor}70`,
-            transform: "scale(1.03)",
+            transform: "scale(1.015)",
           } : {}),
         }}
         onMouseEnter={(e) => {
           if (!isExpanded) {
-            e.currentTarget.style.boxShadow = `0 0 18px ${glowColor}80, 0 0 45px ${glowColor}35, 0 0 70px ${glowColor}12`;
+            e.currentTarget.style.boxShadow = `0 18px 42px -28px ${glowColor}50`;
             e.currentTarget.style.borderColor = `${glowColor}60`;
             e.currentTarget.style.transform = "translateY(-2px)";
           }
@@ -397,7 +418,7 @@ function AgentCard({
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold truncate text-foreground">{agent.name}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <Badge variant="secondary" className="text-[0.625rem]">{GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}</Badge>
+                <Badge variant="secondary" className="text-[var(--text-label)]">{GATEWAY_LABELS[agent.gateway_type] ?? agent.gateway_type}</Badge>
                 <span className="text-xs text-muted-foreground truncate">{agent.connection_url}</span>
               </div>
             </div>
@@ -419,23 +440,23 @@ function AgentCard({
           {/* Actions */}
           <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} className="flex-1 min-w-[7rem]">
-              <Button variant="outline" size="sm" className="w-full h-10 px-4 rounded-xl transition-all duration-300 neon-blue hover:text-[var(--accent-blue)]" onClick={onStartChat} disabled={!agent.is_active}>
+              <Button variant="outline" size="sm" className="h-10 w-full rounded-xl px-4 transition-all duration-300 hover:border-foreground/[0.18] hover:bg-foreground/[0.04]" onClick={onStartChat} disabled={!agent.is_active}>
                 <MessageSquare className="h-4 w-4 mr-1.5" />
                 Chat
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
-              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-emerald hover:text-[var(--accent-emerald)]" onClick={onHealthCheck} disabled={isCheckingHealth}>
+              <Button variant="outline" className="h-10 w-10 aspect-square flex-shrink-0 rounded-xl p-0 transition-all duration-300 hover:border-foreground/[0.18] hover:bg-foreground/[0.04]" onClick={onHealthCheck} disabled={isCheckingHealth}>
                 {isCheckingHealth ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
-              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-violet hover:text-[var(--accent-violet)]" onClick={onEdit}>
+              <Button variant="outline" className="h-10 w-10 aspect-square flex-shrink-0 rounded-xl p-0 transition-all duration-300 hover:border-foreground/[0.18] hover:bg-foreground/[0.04]" onClick={onEdit}>
                 <Pencil className="h-4 w-4" />
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
-              <Button variant="outline" className="h-10 w-10 aspect-square p-0 rounded-xl flex-shrink-0 transition-all duration-300 neon-rose hover:text-[var(--accent-rose)]" onClick={onDelete}>
+              <Button variant="outline" className="h-10 w-10 aspect-square flex-shrink-0 rounded-xl p-0 transition-all duration-300 hover:border-[var(--accent-rose)]/35 hover:bg-[var(--accent-rose)]/6 hover:text-[var(--accent-rose)]" onClick={onDelete}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -459,10 +480,10 @@ function AgentCard({
                   <div><span className="text-muted-foreground">Errors</span><p className="font-medium text-foreground">{agent.error_count}</p></div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" className="flex-1 transition-all duration-300 hover-glow-violet" onClick={onEdit}>
+                  <Button size="sm" className="flex-1 transition-all duration-300" onClick={onEdit}>
                     <Pencil className="h-4 w-4 mr-2" />Edit Agent Settings
                   </Button>
-                  <Button variant="outline" size="sm" onClick={onViewProfile} className="transition-all duration-300 hover-glow-blue">Full Profile</Button>
+                  <Button variant="outline" size="sm" onClick={onViewProfile} className="transition-all duration-300">Full Profile</Button>
                 </div>
               </div>
             </div>

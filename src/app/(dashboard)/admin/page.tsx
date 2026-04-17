@@ -21,6 +21,8 @@ import {
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
 } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/layout/page-intro";
 import {
   getUsers, createUser, deleteUser, getAuditLog, getAgents,
 } from "@/lib/api";
@@ -106,20 +108,34 @@ export default function AdminPage() {
 
   // Rough estimates for stats
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage users, view audit logs, and configure system settings
-        </p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="Platform operations"
+          title="Admin Panel"
+          description="Manage users, audit activity, and review core platform configuration without blurring the line with workspace-level preferences."
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Users</p>
+                <p className="workspace-metric__value">{users.length}</p>
+                <p className="workspace-metric__hint">Account records</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Agents</p>
+                <p className="workspace-metric__value">{agentCount}</p>
+                <p className="workspace-metric__hint">Managed by the platform</p>
+              </div>
+            </div>
+          }
+        />
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <Tabs defaultValue="users">
+        <Tabs defaultValue="users" className="workspace-stack">
           <TabsList>
             <TabsTrigger value="users">
               <Users className="h-4 w-4 mr-1.5" />
@@ -154,23 +170,25 @@ export default function AdminPage() {
             </div>
 
             {users.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No users yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Create a user account to get started
-                  </p>
-                  <Button size="sm" onClick={() => setCreateUserOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Create User
-                  </Button>
+              <Card className="workspace-panel">
+                <CardContent>
+                  <EmptyState
+                    icon={Users}
+                    title="No users yet"
+                    description="Create a user account to get started"
+                    action={
+                      <Button size="sm" onClick={() => setCreateUserOpen(true)}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Create User
+                      </Button>
+                    }
+                  />
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-2">
                 {users.map((user) => (
-                  <Card key={user.id}>
+                   <Card key={user.id} className="workspace-panel">
                     <CardContent className="flex items-center gap-3 p-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-violet)]/10">
                         <Shield className="h-5 w-5 text-[var(--accent-violet)]" />
@@ -214,15 +232,15 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold">Recent Activity</h2>
 
             {auditLog.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <ScrollText className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No audit entries yet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Activity will appear here as actions are performed
-                  </p>
-                </CardContent>
-              </Card>
+               <Card className="workspace-panel">
+                 <CardContent>
+                   <EmptyState
+                     icon={ScrollText}
+                     title="No audit entries yet"
+                     description="Activity will appear here as actions are performed"
+                   />
+                 </CardContent>
+               </Card>
             ) : (
               <AuditTable entries={auditLog} users={users} />
             )}
@@ -233,7 +251,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold">System Overview</h2>
 
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-              <Card>
+               <Card className="workspace-panel">
                 <CardContent className="flex items-center gap-3 p-4">
                   <Bot className="h-5 w-5 text-[var(--accent-blue)]" />
                   <div>
@@ -242,7 +260,7 @@ export default function AdminPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+               <Card className="workspace-panel">
                 <CardContent className="flex items-center gap-3 p-4">
                   <Users className="h-5 w-5 text-[var(--accent-violet)]" />
                   <div>
@@ -251,7 +269,7 @@ export default function AdminPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+               <Card className="workspace-panel">
                 <CardContent className="flex items-center gap-3 p-4">
                   <ScrollText className="h-5 w-5 text-[var(--accent-amber)]" />
                   <div>
@@ -260,7 +278,7 @@ export default function AdminPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+             <Card className="workspace-panel">
                 <CardContent className="flex items-center gap-3 p-4">
                   <Database className="h-5 w-5 text-[var(--accent-emerald)]" />
                   <div>
@@ -312,6 +330,7 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
       )}
+      </div>
     </div>
   );
 }
@@ -331,7 +350,7 @@ function AuditTable({ entries, users }: { entries: AuditLogEntry[]; users: UserA
         }
 
         return (
-          <Card key={entry.id} className="overflow-hidden">
+          <Card key={entry.id} className="workspace-panel overflow-hidden">
             <div
               className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/30 transition-colors"
               onClick={() => setExpandedId(isExpanded ? null : entry.id)}

@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     conversation_id?: string;
     content?: string;
     target_agent_id?: string;
+    attachment_ids?: string[];
   };
 
   if (!body.conversation_id || !body.content?.trim()) {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
           conversationId: body.conversation_id!,
           content: body.content!,
           targetAgentId: body.target_agent_id,
+          attachmentIds: Array.isArray(body.attachment_ids) ? body.attachment_ids : [],
           onEvent: send,
         });
       } catch (error) {

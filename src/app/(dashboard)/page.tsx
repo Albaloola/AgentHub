@@ -154,25 +154,28 @@ export default function DashboardPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-[1400px] space-y-8 px-4 py-4 md:px-6 md:py-6 lg:px-8 lg:py-8">
-        <section className="relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-[linear-gradient(135deg,rgba(255,255,255,0.02),rgba(255,255,255,0))] p-6 shadow-[0_30px_80px_-55px_rgba(0,0,0,0.55)] md:p-8">
+      <div className="workspace-page workspace-page--wide workspace-stack">
+        <section className="workspace-intro">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--theme-accent)_60%,transparent),transparent)]" />
           <div className="pointer-events-none absolute -left-20 top-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent-blue)_16%,transparent),transparent_72%)] blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent-violet)_14%,transparent),transparent_72%)] blur-3xl" />
 
-          <div className="grid gap-8 xl:grid-cols-[1.3fr_0.9fr]">
+          <div className="workspace-intro__content workspace-intro__content--split gap-8 xl:grid-cols-[1.3fr_0.9fr]">
             <div>
-              <p className="text-[0.72rem] font-medium uppercase tracking-[0.26em] text-muted-foreground">
+              <p className="workspace-eyebrow">
                 Hybrid Cockpit
               </p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-                Mission control for channels, agents, and live threads.
+              <h1
+                className="title-font mt-4 max-w-3xl text-[clamp(1.45rem,1rem+0.7vw,2rem)] font-semibold tracking-[-0.035em] text-foreground xl:whitespace-nowrap"
+                style={{ lineHeight: 1.24, paddingBottom: "0.4em", textWrap: "balance" }}
+              >
+                Mission control for channels and agents.
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+              <p className="workspace-description mt-4 max-w-2xl">
                 Launch into the right channel, check gateway health, and keep your pinned conversations close without bouncing between separate surfaces.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="workspace-actions mt-6">
                 <Button onClick={() => router.push("/agents")} className="rounded-full px-5">
                   <Bot className="mr-2 h-4 w-4" />
                   Manage agents
@@ -193,7 +196,7 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="workspace-metric-grid mt-8 sm:grid-cols-2 xl:grid-cols-4">
                 <StatPlate
                   title="Online agents"
                   value={loading ? "..." : `${onlineAgents.length}`}
@@ -221,7 +224,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.8rem] border border-foreground/[0.08] bg-foreground/[0.02] p-5">
+            <div className="surface-subtle workspace-panel p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">Pinned launch deck</p>
@@ -235,7 +238,7 @@ export default function DashboardPage() {
               <div className="mt-4 space-y-3">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, index) => (
-                    <Skeleton key={index} className="h-20 rounded-[1.25rem]" />
+                    <Skeleton key={index} className="h-20 rounded-[var(--workspace-radius-lg)]" />
                   ))
                 ) : heroChannels.length > 0 ? (
                   heroChannels.map((channel) => {
@@ -245,7 +248,7 @@ export default function DashboardPage() {
                         key={channel.id}
                         type="button"
                         onClick={() => void openChannel(channel)}
-                        className="group relative flex w-full items-center gap-4 rounded-[1.25rem] border border-foreground/[0.08] px-4 py-4 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
+                        className="group relative flex w-full items-center gap-4 rounded-[var(--workspace-radius-lg)] border border-foreground/[0.08] px-4 py-4 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
                       >
                         <div
                           className="pointer-events-none absolute inset-x-10 -inset-y-1 rounded-full opacity-0 blur-xl transition-opacity duration-200 group-hover:opacity-100"
@@ -259,7 +262,7 @@ export default function DashboardPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="truncate text-sm font-medium text-foreground">{channel.title}</span>
-                            <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[0.62rem] text-muted-foreground">
+                            <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[var(--text-label)] text-muted-foreground">
                               Local pin
                             </span>
                           </div>
@@ -270,14 +273,14 @@ export default function DashboardPage() {
                     );
                   })
                 ) : (
-                  <div className="rounded-[1.25rem] border border-dashed border-foreground/[0.08] px-4 py-5 text-sm text-muted-foreground">
+                  <div className="rounded-[var(--workspace-radius-lg)] border border-dashed border-foreground/[0.08] px-4 py-5 text-sm text-muted-foreground">
                     Pin a gateway or agent channel from the left rail to keep it here.
                   </div>
                 )}
               </div>
 
               <div className="mt-5 border-t border-foreground/[0.06] pt-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Top operators</p>
+                <p className="text-xs uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">Top operators</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {loading ? (
                     Array.from({ length: 4 }).map((_, index) => (
@@ -314,11 +317,11 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-[1.8rem] border border-foreground/[0.08] bg-foreground/[0.02] p-5 md:p-6">
+        <div className="workspace-panel-grid xl:grid-cols-[1.05fr_0.95fr]">
+          <section className="surface-panel workspace-panel p-5 md:p-6">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-[0.72rem] uppercase tracking-[0.24em] text-muted-foreground">
+                <p className="text-[var(--text-eyebrow)] uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">
                   Gateway lanes
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
@@ -334,7 +337,7 @@ export default function DashboardPage() {
             <div className="mt-6 space-y-4">
               {loading ? (
                 Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-28 rounded-[1.4rem]" />
+                  <Skeleton key={index} className="h-28 rounded-[var(--workspace-radius-lg)]" />
                 ))
               ) : (
                 gatewayGroups.map((group) => (
@@ -403,17 +406,17 @@ function StatPlate({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-[1.35rem] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-4">
+    <div className="workspace-metric">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+          <p className="workspace-metric__label">{title}</p>
+          <p className="workspace-metric__value">{value}</p>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground/[0.05] text-muted-foreground">
           <Icon className="h-4.5 w-4.5" />
         </div>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+      <p className="workspace-metric__hint">{hint}</p>
     </div>
   );
 }
@@ -430,7 +433,7 @@ function GatewayLane({
   const GatewayIcon = group.meta.icon;
 
   return (
-    <div className="rounded-[1.45rem] border border-foreground/[0.08] bg-foreground/[0.015] p-4">
+    <div className="surface-panel workspace-panel p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className={cn("flex h-11 w-11 items-center justify-center rounded-2xl", group.meta.iconClassName)}>
@@ -439,7 +442,7 @@ function GatewayLane({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-medium tracking-tight text-foreground">{group.label}</h3>
-              <span className={cn("rounded-full border px-2 py-0.5 text-[0.62rem]", group.meta.badgeClassName)}>
+              <span className={cn("rounded-full border px-2 py-0.5 text-[var(--text-label)]", group.meta.badgeClassName)}>
                 {group.onlineCount}/{group.agents.length} online
               </span>
             </div>
@@ -511,20 +514,20 @@ function WatchSection({
   const childCount = Array.isArray(children) ? children.filter(Boolean).length : children ? 1 : 0;
 
   return (
-    <section className="rounded-[1.8rem] border border-foreground/[0.08] bg-foreground/[0.02] p-5 md:p-6">
-      <p className="text-[0.72rem] uppercase tracking-[0.24em] text-muted-foreground">{title}</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{title}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    <section className="surface-panel workspace-panel p-5 md:p-6">
+      <p className="workspace-eyebrow">{title}</p>
+      <h2 className="workspace-section-title mt-2">{title}</h2>
+      <p className="workspace-section-description mt-2">{description}</p>
 
       <div className="mt-5 space-y-3">
         {loading ? (
           Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-20 rounded-[1.25rem]" />
+            <Skeleton key={index} className="h-20 rounded-[var(--workspace-radius-lg)]" />
           ))
         ) : childCount > 0 ? (
           children
         ) : (
-          <div className="rounded-[1.25rem] border border-dashed border-foreground/[0.08] px-4 py-5 text-sm text-muted-foreground">
+          <div className="rounded-[var(--workspace-radius-lg)] border border-dashed border-foreground/[0.08] px-4 py-5 text-sm text-muted-foreground">
             {emptyState}
           </div>
         )}
@@ -546,7 +549,7 @@ function ConversationWatchRow({
     <button
       type="button"
       onClick={onOpen}
-      className="group relative flex w-full items-center gap-4 rounded-[1.25rem] border border-foreground/[0.08] px-4 py-4 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
+      className="group relative flex w-full items-center gap-4 rounded-[var(--workspace-radius-lg)] border border-foreground/[0.08] px-4 py-4 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
     >
       <div
         className="pointer-events-none absolute inset-x-8 -inset-y-1 rounded-full opacity-0 blur-xl transition-opacity duration-200 group-hover:opacity-100"
@@ -568,7 +571,7 @@ function ConversationWatchRow({
             {conversation.name || "Untitled chat"}
           </span>
           {conversation.is_pinned && (
-            <span className="rounded-full border border-[var(--accent-rose)]/30 px-2 py-0.5 text-[0.62rem] text-[var(--accent-rose)]">
+            <span className="rounded-full border border-[var(--accent-rose)]/30 px-2 py-0.5 text-[var(--text-label)] text-[var(--accent-rose)]">
               Chat pin
             </span>
           )}

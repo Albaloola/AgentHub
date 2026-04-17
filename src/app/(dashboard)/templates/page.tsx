@@ -16,6 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useStore } from "@/lib/store";
 import { getTemplates, createTemplate, deleteTemplate, getAgents, createConversation } from "@/lib/api";
 import {
@@ -150,16 +151,18 @@ export default function TemplatesPage() {
         </div>
       ) : templates.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No templates yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a template to save conversation configurations for reuse
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Template
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={FileText}
+              title="No templates yet"
+              description="Create a template to save conversation configurations for reuse"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Template
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -178,11 +181,11 @@ export default function TemplatesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{template.name}</span>
-                      <Badge variant="outline" className="text-[0.625rem]">
+                      <Badge variant="outline" className="text-[var(--text-label)]">
                         {template.response_mode}
                       </Badge>
                       {template.stop_on_completion && (
-                        <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
+                        <Badge variant="outline" className="text-[var(--text-label)] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
                           auto-stop
                         </Badge>
                       )}
@@ -390,7 +393,7 @@ function CreateTemplateDialog({
               value={maxResponses}
               onChange={(e) => setMaxResponses(parseInt(e.target.value) || 0)}
             />
-            <p className="text-[0.625rem] text-muted-foreground mt-0.5">0 = unlimited</p>
+            <p className="text-[var(--text-label)] text-muted-foreground mt-0.5">0 = unlimited</p>
           </div>
           <div className="flex items-center gap-2 pt-6">
             <Switch
@@ -419,7 +422,7 @@ function CreateTemplateDialog({
                 >
                   <div
                     className={cn(
-                      "flex h-7 w-7 items-center justify-center rounded-full text-[0.625rem] font-medium text-white",
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white",
                       getAvatarColor(agent.id),
                     )}
                   >
@@ -447,9 +450,12 @@ function CreateTemplateDialog({
               );
             })}
             {agents.filter((a) => a.is_active).length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No active agents available
-              </p>
+              <EmptyState
+                icon={Users}
+                title="No active agents available"
+                className="py-4"
+                iconClassName="h-6 w-6 mb-2"
+              />
             )}
           </div>
         </div>

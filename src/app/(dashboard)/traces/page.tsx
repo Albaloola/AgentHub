@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
@@ -229,12 +230,12 @@ export default function TracesPage() {
         </div>
       ) : filtered.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Activity className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No traces found</h3>
-            <p className="text-sm text-muted-foreground">
-              Traces are recorded when agents process messages
-            </p>
+          <CardContent>
+            <EmptyState
+              icon={Activity}
+              title="No traces found"
+              description="Traces are recorded when agents process messages"
+            />
           </CardContent>
         </Card>
       ) : (
@@ -258,7 +259,7 @@ export default function TracesPage() {
                   {agent ? (
                     <div
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full text-[0.625rem] font-medium text-white shrink-0",
+                        "flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white shrink-0",
                         getAvatarColor(agent.id),
                       )}
                     >
@@ -278,14 +279,14 @@ export default function TracesPage() {
                         </span>
                       )}
                       {agent && (
-                        <Badge variant="outline" className="text-[0.625rem]">
+                        <Badge variant="outline" className="text-[var(--text-label)]">
                           {agent.name}
                         </Badge>
                       )}
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[0.625rem]",
+                          "text-[var(--text-label)]",
                           trace.status === "error"
                             ? "border-[var(--status-danger)]/30 text-[var(--status-danger)]"
                             : "border-[var(--status-online)]/30 text-[var(--status-online)]",
@@ -323,7 +324,7 @@ export default function TracesPage() {
                           </span>
                           <div className="flex gap-2 flex-wrap">
                             {Object.entries(SPAN_LABEL_COLORS).map(([type, cls]) => (
-                              <span key={type} className={cn("text-[0.5625rem] px-1.5 py-0.5 rounded font-medium", cls)}>
+                              <span key={type} className={cn("text-[var(--text-micro)] px-1.5 py-0.5 rounded font-medium", cls)}>
                                 {type}
                               </span>
                             ))}
@@ -349,7 +350,7 @@ export default function TracesPage() {
                                 )}
                                 onClick={() => setSelectedSpan(isSelected ? null : span)}
                               >
-                                <span className="text-[0.625rem] text-muted-foreground w-20 truncate shrink-0">
+                                <span className="text-[var(--text-label)] text-muted-foreground w-20 truncate shrink-0">
                                   {span.name}
                                 </span>
                                 <div className="flex-1 h-5 relative bg-muted rounded overflow-hidden">
@@ -362,7 +363,7 @@ export default function TracesPage() {
                                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                                   />
                                 </div>
-                                <span className="text-[0.625rem] text-muted-foreground w-14 text-right shrink-0">
+                                <span className="text-[var(--text-label)] text-muted-foreground w-14 text-right shrink-0">
                                   {formatDuration(span.duration_ms)}
                                 </span>
                               </div>
@@ -389,7 +390,7 @@ export default function TracesPage() {
                               <div>
                                 <Badge
                                   variant="outline"
-                                  className={cn("text-[0.625rem]", SPAN_LABEL_COLORS[selectedSpan.type])}
+                                  className={cn("text-[var(--text-label)]", SPAN_LABEL_COLORS[selectedSpan.type])}
                                 >
                                   {selectedSpan.type}
                                 </Badge>
@@ -401,7 +402,7 @@ export default function TracesPage() {
                                 <Badge
                                   variant="outline"
                                   className={cn(
-                                    "text-[0.625rem]",
+                                    "text-[var(--text-label)]",
                                     selectedSpan.status === "error"
                                       ? "border-[var(--status-danger)]/30 text-[var(--status-danger)]"
                                       : "border-[var(--status-online)]/30 text-[var(--status-online)]",
@@ -424,16 +425,16 @@ export default function TracesPage() {
                           </div>
                           {selectedSpan.input && (
                             <div>
-                              <Label className="text-[0.625rem]">Input</Label>
-                              <pre className="mt-1 text-[0.625rem] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+                              <Label className="text-[var(--text-label)]">Input</Label>
+                              <pre className="mt-1 text-[var(--text-label)] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
                                 {selectedSpan.input}
                               </pre>
                             </div>
                           )}
                           {selectedSpan.output && (
                             <div>
-                              <Label className="text-[0.625rem]">Output</Label>
-                              <pre className="mt-1 text-[0.625rem] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+                              <Label className="text-[var(--text-label)]">Output</Label>
+                              <pre className="mt-1 text-[var(--text-label)] bg-background rounded-md p-2 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
                                 {selectedSpan.output}
                               </pre>
                             </div>

@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/lib/store";
@@ -213,7 +214,7 @@ export default function FleetPage() {
                         <span className="font-medium truncate">{agent.name}</span>
                         <div className={cn("h-2 w-2 rounded-full shrink-0", statusDot(agent.status))} />
                       </div>
-                      <Badge variant="outline" className="text-[0.625rem] mt-0.5">
+                      <Badge variant="outline" className="text-[var(--text-label)] mt-0.5">
                         {agent.gateway_type}
                       </Badge>
                     </div>
@@ -247,10 +248,12 @@ export default function FleetPage() {
             ))}
             {agents.length === 0 && (
               <Card className="col-span-full">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Activity className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium mb-1">No agents in fleet</h3>
-                  <p className="text-sm text-muted-foreground">Add agents to see fleet overview</p>
+                <CardContent>
+                  <EmptyState
+                    icon={Activity}
+                    title="No agents in fleet"
+                    description="Add agents to see fleet overview"
+                  />
                 </CardContent>
               </Card>
             )}
@@ -280,11 +283,11 @@ export default function FleetPage() {
                               </span>
                               <Badge
                                 variant="outline"
-                                className={cn("text-[0.625rem]", severityBadge(event.severity))}
+                                className={cn("text-[var(--text-label)]", severityBadge(event.severity))}
                               >
                                 {event.severity}
                               </Badge>
-                              <Badge variant="outline" className="text-[0.625rem]">
+                              <Badge variant="outline" className="text-[var(--text-label)]">
                                 {event.type}
                               </Badge>
                             </div>

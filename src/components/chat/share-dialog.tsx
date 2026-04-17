@@ -280,11 +280,11 @@ export function ShareDialog({
                 !selectedUserId &&
                 searchQuery.trim() &&
                 filteredUsers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-popover shadow-[var(--panel-shadow)]">
                     {filteredUsers.map((user) => (
                       <button
                         key={user.id}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-foreground/[0.05] transition-colors"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-foreground/[0.04] transition-colors"
                         onClick={() => {
                           setSelectedUserId(user.id);
                           setSearchQuery(user.display_name);
@@ -297,14 +297,14 @@ export function ShareDialog({
                             {user.display_name}
                           </div>
                           {user.email && (
-                            <div className="truncate text-[0.625rem] text-muted-foreground">
+                            <div className="truncate text-[var(--text-label)] text-muted-foreground">
                               {user.email}
                             </div>
                           )}
                         </div>
                         <Badge
                           variant="outline"
-                          className="text-[0.5625rem] px-1.5 py-0 shrink-0"
+                          className="text-[var(--text-micro)] px-1.5 py-0 shrink-0"
                         >
                           {user.role}
                         </Badge>
@@ -317,7 +317,7 @@ export function ShareDialog({
                 !selectedUserId &&
                 searchQuery.trim().length > 0 &&
                 filteredUsers.length === 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border border-border bg-popover p-3 shadow-lg">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border border-border bg-popover p-3 shadow-[var(--panel-shadow)]">
                     <p className="text-xs text-muted-foreground text-center">
                       No matching users found
                     </p>
@@ -370,7 +370,7 @@ export function ShareDialog({
               People with access
             </label>
             {permissions.length > 0 && (
-              <span className="text-[0.625rem] text-muted-foreground tabular-nums">
+              <span className="text-[var(--text-label)] text-muted-foreground tabular-nums">
                 {permissions.length}
               </span>
             )}
@@ -399,7 +399,7 @@ export function ShareDialog({
                   <div
                     key={perm.user_id}
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-foreground/[0.05]",
+                      "group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-foreground/[0.04]",
                       isRemoving && "opacity-50",
                     )}
                   >
@@ -412,7 +412,7 @@ export function ShareDialog({
                         {perm.display_name}
                       </div>
                       {perm.email && (
-                        <div className="truncate text-[0.625rem] text-muted-foreground">
+                        <div className="truncate text-[var(--text-label)] text-muted-foreground">
                           {perm.email}
                         </div>
                       )}
@@ -432,7 +432,7 @@ export function ShareDialog({
                       <SelectTrigger
                         size="sm"
                         className={cn(
-                          "w-[90px] shrink-0 text-[0.625rem] h-6 gap-1",
+                          "w-[90px] shrink-0 text-[var(--text-label)] h-6 gap-1",
                           isUpdating && "opacity-50",
                         )}
                       >
@@ -485,7 +485,7 @@ export function ShareDialog({
             return (
               <div
                 key={level}
-                className="flex items-center gap-2 text-[0.625rem] text-muted-foreground"
+                className="flex items-center gap-2 text-[var(--text-label)] text-muted-foreground"
               >
                 <Icon className="h-3 w-3 shrink-0" />
                 <span className="font-medium w-12">{meta.label}</span>

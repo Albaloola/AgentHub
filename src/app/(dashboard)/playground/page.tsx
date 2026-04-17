@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -293,7 +294,7 @@ export default function PlaygroundPage() {
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "flex h-5 w-5 items-center justify-center rounded-full text-[0.5rem] font-medium text-white",
+                        "flex h-5 w-5 items-center justify-center rounded-full text-[var(--text-micro)] font-medium text-white",
                         getAvatarColor(agent.id),
                       )}
                     >
@@ -352,12 +353,12 @@ export default function PlaygroundPage() {
                 <CardTitle className="text-sm flex items-center gap-2">
                   System Prompt
                   {selectedVersion && (
-                    <Badge variant="outline" className={cn("text-[0.625rem]", selectedVersion.is_active ? "border-[var(--status-online)]/30 text-[var(--status-online)]" : "border-border")}>
+                    <Badge variant="outline" className={cn("text-[var(--text-label)]", selectedVersion.is_active ? "border-[var(--status-online)]/30 text-[var(--status-online)]" : "border-border")}>
                       v{selectedVersion.version}
                     </Badge>
                   )}
                   {selectedVersionId === "custom" && (
-                    <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-violet)]/30 text-[var(--accent-violet)]">
+                    <Badge variant="outline" className="text-[var(--text-label)] border-[var(--accent-violet)]/30 text-[var(--accent-violet)]">
                       custom
                     </Badge>
                   )}
@@ -433,7 +434,7 @@ export default function PlaygroundPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="rounded-b-lg overflow-auto max-h-40">
-                  <table className="w-full text-[0.6875rem] font-mono">
+                  <table className="w-full text-[var(--text-caption)] font-mono">
                     <tbody>
                       {autoDiff.lines.filter((l) => l.status !== "same").map((line, i) => (
                         <tr
@@ -627,7 +628,7 @@ export default function PlaygroundPage() {
               </div>
               {diffResult && (
                 <div className="rounded-md border border-border overflow-auto max-h-64">
-                  <table className="w-full text-[0.6875rem] font-mono">
+                  <table className="w-full text-[var(--text-caption)] font-mono">
                     <tbody>
                       {diffResult.lines.map((line, i) => (
                         <tr
@@ -668,11 +669,13 @@ export default function PlaygroundPage() {
         {/* Version list */}
         {agentVersions.length === 0 ? (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                No versions yet for this agent. Save the current prompt as a version.
-              </p>
+            <CardContent>
+              <EmptyState
+                icon={FileText}
+                title="No versions yet for this agent. Save the current prompt as a version."
+                className="py-8"
+                iconClassName="h-8 w-8 mb-2"
+              />
             </CardContent>
           </Card>
         ) : (
@@ -699,12 +702,12 @@ export default function PlaygroundPage() {
                           )}
                           <Badge
                             variant="outline"
-                            className={cn("text-[0.625rem]", ENV_COLORS[version.environment])}
+                            className={cn("text-[var(--text-label)]", ENV_COLORS[version.environment])}
                           >
                             {version.environment}
                           </Badge>
                           {version.is_active && (
-                            <Badge variant="outline" className="text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]">
+                            <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)]">
                               active
                             </Badge>
                           )}
@@ -845,7 +848,7 @@ function CreateVersionDialog({
 
         <div>
           <Label className="text-xs">Content Preview</Label>
-          <pre className="mt-1 text-[0.6875rem] bg-muted rounded-md p-3 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
+          <pre className="mt-1 text-[var(--text-caption)] bg-muted rounded-md p-3 whitespace-pre-wrap border border-border max-h-32 overflow-auto">
             {content.slice(0, 300)}{content.length > 300 ? "..." : ""}
           </pre>
         </div>

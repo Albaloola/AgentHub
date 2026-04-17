@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogTrigger,
@@ -114,16 +115,18 @@ export default function ApiKeysPage() {
         </div>
       ) : keys.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Key className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No API keys yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create an API key to access your agents from external applications
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create API Key
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={Key}
+              title="No API keys yet"
+              description="Create an API key to access your agents from external applications"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create API Key
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -140,7 +143,7 @@ export default function ApiKeysPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{apiKey.name}</span>
                       {perms.map((p) => (
-                        <Badge key={p} variant="outline" className="text-[0.625rem]">
+                        <Badge key={p} variant="outline" className="text-[var(--text-label)]">
                           {p}
                         </Badge>
                       ))}
@@ -400,7 +403,7 @@ function CreateApiKeyDialog({
               </div>
             ))}
           </div>
-          <p className="text-[0.625rem] text-muted-foreground mt-1">
+          <p className="text-[var(--text-label)] text-muted-foreground mt-1">
             agent:read - list and query agents &middot; agent:write - send messages &middot; webhook:create - manage webhooks
           </p>
         </div>

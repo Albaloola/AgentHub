@@ -34,7 +34,26 @@ export interface ExecuteConversationTurnInput {
   conversationId: string;
   content: string;
   targetAgentId?: string;
+  attachmentIds?: string[];
   onEvent?: (event: ExecutionEvent) => void;
+}
+
+function attachUploadsToMessage(messageId: string, attachmentIds: string[] | undefined) {
+  if (!attachmentIds?.length) {
+    return;
+  }
+
+  const uniqueAttachmentIds = Array.from(new Set(attachmentIds.filter(Boolean)));
+  if (uniqueAttachmentIds.length === 0) {
+    return;
+  }
+
+  const placeholders = uniqueAttachmentIds.map(() => "?").join(", ");
+  db.prepare(
+    `UPDATE attachments
+     SET message_id = ?
+     WHERE message_id IS NULL AND id IN (${placeholders})`,
+  ).run(messageId, ...uniqueAttachmentIds);
 }
 
 export interface ExecuteConversationTurnResult {
@@ -278,6 +297,7 @@ export async function executeConversationTurn(
     `INSERT INTO messages (id, conversation_id, sender_agent_id, content, token_count)
      VALUES (?, ?, NULL, ?, ?)`,
   ).run(userMessageId, conversation.id, input.content, Math.ceil(input.content.length / 4));
+  attachUploadsToMessage(userMessageId, input.attachmentIds);
   db.prepare("UPDATE conversations SET updated_at = datetime('now') WHERE id = ?").run(conversation.id);
 
   const { agents, responseMode } = loadConversationAgents(conversation, channel, input.targetAgentId);

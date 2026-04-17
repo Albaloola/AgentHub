@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { PageIntro } from "@/components/layout/page-intro";
 import { useStore } from "@/lib/store";
 import { getWorkflows, createWorkflow, updateWorkflow, deleteWorkflow, getAgents } from "@/lib/api";
 import {
@@ -26,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import type { Workflow, WorkflowNode, WorkflowEdge, AgentWithStatus } from "@/lib/types";
 import { toast } from "sonner";
@@ -110,31 +112,45 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Workflows</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Build agent pipelines with visual node graphs
-          </p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Workflow
-          </DialogTrigger>
-          <CreateWorkflowDialog
-            onCreated={(wf) => {
-              setWorkflowsState((prev) => [wf, ...prev]);
-              setCreateOpen(false);
-            }}
-          />
-        </Dialog>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="Automation graph"
+          title="Workflows"
+          description="Build reusable multi-agent pipelines with clearer list management and a shell-consistent entry surface."
+          actions={
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger render={<Button size="sm" />}>
+                <Plus className="mr-1 h-4 w-4" />
+                New Workflow
+              </DialogTrigger>
+              <CreateWorkflowDialog
+                onCreated={(wf) => {
+                  setWorkflowsState((prev) => [wf, ...prev]);
+                  setCreateOpen(false);
+                }}
+              />
+            </Dialog>
+          }
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Workflows</p>
+                <p className="workspace-metric__value">{workflows.length}</p>
+                <p className="workspace-metric__hint">Saved graphs</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Active</p>
+                <p className="workspace-metric__value">{workflows.filter((w) => w.is_active).length}</p>
+                <p className="workspace-metric__hint">Currently running</p>
+              </div>
+            </div>
+          }
+        />
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-2 md:grid-cols-3">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <GitBranch className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
@@ -143,7 +159,7 @@ export default function WorkflowsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Zap className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
@@ -154,7 +170,7 @@ export default function WorkflowsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Bot className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
@@ -178,21 +194,23 @@ export default function WorkflowsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : workflows.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <GitBranch className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No workflows yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create agent pipelines to automate multi-step processes
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Workflow
-            </Button>
+        <Card className="workspace-panel">
+          <CardContent>
+            <EmptyState
+              icon={GitBranch}
+              title="No workflows yet"
+              description="Create agent pipelines to automate multi-step processes"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Workflow
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+          <div className="workspace-stack gap-3">
           {workflows.map((wf) => {
             let nodeCount = 0;
             let edgeCount = 0;
@@ -202,7 +220,7 @@ export default function WorkflowsPage() {
             } catch { /* empty */ }
 
             return (
-              <Card key={wf.id} className="overflow-hidden">
+              <Card key={wf.id} className="workspace-panel overflow-hidden">
                 <div className="flex items-center gap-3 p-4">
                   <div className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-lg",
@@ -216,7 +234,7 @@ export default function WorkflowsPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[0.625rem]",
+                          "text-[var(--text-label)]",
                           wf.is_active ? "border-[var(--status-online)]/30 text-[var(--status-online)]" : "",
                         )}
                       >
@@ -286,6 +304,7 @@ export default function WorkflowsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }
@@ -469,7 +488,7 @@ function WorkflowCanvas({
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <h2 className="font-medium">{workflow.name}</h2>
-          <Badge variant="outline" className="text-[0.625rem]">
+          <Badge variant="outline" className="text-[var(--text-label)]">
             {nodes.length} nodes
           </Badge>
         </div>
@@ -483,7 +502,7 @@ function WorkflowCanvas({
               Add Node
             </Button>
             {addMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-md border border-border bg-card shadow-lg py-1">
+              <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-md border border-border bg-card shadow-[var(--panel-shadow)] py-1">
                 {NODE_TYPES.map(({ value, label, icon: Icon }) => (
                   <button
                     key={value}
@@ -579,7 +598,7 @@ function WorkflowCanvas({
                     node.type === "delay" ? "bg-[var(--accent-violet)]/10" : "bg-[var(--accent-emerald)]/10",
                   )}>
                     {agent ? (
-                      <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[0.5625rem] font-medium text-white", getAvatarColor(agent.id))}>
+                      <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[var(--text-micro)] font-medium text-white", getAvatarColor(agent.id))}>
                         {getInitials(agent.name)}
                       </div>
                     ) : (
@@ -592,7 +611,7 @@ function WorkflowCanvas({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium truncate">{node.label}</div>
-                    <div className="text-[0.625rem] text-muted-foreground capitalize">{node.type}</div>
+                    <div className="text-[var(--text-label)] text-muted-foreground capitalize">{node.type}</div>
                   </div>
                 </div>
 

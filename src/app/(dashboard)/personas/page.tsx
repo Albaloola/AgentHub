@@ -16,6 +16,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -156,16 +157,18 @@ export default function PersonasPage() {
         </div>
       ) : personas.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Brain className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No personas yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a persona to define reusable agent behavior configurations
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Persona
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={Brain}
+              title="No personas yet"
+              description="Create a persona to define reusable agent behavior configurations"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Persona
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -258,14 +261,14 @@ function PersonaCard({
             <div className="flex items-center gap-2">
               <span className="font-medium truncate">{persona.name}</span>
               {persona.is_builtin && (
-                <Badge variant="outline" className="text-[0.625rem] shrink-0">built-in</Badge>
+                <Badge variant="outline" className="text-[var(--text-label)] shrink-0">built-in</Badge>
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <Badge variant="outline" className="text-[0.625rem]">{persona.category}</Badge>
+              <Badge variant="outline" className="text-[var(--text-label)]">{persona.category}</Badge>
               <Badge
                 variant="outline"
-                className="text-[0.625rem] border-[var(--accent-blue)]/30 text-[var(--accent-blue)]"
+                className="text-[var(--text-label)] border-[var(--accent-blue)]/30 text-[var(--accent-blue)]"
               >
                 {persona.behavior_mode}
               </Badge>

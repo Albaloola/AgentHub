@@ -127,7 +127,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
       <Button
         variant="outline"
         size="sm"
-        className="fixed bottom-20 right-4 z-40 gap-1.5 shadow-lg"
+        className="fixed bottom-20 right-4 z-40 gap-1.5 shadow-[var(--panel-shadow)]"
         onClick={() => setOpen(true)}
       >
         <Layers className="h-4 w-4" />
@@ -147,7 +147,7 @@ export function ArtifactsPanel({ messages }: { messages: MessageWithToolCalls[] 
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <Code2 className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium flex-1">{current.title}</span>
-        <Badge variant="outline" className="text-[0.625rem]">{current.language}</Badge>
+        <Badge variant="outline" className="text-[var(--text-label)]">{current.language}</Badge>
 
         {artifacts.length > 1 && (
           <div className="flex items-center gap-1">

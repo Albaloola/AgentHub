@@ -15,6 +15,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageIntro } from "@/components/layout/page-intro";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,57 +126,78 @@ export default function ScheduledTasksPage() {
 
   const activeTasks = tasks.filter((t) => t.is_active);
   const totalRuns = tasks.reduce((sum, t) => sum + t.run_count, 0);
+  const manualTasks = tasks.filter((t) => !t.cron_expression).length;
+  const tasksNeedingAttention = tasks.filter((t) => t.last_status === "error").length;
+  const pausedTasks = tasks.filter((t) => !t.is_active).length;
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Scheduled Tasks</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Automate agent actions on a recurring schedule
-          </p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Task
-          </DialogTrigger>
-          <CreateTaskDialog
-            agents={agents}
-            onCreated={(t) => {
-              setTasks((prev) => [t, ...prev]);
-              setCreateOpen(false);
-            }}
-          />
-        </Dialog>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-6xl">
+        <PageIntro
+          eyebrow="Automation"
+          title="Scheduled Tasks"
+          description="Automate recurring prompts and operational checks without leaving the shell. Keep schedules, state, and run history in one consistent surface."
+          actions={
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger render={<Button size="sm" />}>
+                <Plus className="mr-1 h-4 w-4" />
+                New Task
+              </DialogTrigger>
+              <CreateTaskDialog
+                agents={agents}
+                onCreated={(t) => {
+                  setTasks((prev) => [t, ...prev]);
+                  setCreateOpen(false);
+                }}
+              />
+            </Dialog>
+          }
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Tasks</p>
+                <p className="workspace-metric__value">{tasks.length}</p>
+                <p className="workspace-metric__hint">Total automations</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Active</p>
+                <p className="workspace-metric__value">{activeTasks.length}</p>
+                <p className="workspace-metric__hint">Currently scheduled</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Runs</p>
+                <p className="workspace-metric__value">{totalRuns}</p>
+                <p className="workspace-metric__hint">Historical executions</p>
+              </div>
+            </div>
+          }
+        />
 
-      {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-1 md:grid-cols-3">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
-            <Calendar className="h-5 w-5 text-[var(--accent-blue)]" />
+            <Clock className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
-              <div className="text-2xl font-bold">{tasks.length}</div>
-              <div className="text-xs text-muted-foreground">Total Tasks</div>
+              <div className="text-2xl font-bold">{manualTasks}</div>
+              <div className="text-xs text-muted-foreground">Manual-only tasks</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
-            <Activity className="h-5 w-5 text-[var(--accent-emerald)]" />
+            <AlertTriangle className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
-              <div className="text-2xl font-bold">{activeTasks.length}</div>
-              <div className="text-xs text-muted-foreground">Active Tasks</div>
+              <div className="text-2xl font-bold">{tasksNeedingAttention}</div>
+              <div className="text-xs text-muted-foreground">Need attention</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Timer className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
-              <div className="text-2xl font-bold">{totalRuns}</div>
-              <div className="text-xs text-muted-foreground">Total Runs</div>
+              <div className="text-2xl font-bold">{pausedTasks}</div>
+              <div className="text-xs text-muted-foreground">Paused schedules</div>
             </div>
           </CardContent>
         </Card>
@@ -186,17 +209,20 @@ export default function ScheduledTasksPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : tasks.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Clock className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No scheduled tasks yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a task to run agent prompts on a schedule
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Task
-            </Button>
+        <Card className="workspace-panel">
+          <CardContent>
+            <EmptyState
+              icon={Clock}
+              eyebrow="Automation"
+              title="No scheduled tasks yet"
+              description="Create a task to run agent prompts on a schedule or keep it manual for one-click operational runs."
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Task
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -208,15 +234,15 @@ export default function ScheduledTasksPage() {
             const isRunning = runningId === task.id;
 
             return (
-              <Card key={task.id} className="overflow-hidden">
+              <Card key={task.id} className="workspace-panel overflow-hidden">
                 <div
-                  className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/30 transition-colors"
+                  className="workspace-list-row flex items-center gap-3 px-4 py-4 cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : task.id)}
                 >
                   {/* Agent avatar */}
                   <div
                     className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-full text-[0.625rem] font-medium text-white shrink-0",
+                      "flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-label)] font-medium text-white shrink-0",
                       getAvatarColor(task.agent_id),
                     )}
                   >
@@ -230,7 +256,7 @@ export default function ScheduledTasksPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[0.625rem]",
+                          "text-[var(--text-label)]",
                           task.is_active
                             ? "border-[var(--status-online)]/30 text-[var(--status-online)]"
                             : "border-muted-foreground/30 text-muted-foreground",
@@ -239,14 +265,15 @@ export default function ScheduledTasksPage() {
                         {task.is_active ? "active" : "paused"}
                       </Badge>
                       {task.last_status === "error" && (
-                        <Badge variant="outline" className="text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
+                        <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
                           error
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                    <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                       <span>{agentName}</span>
                       <span>{formatCron(task.cron_expression)}</span>
+                      <span>{task.run_count} runs</span>
                     </div>
                   </div>
 
@@ -300,7 +327,7 @@ export default function ScheduledTasksPage() {
                 </div>
 
                 {isExpanded && (
-                  <div className="border-t border-border px-4 py-3 bg-muted/30 space-y-3">
+                  <div className="border-t border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--surface-subtle)_92%,transparent)] px-4 py-4 space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Agent:</span>{" "}
@@ -324,18 +351,18 @@ export default function ScheduledTasksPage() {
 
                     <div>
                       <span className="text-xs text-muted-foreground">Prompt:</span>
-                      <pre className="mt-1 text-xs bg-background rounded-md p-3 whitespace-pre-wrap border border-border">
+                      <pre className="mt-2 rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--code-surface)] p-3 text-xs whitespace-pre-wrap">
                         {task.prompt}
                       </pre>
                     </div>
 
                     {task.last_error && (
                       <div>
-                        <div className="flex items-center gap-1.5 text-xs text-[var(--status-danger)] mb-1">
+                        <div className="mb-2 flex items-center gap-1.5 text-xs text-[var(--status-danger)]">
                           <AlertTriangle className="h-3.5 w-3.5" />
                           <span className="font-medium">Last Error</span>
                         </div>
-                        <pre className="text-xs bg-[var(--status-danger)]/5 text-[var(--status-danger)] rounded-md p-3 whitespace-pre-wrap border border-[var(--status-danger)]/20">
+                        <pre className="rounded-[var(--workspace-radius-md)] border border-[var(--status-danger)]/20 bg-[var(--status-danger)]/5 p-3 text-xs whitespace-pre-wrap text-[var(--status-danger)]">
                           {task.last_error}
                         </pre>
                       </div>
@@ -371,6 +398,7 @@ export default function ScheduledTasksPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }
@@ -435,10 +463,10 @@ function CreateTaskDialog({
   }
 
   return (
-    <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>Create Scheduled Task</DialogTitle>
-      </DialogHeader>
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Scheduled Task</DialogTitle>
+        </DialogHeader>
       <div className="space-y-4">
         <div>
           <Label>Name</Label>
@@ -487,27 +515,27 @@ function CreateTaskDialog({
             onChange={(e) => setCronExpression(e.target.value)}
             className="font-mono"
           />
-          <div className="mt-2 space-y-1">
-            <p className="text-[0.625rem] text-muted-foreground font-medium">Common patterns:</p>
-            <div className="grid grid-cols-1 gap-0.5 text-[0.625rem] text-muted-foreground">
+          <div className="mt-3 rounded-[var(--workspace-radius-md)] border border-[var(--panel-border)] bg-[var(--surface-subtle)] p-3 space-y-1">
+            <p className="text-[var(--text-label)] text-muted-foreground font-medium">Common patterns:</p>
+            <div className="grid grid-cols-1 gap-0.5 text-[var(--text-label)] text-muted-foreground">
               <span>
-                <code className="bg-muted px-1 rounded font-mono">0 9 * * *</code> — Daily at 9:00 AM
+                <code className="rounded bg-background px-1 font-mono">0 9 * * *</code> — Daily at 9:00 AM
               </span>
               <span>
-                <code className="bg-muted px-1 rounded font-mono">*/30 * * * *</code> — Every 30 minutes
+                <code className="rounded bg-background px-1 font-mono">*/30 * * * *</code> — Every 30 minutes
               </span>
               <span>
-                <code className="bg-muted px-1 rounded font-mono">0 9 * * 1-5</code> — Weekdays at 9:00 AM
+                <code className="rounded bg-background px-1 font-mono">0 9 * * 1-5</code> — Weekdays at 9:00 AM
               </span>
               <span>
-                <code className="bg-muted px-1 rounded font-mono">0 */2 * * *</code> — Every 2 hours
+                <code className="rounded bg-background px-1 font-mono">0 */2 * * *</code> — Every 2 hours
               </span>
               <span>
-                <code className="bg-muted px-1 rounded font-mono">0 0 * * 0</code> — Weekly on Sunday midnight
+                <code className="rounded bg-background px-1 font-mono">0 0 * * 0</code> — Weekly on Sunday midnight
               </span>
             </div>
           </div>
-          <p className="text-[0.625rem] text-muted-foreground mt-1">
+          <p className="text-[var(--text-label)] text-muted-foreground mt-1">
             Leave empty for manual-only tasks (triggered via Run Now).
           </p>
         </div>

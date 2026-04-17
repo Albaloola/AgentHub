@@ -60,7 +60,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-[1rem] p-5 text-sm text-popover-foreground outline-none sm:max-w-sm",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-[var(--workspace-radius-md)] p-5 text-sm text-popover-foreground outline-none sm:max-w-sm",
           "glass-strong",
           "data-open:animation-[dialog-panel-in_0.3s_cubic-bezier(0.16,1,0.3,1)_both]",
           "data-closed:animation-[dialog-panel-out_0.2s_cubic-bezier(0.4,0,0.2,1)_both]",
@@ -114,7 +114,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-5 -mb-5 flex flex-col-reverse gap-2 rounded-b-[1rem] border-t border-[var(--panel-border)] bg-[var(--surface-muted)] p-5 sm:flex-row sm:justify-end",
+        "-mx-5 -mb-5 flex flex-col-reverse gap-2 rounded-b-[var(--workspace-radius-md)] border-t border-[var(--panel-border)] bg-[var(--surface-muted)] p-5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

@@ -8,10 +8,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { PageIntro } from "@/components/layout/page-intro";
 import {
   getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase,
   getDocuments, uploadDocument, deleteDocument,
@@ -184,7 +186,8 @@ export default function KnowledgePage() {
   const totalChunks = knowledgeBases.reduce((sum, kb) => sum + kb.total_chunks, 0);
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -194,30 +197,43 @@ export default function KnowledgePage() {
         onChange={handleFileSelected}
       />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Knowledge Bases</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage document collections for retrieval-augmented generation
-          </p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Knowledge Base
-          </DialogTrigger>
-          <CreateKBDialog
-            onCreated={(kb) => {
-              setKnowledgeBases((prev) => [kb, ...prev]);
-              setCreateOpen(false);
-            }}
-          />
-        </Dialog>
-      </div>
+      <PageIntro
+        eyebrow="Retrieval sources"
+        title="Knowledge Bases"
+        description="Manage document collections, upload source files, and keep retrieval-ready content aligned with the rest of the workspace system."
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button size="sm" />}>
+              <Plus className="mr-1 h-4 w-4" />
+              New Knowledge Base
+            </DialogTrigger>
+            <CreateKBDialog
+              onCreated={(kb) => {
+                setKnowledgeBases((prev) => [kb, ...prev]);
+                setCreateOpen(false);
+              }}
+            />
+          </Dialog>
+        }
+        aside={
+          <div className="workspace-metric-grid">
+            <div className="workspace-metric">
+              <p className="workspace-metric__label">Bases</p>
+              <p className="workspace-metric__value">{knowledgeBases.length}</p>
+              <p className="workspace-metric__hint">Retrieval collections</p>
+            </div>
+            <div className="workspace-metric">
+              <p className="workspace-metric__label">Documents</p>
+              <p className="workspace-metric__value">{totalDocs}</p>
+              <p className="workspace-metric__hint">Uploaded sources</p>
+            </div>
+          </div>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-2 md:grid-cols-3">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Database className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
@@ -226,7 +242,7 @@ export default function KnowledgePage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <FileText className="h-5 w-5 text-[var(--accent-violet)]" />
             <div>
@@ -235,7 +251,7 @@ export default function KnowledgePage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Hash className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
@@ -252,21 +268,23 @@ export default function KnowledgePage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : knowledgeBases.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <BookOpen className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No knowledge bases yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a knowledge base to upload and manage documents for RAG
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Knowledge Base
-            </Button>
+        <Card className="workspace-panel">
+          <CardContent>
+            <EmptyState
+              icon={BookOpen}
+              title="No knowledge bases yet"
+              description="Create a knowledge base to upload and manage documents for RAG"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Knowledge Base
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+          <div className="workspace-stack gap-3">
           {knowledgeBases.map((kb) => {
             const isExpanded = expandedId === kb.id;
             const kbDocs = documents[kb.id] || [];
@@ -274,7 +292,7 @@ export default function KnowledgePage() {
             const isUploading = uploading === kb.id;
 
             return (
-              <Card key={kb.id} className="overflow-hidden">
+              <Card key={kb.id} className="workspace-panel overflow-hidden">
                 <div
                   className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/30 transition-colors"
                   onClick={() => handleExpand(kb.id)}
@@ -285,10 +303,10 @@ export default function KnowledgePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{kb.name}</span>
-                      <Badge variant="outline" className="text-[0.625rem]">
+                      <Badge variant="outline" className="text-[var(--text-label)]">
                         {kb.document_count} doc{kb.document_count !== 1 ? "s" : ""}
                       </Badge>
-                      <Badge variant="outline" className="text-[0.625rem] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
+                      <Badge variant="outline" className="text-[var(--text-label)] border-[var(--accent-amber)]/30 text-[var(--accent-amber)]">
                         {kb.total_chunks} chunk{kb.total_chunks !== 1 ? "s" : ""}
                       </Badge>
                     </div>
@@ -336,24 +354,28 @@ export default function KnowledgePage() {
                         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
                     ) : kbDocs.length === 0 ? (
-                      <div className="text-center py-6">
-                        <File className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground mb-2">No documents yet</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => handleUploadClick(kb.id, e)}
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          Upload Document
-                        </Button>
-                      </div>
+                      <EmptyState
+                        icon={File}
+                        title="No documents yet"
+                        className="py-6"
+                        iconClassName="h-8 w-8 mb-2"
+                        action={
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => handleUploadClick(kb.id, e)}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            Upload Document
+                          </Button>
+                        }
+                      />
                     ) : (
                       <div className="space-y-1">
                         {kbDocs.map((doc) => (
                           <div
                             key={doc.id}
-                            className="flex items-center gap-3 rounded-md border border-border bg-background p-2.5"
+                            className="workspace-list-row flex items-center gap-3 rounded-md p-2.5"
                           >
                             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                             <div className="flex-1 min-w-0">
@@ -361,12 +383,12 @@ export default function KnowledgePage() {
                                 <span className="text-sm font-medium truncate">{doc.file_name}</span>
                                 <Badge
                                   variant="outline"
-                                  className={`text-[0.625rem] ${fileTypeBadgeColor(doc.file_type)}`}
+                                  className={`text-[var(--text-label)] ${fileTypeBadgeColor(doc.file_type)}`}
                                 >
                                   {doc.file_type.toUpperCase()}
                                 </Badge>
                               </div>
-                              <div className="flex items-center gap-3 mt-0.5 text-[0.625rem] text-muted-foreground">
+                              <div className="flex items-center gap-3 mt-0.5 text-[var(--text-label)] text-muted-foreground">
                                 <span>{formatFileSize(doc.file_size)}</span>
                                 <span>{doc.chunk_count} chunk{doc.chunk_count !== 1 ? "s" : ""}</span>
                                 <span>{new Date(doc.created_at).toLocaleDateString()}</span>
@@ -456,6 +478,7 @@ export default function KnowledgePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }

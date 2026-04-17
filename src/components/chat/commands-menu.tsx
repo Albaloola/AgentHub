@@ -242,20 +242,20 @@ export function CommandsMenu({
 
   return (
     <div className="absolute inset-x-0 bottom-full z-50 mb-3 animate-fade-in">
-      <div className="mx-2 overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] glass-strong shadow-[0_20px_70px_-38px_rgba(0,0,0,0.65)]">
+      <div className="mx-2 overflow-hidden rounded-[var(--workspace-radius-lg)] border border-[var(--panel-border)] glass-strong shadow-[var(--panel-shadow-dramatic)]">
         <div className="flex flex-wrap items-center gap-2 border-b border-foreground/[0.06] px-4 py-3">
           <div className="flex items-center gap-2">
             <Command className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="text-xs font-medium uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">
               Commands
             </span>
           </div>
           {channelContext && (
-            <span className="rounded-full border border-foreground/[0.08] bg-foreground/[0.04] px-2 py-1 text-[0.65rem] text-foreground/80">
+            <span className="rounded-full border border-foreground/[0.08] bg-foreground/[0.04] px-2 py-1 text-[var(--text-label)] text-foreground/80">
               {channelContext.label}
             </span>
           )}
-          <span className="ml-auto text-[0.65rem] text-muted-foreground">
+          <span className="ml-auto text-[var(--text-label)] text-muted-foreground">
             <kbd className="rounded bg-foreground/[0.06] px-1 py-0.5">↑↓</kbd>{" "}
             move
             {" · "}
@@ -307,12 +307,12 @@ export function CommandsMenu({
                 <div className="min-w-0">
                   <p className="truncate text-sm">{command.description}</p>
                   {command.scopeLabel && (
-                    <p className="truncate text-[0.7rem] text-muted-foreground/80">
+                    <p className="truncate text-[var(--text-caption)] text-muted-foreground/80">
                       {command.scopeLabel}
                     </p>
                   )}
                 </div>
-                <span className="rounded-full border border-foreground/[0.08] px-2 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
+                <span className="rounded-full border border-foreground/[0.08] px-2 py-1 text-[var(--text-label)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
                   {getSourceBadge(command.source)}
                 </span>
               </button>

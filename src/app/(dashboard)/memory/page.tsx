@@ -18,6 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -193,24 +194,18 @@ export default function MemoryPage() {
         </div>
       ) : filtered.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Brain className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">
-              {sharedMemory.length === 0
-                ? "No memory entries yet"
-                : "No matching entries"}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {sharedMemory.length === 0
-                ? "Create a shared memory entry for agents to reference"
-                : "Try adjusting your search or filter"}
-            </p>
-            {sharedMemory.length === 0 && (
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Create Entry
-              </Button>
-            )}
+          <CardContent>
+            <EmptyState
+              icon={Brain}
+              title={sharedMemory.length === 0 ? "No memory entries yet" : "No matching entries"}
+              description={sharedMemory.length === 0 ? "Create a shared memory entry for agents to reference" : "Try adjusting your search or filter"}
+              action={sharedMemory.length === 0 ? (
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Entry
+                </Button>
+              ) : undefined}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -269,17 +264,17 @@ export default function MemoryPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge
                       variant="outline"
-                      className={cn("text-[0.625rem]", getCategoryColor(entry.category))}
+                      className={cn("text-[var(--text-label)]", getCategoryColor(entry.category))}
                     >
                       {entry.category}
                     </Badge>
                     {expired && (
-                      <Badge variant="outline" className="text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
+                      <Badge variant="outline" className="text-[var(--text-label)] border-[var(--status-danger)]/30 text-[var(--status-danger)]">
                         expired
                       </Badge>
                     )}
                     {agentName && (
-                      <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-[var(--text-label)] text-muted-foreground">
                         <div
                           className={cn(
                             "flex h-4 w-4 items-center justify-center rounded-full text-[0.4375rem] font-medium text-white",
@@ -291,14 +286,14 @@ export default function MemoryPage() {
                         {agentName}
                       </div>
                     )}
-                    <span className="text-[0.625rem] text-muted-foreground ml-auto">
+                    <span className="text-[var(--text-label)] text-muted-foreground ml-auto">
                       {entry.access_count} accesses
                     </span>
                   </div>
 
                   {/* Confidence bar */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[0.625rem] text-muted-foreground">Confidence</span>
+                    <span className="text-[var(--text-label)] text-muted-foreground">Confidence</span>
                     <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className={cn(
@@ -312,7 +307,7 @@ export default function MemoryPage() {
                         style={{ width: `${Math.round(entry.confidence * 100)}%` }}
                       />
                     </div>
-                    <span className="text-[0.625rem] text-muted-foreground w-8 text-right">
+                    <span className="text-[var(--text-label)] text-muted-foreground w-8 text-right">
                       {Math.round(entry.confidence * 100)}%
                     </span>
                   </div>
@@ -464,7 +459,7 @@ function CreateEntryDialog({
             onChange={(e) => setConfidence(parseFloat(e.target.value))}
             className="w-full mt-1 accent-primary"
           />
-          <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-0.5">
+          <div className="flex justify-between text-[var(--text-label)] text-muted-foreground mt-0.5">
             <span>0.0</span>
             <span>0.5</span>
             <span>1.0</span>
@@ -558,7 +553,7 @@ function EditEntryDialog({
             onChange={(e) => setConfidence(parseFloat(e.target.value))}
             className="w-full mt-1 accent-primary"
           />
-          <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-0.5">
+          <div className="flex justify-between text-[var(--text-label)] text-muted-foreground mt-0.5">
             <span>0.0</span>
             <span>0.5</span>
             <span>1.0</span>

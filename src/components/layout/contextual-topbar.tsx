@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Command, Search, Settings } from "lucide-react";
+import { Bot, Command, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { useEffect, useState } from "react";
@@ -57,11 +57,16 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
     "/admin": "Admin",
   };
 
-  const title = pathname ? (titles[pathname] || "AgentHub") : "AgentHub";
+  const title = pathname
+    ? pathname.startsWith("/chat/")
+      ? "Chat"
+      : (titles[pathname] || "Workspace")
+    : "Workspace";
+  const showFullSettingsLink = pathname !== "/settings";
 
   return (
     <div
-      className="relative z-20 flex shrink-0 items-center justify-between border-b border-foreground/[0.05] px-[var(--shell-pad,1rem)]"
+      className="workspace-shell-chrome relative z-20 flex shrink-0 items-center justify-between px-[var(--shell-pad,1rem)]"
       style={{ minHeight: "var(--topbar-height, 3.5rem)" }}
     >
       <div 
@@ -79,11 +84,24 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
         }}
       />
 
-      <div className="relative z-10 flex flex-1 items-center gap-2">
-        <span className="contextual-topbar__title title-font font-bold tracking-tight text-foreground">{title}</span>
+      <div className="relative z-10 flex flex-1 items-center gap-3">
+        <Link href="/" className="flex min-w-0 items-center gap-3 rounded-full pr-2 transition-colors hover:text-foreground">
+          <span className="brand-chip flex h-9 w-9 items-center justify-center rounded-[var(--workspace-radius-md)] text-white shadow-sm">
+            <Bot className="h-4.5 w-4.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-foreground/55">AgentHub</p>
+            <p className="hidden truncate text-sm font-semibold text-foreground/88 xl:block">Operational workspace</p>
+          </div>
+        </Link>
+
+        <span className="hidden h-6 w-px bg-foreground/[0.08] xl:block" />
+        <span className="surface-subtle hidden items-center rounded-full px-3 py-1 text-[var(--text-eyebrow)] font-medium text-foreground/85 xl:inline-flex">
+          {title}
+        </span>
       </div>
 
-      <div className="relative z-10 hidden flex-1 justify-center lg:flex">
+      <div className="relative z-10 hidden flex-1 justify-center xl:flex">
         {mounted && (
           <span className="text-sm font-semibold tracking-wide text-foreground/90 tabular-nums">
             {formatUiDateTime(now, dateFormat)}
@@ -97,27 +115,29 @@ export function ContextualTopBar({ onOpenSettings }: ContextualTopBarProps) {
           size="sm"
           onClick={openCommandPalette}
           aria-label="Open command palette"
-          className="hidden h-9 rounded-xl px-3 text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground md:inline-flex"
+          className="hidden h-9 rounded-xl px-2.5 text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground md:inline-flex lg:px-3"
         >
           <Search className="mr-2 h-4 w-4" />
-          Search
-          <span className="ml-2 inline-flex items-center gap-1 rounded-md border border-foreground/[0.08] px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+          <span className="hidden xl:inline">Search</span>
+          <span className="ml-0 inline-flex items-center gap-1 rounded-md border border-foreground/[0.08] px-1.5 py-0.5 text-[var(--text-label)] text-muted-foreground xl:ml-2">
             <Command className="h-3 w-3" />
             K
           </span>
         </Button>
-        <Link
-          href="/settings"
-          className="hidden h-9 items-center rounded-xl border border-foreground/[0.08] px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground md:inline-flex"
-        >
-          Full settings
-        </Link>
+        {showFullSettingsLink && (
+          <Link
+            href="/settings"
+            className="hidden h-9 items-center rounded-xl border border-foreground/[0.08] px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.04] hover:text-foreground xl:inline-flex"
+          >
+            Full settings
+          </Link>
+        )}
         <Button
           variant="ghost"
           size="icon"
           onClick={onOpenSettings}
           aria-label="Open settings"
-          className="h-9 w-9 rounded-xl hover:bg-foreground/[0.08]"
+          className="h-9 w-9 rounded-xl hover:bg-foreground/[0.06]"
         >
           <Settings className="h-4.5 w-4.5" />
         </Button>

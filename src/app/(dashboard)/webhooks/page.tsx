@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogTrigger,
@@ -179,16 +180,18 @@ export default function WebhooksPage() {
         </div>
       ) : webhooks.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <WebhookIcon className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No webhooks yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a webhook to let external services trigger your agents
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Webhook
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={WebhookIcon}
+              title="No webhooks yet"
+              description="Create a webhook to let external services trigger your agents"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Webhook
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -212,8 +215,8 @@ export default function WebhooksPage() {
                         variant="outline"
                         className={
                           webhook.is_active
-                            ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]"
-                            : "text-[0.625rem] border-muted-foreground/30 text-muted-foreground"
+                            ? "text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)]"
+                            : "text-[var(--text-label)] border-muted-foreground/30 text-muted-foreground"
                         }
                       >
                         {webhook.is_active ? "active" : "paused"}
@@ -310,7 +313,12 @@ export default function WebhooksPage() {
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                         </div>
                       ) : webhookEvents.length === 0 ? (
-                        <p className="text-xs text-muted-foreground py-3">No events yet</p>
+                        <EmptyState
+                          icon={Activity}
+                          title="No events yet"
+                          className="py-3"
+                          iconClassName="h-6 w-6 mb-2"
+                        />
                       ) : (
                         <div className="mt-2 space-y-2">
                           {webhookEvents.map((ev) => (
@@ -322,27 +330,27 @@ export default function WebhooksPage() {
                                 variant="outline"
                                 className={
                                   ev.status === "success"
-                                    ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)] shrink-0"
+                                    ? "text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)] shrink-0"
                                     : ev.status === "error"
-                                      ? "text-[0.625rem] border-[var(--status-danger)]/30 text-[var(--status-danger)] shrink-0"
-                                      : "text-[0.625rem] shrink-0"
+                                      ? "text-[var(--text-label)] border-[var(--status-danger)]/30 text-[var(--status-danger)] shrink-0"
+                                      : "text-[var(--text-label)] shrink-0"
                                 }
                               >
                                 {ev.status}
                               </Badge>
                               <div className="flex-1 min-w-0">
                                 {ev.payload && (
-                                  <pre className="text-[0.625rem] text-muted-foreground truncate max-w-full">
+                                  <pre className="text-[var(--text-label)] text-muted-foreground truncate max-w-full">
                                     {ev.payload.length > 120
                                       ? ev.payload.slice(0, 120) + "..."
                                       : ev.payload}
                                   </pre>
                                 )}
                                 {ev.error && (
-                                  <p className="text-[0.625rem] text-[var(--status-danger)] mt-0.5">{ev.error}</p>
+                                  <p className="text-[var(--text-label)] text-[var(--status-danger)] mt-0.5">{ev.error}</p>
                                 )}
                               </div>
-                              <span className="text-[0.625rem] text-muted-foreground shrink-0">
+                              <span className="text-[var(--text-label)] text-muted-foreground shrink-0">
                                 {new Date(ev.created_at).toLocaleString()}
                               </span>
                             </div>
@@ -474,7 +482,7 @@ function CreateWebhookDialog({
             value={bodyTransform}
             onChange={(e) => setBodyTransform(e.target.value)}
           />
-          <p className="text-[0.625rem] text-muted-foreground mt-0.5">
+          <p className="text-[var(--text-label)] text-muted-foreground mt-0.5">
             Extract a specific field from the incoming payload
           </p>
         </div>

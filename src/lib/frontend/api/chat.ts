@@ -60,12 +60,13 @@ export function streamChat(
   conversationId: string,
   content: string,
   callbacks: ChatStreamCallbacks,
-  options?: { target_agent_id?: string; signal?: AbortSignal },
+  options?: { target_agent_id?: string; attachment_ids?: string[]; signal?: AbortSignal },
 ): void {
   const body = JSON.stringify({
     conversation_id: conversationId,
     content,
     target_agent_id: options?.target_agent_id,
+    attachment_ids: options?.attachment_ids,
   });
 
   fetch("/api/chat", {

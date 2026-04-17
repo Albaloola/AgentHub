@@ -198,7 +198,7 @@ export function ChatInput({
 
   return (
     <div
-      className="relative z-10 mx-auto w-full max-w-[var(--composer-max-width,60rem)] px-3 md:px-4"
+      className="relative z-10 mx-auto w-full max-w-[var(--composer-max-width,60rem)] px-2 md:px-3"
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
     >
@@ -213,20 +213,18 @@ export function ChatInput({
       />
 
       <div
-        className="pointer-events-none absolute inset-x-6 inset-y-0 rounded-[2rem] blur-3xl transition-opacity duration-300"
+        className="pointer-events-none absolute inset-x-6 inset-y-2 rounded-[2rem] blur-3xl transition-opacity duration-300"
         style={{
           background: `radial-gradient(circle at 50% 0%, ${channelContext?.accent ?? "var(--theme-accent)"} 0%, transparent 72%)`,
-          opacity: isFocused ? 0.28 : 0.12,
+          opacity: isFocused ? 0.16 : 0.06,
         }}
       />
 
       <motion.div
-        className="relative overflow-visible rounded-[1.9rem] border backdrop-blur-xl"
+        className="surface-panel-strong workspace-panel relative overflow-visible border backdrop-blur-xl"
         style={{
-          background: "var(--glass-bg)",
-          borderColor: "var(--panel-border)",
           boxShadow: isFocused
-            ? `var(--panel-shadow), 0 0 0 1px ${channelContext?.accent ?? "var(--theme-accent)"}, 0 0 26px color-mix(in srgb, ${channelContext?.accent ?? "var(--theme-accent)"} 26%, transparent)`
+            ? `var(--panel-shadow), 0 0 0 1px color-mix(in srgb, ${channelContext?.accent ?? "var(--theme-accent)"} 45%, transparent)`
             : "var(--panel-shadow)",
         }}
         animate={{
@@ -257,7 +255,7 @@ export function ChatInput({
                     <>
                       <div
                         className={cn(
-                          "flex h-5 w-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white",
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[var(--text-micro)] font-semibold text-white",
                           getAvatarColor(resolvedTargetAgent.id),
                         )}
                       >
@@ -278,7 +276,7 @@ export function ChatInput({
                       <DropdownMenuItem key={agent.id} onClick={() => setTargetAgent(agent)}>
                         <div
                           className={cn(
-                            "mr-2 flex h-5 w-5 items-center justify-center rounded-full text-[0.55rem] font-semibold text-white",
+                            "mr-2 flex h-5 w-5 items-center justify-center rounded-full text-[var(--text-micro)] font-semibold text-white",
                             getAvatarColor(agent.id),
                           )}
                         >
@@ -292,7 +290,7 @@ export function ChatInput({
               )}
 
               {!resolvedTargetAgent && channelContext && (
-                <span className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[0.7rem] text-muted-foreground">
+                <span className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[var(--text-caption)] text-muted-foreground">
                   {channelContext.kind === "group" ? "Squad lane" : "Channel lane"}
                 </span>
               )}
@@ -305,7 +303,7 @@ export function ChatInput({
                     setContent(`${command.name} `);
                     textareaRef.current?.focus();
                   }}
-                  className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[0.72rem] text-muted-foreground transition-colors hover:border-foreground/[0.16] hover:bg-foreground/[0.04] hover:text-foreground"
+                  className="rounded-full border border-foreground/[0.08] px-3 py-1.5 text-[var(--text-eyebrow)] text-muted-foreground transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.04] hover:text-foreground"
                 >
                   {command.name}
                 </button>
@@ -313,14 +311,14 @@ export function ChatInput({
               </div>
 
               {channelContext?.scopeHint ? (
-                <span className="hidden max-w-[24rem] text-right text-[0.68rem] text-muted-foreground lg:block">
+                <span className="hidden max-w-[24rem] text-right text-[var(--text-caption)] text-muted-foreground lg:block">
                   {channelContext.scopeHint}
                 </span>
               ) : null}
             </div>
           )}
 
-          <div className={cn("flex gap-2", expanded ? "flex-col" : "items-end")}>
+          <div className={cn("flex w-full min-w-0 gap-2", expanded ? "flex-col" : "items-end")}>
             <div className="flex shrink-0 items-center gap-1">
               <input
                 ref={fileInputRef}
@@ -333,7 +331,7 @@ export function ChatInput({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-[1rem] text-muted-foreground hover:text-foreground"
+                className="h-10 w-10 rounded-[var(--workspace-radius-md)] text-muted-foreground hover:text-foreground"
                 disabled={disabled || uploading || isStreaming}
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Attach file"
@@ -343,7 +341,7 @@ export function ChatInput({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-[1rem] text-muted-foreground hover:text-foreground"
+                className="h-10 w-10 rounded-[var(--workspace-radius-md)] text-muted-foreground hover:text-foreground"
                 onClick={() => setExpanded((previous) => !previous)}
                 aria-label={expanded ? "Collapse composer" : "Expand composer"}
                 title={expanded ? "Collapse composer" : "Expand composer"}
@@ -354,10 +352,10 @@ export function ChatInput({
 
             <div className="relative min-w-0 flex-1">
               <div
-                className={cn(
-                  "overflow-hidden rounded-[1.5rem] border border-foreground/[0.05] bg-foreground/[0.035] transition-colors focus-within:bg-foreground/[0.05]",
-                  expanded ? "p-4" : "px-4 py-3",
-                )}
+                  className={cn(
+                    "surface-input overflow-hidden rounded-[var(--workspace-radius-lg)] border transition-colors focus-within:bg-foreground/[0.04]",
+                    expanded ? "p-4" : "px-4 py-3",
+                  )}
               >
                 <textarea
                   ref={textareaRef}
@@ -387,24 +385,24 @@ export function ChatInput({
               </div>
 
               {content.length > 0 && (
-                <div className="pointer-events-none absolute right-4 top-3 text-[0.68rem] text-muted-foreground/60">
+                <div className="pointer-events-none absolute right-4 top-3 text-[var(--text-caption)] text-muted-foreground/60">
                   ~{Math.ceil(content.length / 4)} tokens
                 </div>
               )}
             </div>
 
             <div className={cn("flex shrink-0 items-center gap-2", expanded && "justify-between")}>
-              <div className="hidden flex-col text-[0.68rem] text-muted-foreground md:flex">
+              <div className="hidden flex-col text-[var(--text-caption)] text-muted-foreground xl:flex">
                 <span>
                   {resolvedTargetAgent ? `Next reply routes to ${resolvedTargetAgent.name}.` : `Next reply routes to ${routeLabel.toLowerCase()}.`}
                 </span>
-                <span>Enter sends, Shift+Enter adds a newline, `/` opens commands.</span>
+                <span>Enter sends. Shift+Enter adds a newline.</span>
               </div>
 
               {isStreaming ? (
                 <Button
                   variant="destructive"
-                  className="h-11 rounded-[1rem] px-4"
+                  className="h-11 rounded-[var(--workspace-radius-md)] px-4"
                   onClick={onCancel}
                   aria-label="Stop generating"
                 >
@@ -418,9 +416,9 @@ export function ChatInput({
                 >
                   <Button
                     className={cn(
-                      "h-11 rounded-[1rem] px-4 font-medium transition-colors duration-200",
+                      "h-11 rounded-[var(--workspace-radius-md)] px-4 font-medium transition-colors duration-200",
                       content.trim() && !disabled
-                        ? "bg-[var(--theme-accent)] text-white shadow-lg shadow-[var(--theme-accent-shadow-strong)] hover:bg-[var(--theme-accent-alt)]"
+                        ? "bg-[var(--theme-accent)] text-white shadow-[var(--theme-accent-shadow-strong)] hover:bg-[var(--theme-accent-alt)]"
                         : "bg-foreground/[0.06] text-muted-foreground",
                     )}
                     onClick={handleSend}

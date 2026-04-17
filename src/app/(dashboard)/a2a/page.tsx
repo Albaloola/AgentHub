@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -168,16 +169,18 @@ export default function A2APage() {
         </div>
       ) : cards.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Network className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No agent cards yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Publish an A2A card to make an agent discoverable by other agents
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Publish Card
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={Network}
+              title="No agent cards yet"
+              description="Publish an A2A card to make an agent discoverable by other agents"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Publish Card
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -190,7 +193,7 @@ export default function A2APage() {
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full text-[0.6875rem] font-medium text-white shrink-0",
+                        "flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-caption)] font-medium text-white shrink-0",
                         getAvatarColor(card.agent_id),
                       )}
                     >
@@ -202,7 +205,7 @@ export default function A2APage() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[0.625rem]",
+                            "text-[var(--text-label)]",
                             card.is_published
                               ? "border-[var(--status-online)]/30 text-[var(--status-online)]"
                               : "border-muted-foreground/30 text-muted-foreground",

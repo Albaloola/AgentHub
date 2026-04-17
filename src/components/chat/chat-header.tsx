@@ -223,7 +223,7 @@ export function ChatHeader({
 
   return (
     <div
-      className="border-b border-foreground/[0.05] px-[var(--shell-pad,1rem)] py-3"
+      className="workspace-shell-chrome px-[var(--shell-pad,1rem)] py-3"
       style={{ minHeight: "calc(var(--topbar-height, 3.5rem) + 0.75rem)" }}
     >
       <div className="flex flex-wrap items-start gap-3">
@@ -231,7 +231,7 @@ export function ChatHeader({
           <div className="flex flex-wrap items-center gap-2.5">
             {channelContext && ChannelIcon && (
               <span
-                className="inline-flex items-center gap-2 rounded-full border border-foreground/[0.08] px-3 py-1 text-[0.72rem] font-medium"
+                className="inline-flex items-center gap-2 rounded-full border border-foreground/[0.08] px-3 py-1 text-[var(--text-eyebrow)] font-medium"
                 style={{
                   background: `color-mix(in srgb, ${channelContext.accent} 14%, transparent)`,
                   color: channelContext.accent,
@@ -255,24 +255,24 @@ export function ChatHeader({
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {channelContext && (
-              <Badge variant="outline" className="text-[0.68rem]">
+              <Badge variant="outline" className="text-[var(--text-caption)]">
                 {channelContext.kind === "group" ? "Squad channel" : "Direct channel"}
               </Badge>
             )}
             {channelContext?.gatewayLabel && (
-              <Badge variant="outline" className="text-[0.68rem]">
+              <Badge variant="outline" className="text-[var(--text-caption)]">
                 {channelContext.gatewayLabel}
               </Badge>
             )}
             {conversation.type === "group" && (
-              <Badge variant="outline" className="text-[0.68rem]">
+              <Badge variant="outline" className="text-[var(--text-caption)]">
                 {conversation.agents.length} agents
               </Badge>
             )}
             {queueCount > 0 && (
               <Badge
                 variant="outline"
-                className="border-[var(--accent-amber)]/30 text-[0.68rem] text-[var(--accent-amber)]"
+                className="border-[var(--accent-amber)]/30 text-[var(--text-caption)] text-[var(--accent-amber)]"
               >
                 {queueCount} queued
               </Badge>
@@ -376,20 +376,20 @@ export function ChatHeader({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <ParticipantStack
           conversation={conversation}
           isStreaming={isStreaming}
           streamingAgentId={streamingAgentId}
         />
-        <div className="flex items-center gap-2 text-[0.72rem] text-muted-foreground">
+        <div className="flex items-center gap-2 text-[var(--text-eyebrow)] text-muted-foreground">
           <Command className="h-3.5 w-3.5" />
           <span>Use `/` in the composer for channel commands</span>
         </div>
       </div>
 
       {searchOpen && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] px-3 py-2 animate-fade-in">
+        <div className="surface-subtle mt-3 flex flex-wrap items-center gap-2 rounded-2xl px-3 py-2 animate-fade-in">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
           <input
             ref={searchInputRef}
@@ -401,7 +401,7 @@ export function ChatHeader({
             className="min-w-[12rem] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
           />
           {searchResultCount > 0 && (
-            <span className="text-[0.72rem] text-muted-foreground">
+            <span className="text-[var(--text-eyebrow)] text-muted-foreground">
               {searchResultCount} results
             </span>
           )}

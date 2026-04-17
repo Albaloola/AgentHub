@@ -40,7 +40,7 @@ export function FileChips({ files, onRemove }: FileChipsProps) {
         >
           {getFileIcon(file.file_type)}
           <span className="max-w-[7.5rem] truncate">{file.file_name}</span>
-          <span className="text-[0.625rem] text-muted-foreground">{formatFileSize(file.file_size)}</span>
+          <span className="text-[var(--text-label)] text-muted-foreground">{formatFileSize(file.file_size)}</span>
           <button
             className="ml-1 rounded-sm p-0.5 hover:bg-accent"
             onClick={() => onRemove(file.id)}

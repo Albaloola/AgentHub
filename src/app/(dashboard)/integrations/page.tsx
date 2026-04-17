@@ -15,9 +15,11 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
+import { PageIntro } from "@/components/layout/page-intro";
 import { useStore } from "@/lib/store";
 import {
   getIntegrations, createIntegration, updateIntegration, deleteIntegration, getAgents,
@@ -95,32 +97,46 @@ export default function IntegrationsPage() {
   const totalEvents = integrations.reduce((sum, i) => sum + i.event_count, 0);
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Integrations</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Connect agents to external services and event sources
-          </p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger render={<Button size="sm" />}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Integration
-          </DialogTrigger>
-          <CreateIntegrationDialog
-            agents={agents}
-            onCreated={(i) => {
-              setIntegrations((prev) => [i, ...prev]);
-              setCreateOpen(false);
-            }}
-          />
-        </Dialog>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="workspace-page workspace-stack max-w-7xl">
+        <PageIntro
+          eyebrow="External connectivity"
+          title="Integrations"
+          description="Connect external services, event streams, and delivery channels to the same operational workspace language as the rest of AgentHub."
+          actions={
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger render={<Button size="sm" />}>
+                <Plus className="mr-1 h-4 w-4" />
+                New Integration
+              </DialogTrigger>
+              <CreateIntegrationDialog
+                agents={agents}
+                onCreated={(i) => {
+                  setIntegrations((prev) => [i, ...prev]);
+                  setCreateOpen(false);
+                }}
+              />
+            </Dialog>
+          }
+          aside={
+            <div className="workspace-metric-grid">
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Integrations</p>
+                <p className="workspace-metric__value">{integrations.length}</p>
+                <p className="workspace-metric__hint">Configured services</p>
+              </div>
+              <div className="workspace-metric">
+                <p className="workspace-metric__label">Active</p>
+                <p className="workspace-metric__value">{activeCount}</p>
+                <p className="workspace-metric__hint">Currently connected</p>
+              </div>
+            </div>
+          }
+        />
 
       {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-        <Card>
+      <div className="workspace-panel-grid grid-cols-2 md:grid-cols-3">
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Link className="h-5 w-5 text-[var(--accent-blue)]" />
             <div>
@@ -129,7 +145,7 @@ export default function IntegrationsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Power className="h-5 w-5 text-[var(--accent-emerald)]" />
             <div>
@@ -138,7 +154,7 @@ export default function IntegrationsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="workspace-panel">
           <CardContent className="flex items-center gap-3 p-4">
             <Zap className="h-5 w-5 text-[var(--accent-amber)]" />
             <div>
@@ -154,25 +170,27 @@ export default function IntegrationsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : integrations.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Plug className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No integrations yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Connect an external service to start receiving events
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Integration
-            </Button>
+        <Card className="workspace-panel">
+          <CardContent>
+            <EmptyState
+              icon={Plug}
+              title="No integrations yet"
+              description="Connect an external service to start receiving events"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Integration
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {integrations.map((integration) => {
+         <div className="workspace-panel-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+           {integrations.map((integration) => {
             const agent = agents.find((a) => a.id === integration.agent_id);
             return (
-              <Card key={integration.id} className="overflow-hidden">
+               <Card key={integration.id} className="workspace-panel overflow-hidden">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]">
@@ -183,15 +201,15 @@ export default function IntegrationsPage() {
                         <span className="font-medium truncate">{integration.name}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge variant="outline" className="text-[0.625rem]">
+                        <Badge variant="outline" className="text-[var(--text-label)]">
                           {getTypeLabel(integration.type)}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={
                             integration.is_active
-                              ? "text-[0.625rem] border-[var(--status-online)]/30 text-[var(--status-online)]"
-                              : "text-[0.625rem] border-gray-500/30 text-gray-500"
+                              ? "text-[var(--text-label)] border-[var(--status-online)]/30 text-[var(--status-online)]"
+                              : "text-[var(--text-label)] border-gray-500/30 text-gray-500"
                           }
                         >
                           {integration.is_active ? "connected" : "disconnected"}
@@ -242,6 +260,7 @@ export default function IntegrationsPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

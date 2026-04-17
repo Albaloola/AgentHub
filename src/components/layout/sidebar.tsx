@@ -93,7 +93,7 @@ function rowSurfaceClass(navStyle: "pills" | "list", isActive: boolean) {
     return cn(
       shared,
       spacing,
-      "rounded-[1rem] border border-transparent bg-transparent",
+      "rounded-[var(--workspace-radius-md)] border border-transparent bg-transparent",
       isActive
         ? "bg-foreground/[0.07] text-foreground"
         : "text-foreground/92 hover:bg-foreground/[0.04]",
@@ -103,19 +103,19 @@ function rowSurfaceClass(navStyle: "pills" | "list", isActive: boolean) {
   return cn(
     shared,
     spacing,
-    "rounded-[1.15rem] border",
+    "rounded-[var(--workspace-radius-lg)] border",
     isActive
       ? "border-foreground/[0.12] bg-foreground/[0.04]"
-      : "border-foreground/[0.06] hover:border-foreground/[0.12] hover:bg-foreground/[0.025]",
+      : "border-foreground/[0.06] hover:border-foreground/[0.14] hover:bg-foreground/[0.03]",
   );
 }
 
 function iconButtonClass(active = false) {
   return cn(
-    "flex h-10 w-10 items-center justify-center rounded-[1rem] border transition-colors",
+    "flex h-10 w-10 items-center justify-center rounded-[var(--workspace-radius-md)] border transition-colors",
     active
       ? "border-foreground/[0.12] bg-foreground/[0.05] text-foreground"
-      : "border-foreground/[0.06] bg-transparent text-muted-foreground hover:border-foreground/[0.1] hover:bg-foreground/[0.04] hover:text-foreground",
+      : "border-foreground/[0.06] bg-transparent text-muted-foreground hover:border-foreground/[0.12] hover:bg-foreground/[0.04] hover:text-foreground",
   );
 }
 
@@ -577,7 +577,7 @@ export function Sidebar() {
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
             <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setSidebarOpen(false)}>
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-lg"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-[var(--panel-shadow)]"
                 style={{
                   background: "linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-alt) 100%)",
                   boxShadow: "0 12px 30px -20px var(--theme-accent-shadow-strong)",
@@ -587,7 +587,7 @@ export function Sidebar() {
               </div>
               {!collapsed && (
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70">
+                  <p className="text-sm font-semibold uppercase tracking-[var(--tracking-label)] text-foreground/70">
                     AgentHub
                   </p>
                   <p className="truncate text-lg font-semibold tracking-tight text-foreground">
@@ -630,7 +630,7 @@ export function Sidebar() {
                   <button
                     type="button"
                     onClick={() => setNewChatOpen((previous) => !previous)}
-                    className="group relative isolate flex w-full items-center justify-between overflow-visible rounded-[1.15rem] border border-foreground/[0.08] px-4 py-3 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
+                    className="group relative isolate flex w-full items-center justify-between overflow-visible rounded-[var(--workspace-radius-lg)] border border-foreground/[0.08] px-4 py-3 text-left transition-colors hover:border-foreground/[0.14] hover:bg-foreground/[0.03]"
                   >
                     <div className="pointer-events-none absolute inset-x-6 -inset-y-1 -z-10 rounded-full opacity-0 blur-xl transition-opacity duration-200 group-hover:opacity-100" style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent-blue) 26%, transparent) 0%, transparent 72%)" }} />
                     <div className="flex items-center gap-3">
@@ -646,8 +646,8 @@ export function Sidebar() {
                   </button>
 
                   {newChatOpen && (
-                    <div className="overflow-hidden rounded-[1.2rem] border border-foreground/[0.08] bg-foreground/[0.02]">
-                      <div className="border-b border-foreground/[0.06] px-4 py-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    <div className="overflow-hidden rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02]">
+                      <div className="border-b border-foreground/[0.06] px-4 py-3 text-xs uppercase tracking-[var(--tracking-label)] text-muted-foreground">
                         Available agents
                       </div>
                       <div className="max-h-64 overflow-y-auto py-1">
@@ -688,7 +688,7 @@ export function Sidebar() {
                   )}
                 </div>
               ) : (
-                <div className="mt-4 rounded-[1.25rem] border border-foreground/[0.08] bg-foreground/[0.03] p-4">
+                <div className="mt-4 rounded-[var(--workspace-radius-lg)] border border-foreground/[0.08] bg-foreground/[0.03] p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--theme-accent-softer)] text-[var(--theme-accent-text)]">
                       <Sparkles className="h-4.5 w-4.5" />
@@ -734,7 +734,7 @@ export function Sidebar() {
                           shortcut.action();
                           setSidebarOpen(false);
                         }}
-                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
                         aria-label={shortcut.label}
                       >
                         <div
@@ -811,10 +811,10 @@ export function Sidebar() {
                       ? ownedChannelGroups.map((group) => (
                           <div key={group.gateway} className="space-y-1.5">
                             <div className="flex items-center justify-between px-1">
-                              <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
+                              <p className="text-[var(--text-caption)] uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">
                                 {group.label}
                               </p>
-                              <span className="text-[0.68rem] text-muted-foreground">
+                              <span className="text-[var(--text-caption)] text-muted-foreground">
                                 {group.onlineCount}/{Math.max(group.totalAgents, 1)} online
                               </span>
                             </div>
@@ -834,10 +834,10 @@ export function Sidebar() {
                       : gatewayGroups.map((group) => (
                           <div key={group.gateway} className="space-y-1.5">
                             <div className="flex items-center justify-between px-1">
-                              <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
+                              <p className="text-[var(--text-caption)] uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">
                                 {group.label}
                               </p>
-                              <span className="text-[0.68rem] text-muted-foreground">
+                              <span className="text-[var(--text-caption)] text-muted-foreground">
                                 {group.onlineCount}/{group.agents.length} online
                               </span>
                             </div>
@@ -881,8 +881,8 @@ export function Sidebar() {
                   emptyState="No folders yet. Create one to keep long-running work tidy."
                 >
                   {createFolderOpen && (
-                    <div className="rounded-[1rem] border border-foreground/[0.08] bg-foreground/[0.02] p-3">
-                      <label className="block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02] p-3">
+                      <label className="block text-[var(--text-caption)] font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
                         Folder name
                       </label>
                       <input
@@ -915,7 +915,7 @@ export function Sidebar() {
                     return (
                       <div
                         key={folder.id}
-                        className="overflow-hidden rounded-[1.05rem] border border-foreground/[0.08] bg-foreground/[0.02]"
+                        className="overflow-hidden rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02]"
                       >
                         <div className="flex items-center gap-2 px-3 py-2.5">
                           <button
@@ -930,7 +930,7 @@ export function Sidebar() {
                             )}
                             <FolderOpen className="h-4 w-4 text-[var(--theme-accent)]" />
                             <span className="truncate text-sm font-medium text-foreground">{folder.name}</span>
-                            <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[0.65rem] text-muted-foreground">
+                            <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[var(--text-label)] text-muted-foreground">
                               {folderConversations.length}
                             </span>
                           </button>
@@ -965,7 +965,7 @@ export function Sidebar() {
                                 />
                               ))
                             ) : (
-                              <div className="rounded-[0.95rem] border border-dashed border-foreground/[0.08] px-3 py-3 text-sm text-muted-foreground">
+                              <div className="rounded-[var(--workspace-radius-sm)] border border-dashed border-foreground/[0.08] px-3 py-3 text-sm text-muted-foreground">
                                 No chats in this folder yet.
                               </div>
                             )}
@@ -1046,7 +1046,7 @@ export function Sidebar() {
                   <div className="grid gap-2 sm:grid-cols-2">
                     <button
                       type="button"
-                      className="rounded-[1.05rem] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
+                      className="rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
                       onClick={openCommandPalette}
                     >
                       <p className="text-sm font-medium text-foreground">Open search</p>
@@ -1054,7 +1054,7 @@ export function Sidebar() {
                     </button>
                     <button
                       type="button"
-                      className="rounded-[1.05rem] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
+                      className="rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
                       onClick={openQuickSettings}
                     >
                       <p className="text-sm font-medium text-foreground">Quick settings</p>
@@ -1062,14 +1062,14 @@ export function Sidebar() {
                     </button>
                     <Link
                       href="/settings"
-                      className="rounded-[1.05rem] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 transition-colors hover:bg-foreground/[0.04]"
+                      className="rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 transition-colors hover:bg-foreground/[0.04]"
                     >
                       <p className="text-sm font-medium text-foreground">Full settings</p>
                       <p className="mt-1 text-xs text-muted-foreground">Canonical workspace settings and previews.</p>
                     </Link>
                     <button
                       type="button"
-                      className="rounded-[1.05rem] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
+                      className="rounded-[var(--workspace-radius-md)] border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04]"
                       onClick={() => setNavConfigOpen(true)}
                     >
                       <p className="text-sm font-medium text-foreground">Customize control</p>
@@ -1109,7 +1109,7 @@ function SidebarTabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex items-center justify-center gap-2 rounded-[1rem] border px-3 py-2.5 text-sm font-medium transition-all duration-200",
+        "relative flex items-center justify-center gap-2 rounded-[var(--workspace-radius-md)] border px-3 py-2.5 text-sm font-medium transition-all duration-200",
         active
           ? "border-[var(--theme-accent-border)] bg-[var(--theme-accent-softer)] text-[var(--theme-accent-text)]"
           : "border-foreground/[0.08] text-muted-foreground hover:border-foreground/[0.14] hover:bg-foreground/[0.03] hover:text-foreground",
@@ -1162,10 +1162,10 @@ function SidebarSection({
     <section className="mb-[var(--shell-section-gap,1.4rem)]">
       <div className="mb-3 flex items-start justify-between gap-3 px-1">
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
+          <p className="text-[var(--text-caption)] uppercase tracking-[var(--tracking-eyebrow)] text-muted-foreground">
             {title}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-1 hidden text-xs text-muted-foreground xl:block">{description}</p>
         </div>
         {action}
       </div>
@@ -1173,7 +1173,7 @@ function SidebarSection({
         {childCount > 0 ? (
           children
         ) : emptyState ? (
-          <div className="rounded-[1.15rem] border border-dashed border-foreground/[0.08] px-4 py-3 text-sm text-muted-foreground">
+          <div className="rounded-[var(--workspace-radius-md)] border border-dashed border-foreground/[0.06] bg-foreground/[0.015] px-3 py-2.5 text-xs text-muted-foreground">
             {emptyState}
           </div>
         ) : null}
@@ -1215,11 +1215,6 @@ function GatewayCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-foreground">{group.label}</span>
-            {isPinned && (
-              <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[0.62rem] text-muted-foreground">
-                Pinned
-              </span>
-            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {group.onlineCount} online · {group.agents.length} agents
@@ -1300,11 +1295,6 @@ function ChannelRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-foreground">{channel.title}</span>
-            {isPinned && (
-              <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[0.62rem] text-muted-foreground">
-                Pinned
-              </span>
-            )}
           </div>
           <p className="truncate text-xs text-muted-foreground">{channel.subtitle}</p>
         </div>
@@ -1372,13 +1362,8 @@ function ConversationRow({
             <span className="truncate text-sm font-medium text-foreground">
               {conversation.name || "Untitled chat"}
             </span>
-            {conversation.is_pinned && (
-              <span className="rounded-full border border-[var(--accent-rose)]/30 px-2 py-0.5 text-[0.62rem] text-[var(--accent-rose)]">
-                Chat pin
-              </span>
-            )}
             {activeFolder && (
-              <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[0.62rem] text-muted-foreground">
+              <span className="rounded-full border border-foreground/[0.08] px-2 py-0.5 text-[var(--text-label)] text-muted-foreground">
                 {activeFolder.name}
               </span>
             )}
@@ -1463,7 +1448,7 @@ function ControlGroupCard({
   const GroupIcon = group.icon;
 
   return (
-    <div className="overflow-hidden rounded-[1.15rem] border border-foreground/[0.08] bg-foreground/[0.02]">
+    <div className="overflow-hidden rounded-[var(--workspace-radius-lg)] border border-foreground/[0.08] bg-foreground/[0.02]">
       <div className="flex items-start gap-3 border-b border-foreground/[0.06] px-4 py-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-2xl"
@@ -1491,7 +1476,7 @@ function ControlGroupCard({
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center gap-3 rounded-[1rem] px-3 py-2.5 transition-colors",
+                "group flex items-center gap-3 rounded-[var(--workspace-radius-md)] px-3 py-2.5 transition-colors",
                 active
                   ? "bg-foreground/[0.06] text-foreground"
                   : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground",

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useStore } from "@/lib/store";
 import { getPolicies, createPolicy, updatePolicy, deletePolicy, getAgents } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -140,16 +141,18 @@ export default function PoliciesPage() {
         </div>
       ) : policies.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Shield className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No policies yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create policy rules to govern agent behavior at runtime
-            </p>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Policy
-            </Button>
+          <CardContent>
+            <EmptyState
+              icon={Shield}
+              title="No policies yet"
+              description="Create policy rules to govern agent behavior at runtime"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Policy
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -181,16 +184,16 @@ export default function PoliciesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="font-medium">{policy.name}</span>
-                        <Badge variant="outline" className="text-[0.625rem]">
+                        <Badge variant="outline" className="text-[var(--text-label)]">
                           {policy.type}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className={cn("text-[0.625rem]", severityColor)}
+                          className={cn("text-[var(--text-label)]", severityColor)}
                         >
                           {policy.severity}
                         </Badge>
-                        <Badge variant="outline" className="text-[0.625rem]">
+                        <Badge variant="outline" className="text-[var(--text-label)]">
                           {policy.scope}
                         </Badge>
                       </div>

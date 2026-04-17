@@ -73,7 +73,7 @@ export function HudPanel({
         animate={{ opacity: 1, x: 0 }}
         transition={spring.bouncy}
         className={cn(
-          "surface-panel flex flex-col overflow-hidden rounded-[1rem]",
+          "surface-panel flex flex-col overflow-hidden rounded-[var(--workspace-radius-md)]",
           "transition-[box-shadow,border-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           "hover:shadow-[var(--panel-shadow-hover)] hover:border-[var(--panel-border-strong)]",
           accent !== "none" && "border-t-2",
@@ -121,7 +121,7 @@ export function HudPanel({
           <span className={cn("font-medium flex-1", variant === "compact" ? "text-xs" : "text-sm")}>{title}</span>
 
           {status && (
-            <span className="text-[0.625rem] text-muted-foreground/60">{status}</span>
+            <span className="text-[var(--text-label)] text-muted-foreground/60">{status}</span>
           )}
 
           {badge}
@@ -192,7 +192,7 @@ export function HudStat({
   return (
     <div
       className={cn(
-        "surface-panel flex items-center gap-3 rounded-[1rem] p-fluid",
+        "surface-panel flex items-center gap-3 rounded-[var(--workspace-radius-md)] p-fluid",
         "transition-[box-shadow,border-color,transform] duration-300",
         "hover:shadow-[var(--panel-shadow-hover)] hover:border-[var(--panel-border-strong)]",
         accent !== "none" && "border-l-2",
@@ -210,7 +210,7 @@ export function HudStat({
       </div>
       {trend && (
         <div className={cn(
-          "ml-auto text-[0.625rem] font-medium",
+          "ml-auto text-[var(--text-label)] font-medium",
           trend === "up"
             ? "text-[var(--accent-emerald)]"
             : trend === "down"
